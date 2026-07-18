@@ -1,0 +1,27 @@
+name: Vendor release monitor
+on:
+  schedule:
+    - cron: "17 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  candidates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python tools/check_vendor_releases.py
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/vendor-candidates
+          delete-branch: true
+          commit-message: "chore: refresh vendor release candidates"
+          title: "Review current Kodi and Proton VPN release candidates"
+          body: "Automated discovery only. Verify ABI compatibility, package identity, hashes, and signing certificates before changing a signed manifest."
+          add-paths: config/vendor-candidates.json
+

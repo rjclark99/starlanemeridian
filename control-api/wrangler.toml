@@ -1,0 +1,17 @@
+name = "starlane-meridian-control"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+workers_dev = false
+
+[[routes]]
+pattern = "control.starlanemeridian.uk"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kodi-setup-control"
+database_id = "7ffe748f-2434-46cf-b561-b5cfd904d085"
+
+[vars]
+PAIRING_TTL_SECONDS = "600"
+STATUS_RETENTION_DAYS = "90"

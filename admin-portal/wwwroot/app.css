@@ -1,0 +1,150 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  color: #e9f2ff;
+  background: #07111f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at 80% 0, #173e69, #07111f 55%);
+}
+
+header {
+  min-height: 90px;
+  padding: 18px 5vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid #24415f;
+}
+
+small { font-size: .75rem; letter-spacing: .18em; color: #52b8ff; }
+h1 { margin: 2px 0; font-size: 1.75rem; line-height: 1.2; }
+h2 { margin: 0 0 18px; font-size: 1.5rem; line-height: 1.25; }
+p { margin: 12px 0; }
+
+main {
+  width: 100%;
+  max-width: 1180px;
+  margin: 36px auto;
+  padding: 0 24px;
+}
+
+.card {
+  min-width: 0;
+  padding: 24px;
+  background: #10233ae8;
+  border: 1px solid #294866;
+  border-radius: 12px;
+  box-shadow: 0 18px 55px #0005;
+}
+
+#unlock { max-width: 600px; margin: 80px auto; }
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(260px, .8fr) minmax(420px, 1.2fr);
+  gap: 28px;
+}
+
+.split > * { min-width: 0; }
+
+label {
+  display: block;
+  margin: 12px 0;
+  color: #bcd0e7;
+  font-size: 1rem;
+}
+
+input, select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 6px;
+  padding: 11px 12px;
+  border: 1px solid #3a5877;
+  border-radius: 7px;
+  background: #081727;
+  color: #fff;
+  font: inherit;
+  line-height: 1.35;
+}
+
+select { margin-top: 0; width: auto; max-width: 100%; }
+
+button, a { font-family: inherit; font-size: .875rem; line-height: 1.25; }
+
+button {
+  padding: 11px 17px;
+  border: 0;
+  border-radius: 7px;
+  background: #52b8ff;
+  color: #06111f;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary, nav button { background: #1b3652; color: #dceaff; }
+.actions, nav, .signup-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0; }
+.signup-links { margin: 12px 0 18px; }
+.signup-links a { display: inline-flex; max-width: 100%; padding: 10px 14px; overflow-wrap: anywhere; text-align: center; }
+nav { padding-bottom: 12px; border-bottom: 1px solid #274663; }
+nav .active { background: #52b8ff; color: #06111f; }
+.check { display: flex; gap: 8px; align-items: center; }
+.check input { width: auto; margin: 0; }
+.error { color: #ff8a80; }
+.hint { color: #ffca80; font-size: .875rem; }
+
+.household {
+  padding: 14px;
+  margin: 9px 0;
+  border: 1px solid #294866;
+  border-radius: 8px;
+  background: #0d1c2e;
+  cursor: pointer;
+}
+
+.household strong { display: block; }
+.household span { color: #94aac2; font-size: .8125rem; }
+.device-card { cursor: default; }
+.device-card span { display: block; overflow-wrap: anywhere; }
+.device-actions select { flex: 1 1 260px; }
+.command-result { min-height: 1.45em; margin: 8px 0 0; color: #94aac2; font-size: .875rem; }
+
+pre {
+  max-width: 100%;
+  min-height: 80px;
+  padding: 16px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #06101d;
+  border-radius: 8px;
+  font-size: .875rem;
+}
+
+.audit { padding: 10px; border-bottom: 1px solid #24415f; }
+.audit time { margin-right: 12px; color: #94aac2; font-size: .875rem; }
+
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  header { align-items: flex-start; flex-direction: column; padding: 16px 20px; }
+  header .actions { margin: 0; }
+  main { margin: 24px auto; padding: 0 16px; }
+  .card { padding: 18px; }
+  nav { gap: 8px; }
+  nav button { flex: 1 1 auto; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Starlane Meridian Console</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<header>
+  <div><small>LOCAL ADMINISTRATION</small><h1>Starlane Meridian</h1></div>
+  <div class="actions"><a id="export" href="/api/vault/export">Export encrypted backup</a><button id="lock">Lock vault</button></div>
+</header>
+<main>
+  <section id="unlock" class="card">
+    <h2>Encrypted credential vault</h2>
+    <p>The vault is bound to this Windows profile and protected by your master password.</p>
+    <input id="master" type="password" autocomplete="current-password" placeholder="Master password (14+ characters)">
+    <div class="actions"><button id="unlockButton">Unlock</button><button id="createButton" class="secondary">Create vault</button></div>
+    <p id="unlockError" class="error"></p>
+  </section>
+  <div id="dashboard" hidden>
+    <nav><button data-tab="households" class="active">Households</button><button data-tab="devices">Devices &amp; ADB</button><button data-tab="audit">Audit</button></nav>
+    <section id="households" class="tab">
+      <div class="split">
+        <div><h2>Households</h2><div id="householdList"></div></div>
+        <form id="householdForm" class="card">
+          <h2>Credential record</h2>
+          <input id="householdId" type="hidden">
+          <label>Name<input id="displayName" required maxlength="80"></label>
+          <button type="button" id="generate" class="secondary">Generate suggestions</button>
+          <div class="signup-links">
+            <a href="https://account.proton.me/signup" target="_blank" rel="noreferrer">Open official Proton signup</a>
+            <a href="https://real-debrid.com/signup" target="_blank" rel="noreferrer">Open official Real-Debrid signup</a>
+          </div>
+          <label>Proton username<input id="protonUsername" autocomplete="off"></label>
+          <label>Proton password<input id="protonPassword" type="password" autocomplete="new-password"></label>
+          <label>Real-Debrid username<input id="rdUsername" autocomplete="off"></label>
+          <label>Real-Debrid password<input id="rdPassword" type="password" autocomplete="new-password"></label>
+          <label class="check"><input id="consent" type="checkbox"> Household consent recorded</label>
+          <label class="check"><input id="handoff" type="checkbox"> Account handoff recorded</label>
+          <button type="submit">Save encrypted record</button>
+          <p class="hint">The household completes signup, CAPTCHA, terms, verification, and payment on the provider's page. Never enter payment-card information here.</p>
+        </form>
+      </div>
+    </section>
+    <section id="devices" class="tab" hidden>
+      <h2>Paired devices</h2>
+      <div class="card">
+        <label>Household alias<input id="pairingAlias" maxlength="80"></label>
+        <div class="actions"><button id="pairingCreate">Create 10-minute pairing code</button><button id="deviceRefresh" class="secondary">Refresh devices</button></div>
+        <strong id="pairingCode"></strong><div id="deviceList"></div>
+      </div>
+      <h2>Fire TV / Android TV via ADB</h2>
+      <div class="card">
+        <p>Developer Options and ADB approval must be completed on the TV first.</p>
+        <label>Device IP or hostname<input id="deviceAddress" placeholder="192.168.1.50"></label>
+        <label>Setup APK path<input id="apkPath" placeholder="C:\path\setup.apk"></label>
+        <label>Bootstrap ZIP path<input id="bootstrapPath" placeholder="C:\path\repository.kodisetup.zip"></label>
+        <div class="actions"><button id="adbConnect">Connect</button><button id="adbInstall">Install setup APK</button><button id="adbBootstrap">Deploy bootstrap</button><button id="adbList" class="secondary">List devices</button></div>
+        <pre id="adbOutput"></pre>
+      </div>
+    </section>
+    <section id="audit" class="tab" hidden><h2>Local audit history</h2><div id="auditList"></div></section>
+  </div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

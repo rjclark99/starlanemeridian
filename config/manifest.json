@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "configVersion": "2026.07.1",
+  "stage": "test",
+  "minimumSetupAppVersion": 1,
+  "kodi": {
+    "channel": "stable",
+    "packageName": "org.xbmc.kodi",
+    "architectures": {
+      "armeabi-v7a": {
+        "url": "https://mirrors.kodi.tv/releases/android/arm/kodi-21.3-Omega-armeabi-v7a.apk",
+        "sha256": "12d75e895649f68f217e42c2d881a94fd3177d7b9a7937825852aed545520cc8",
+        "signerSha256": "f517b44b5db5e62a6c1ec55ba47526db7de0d61f6ba26a7987520e293499b8d5"
+      },
+      "arm64-v8a": {
+        "url": "https://mirrors.kodi.tv/releases/android/arm64-v8a/kodi-21.3-Omega-arm64-v8a.apk",
+        "sha256": "34e7526705a038fa12f70161d0c1cc38f10deb0fee305b46fbd46ff015d05b44",
+        "signerSha256": "f517b44b5db5e62a6c1ec55ba47526db7de0d61f6ba26a7987520e293499b8d5"
+      }
+    }
+  },
+  "bootstrap": {
+    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.0.zip",
+    "sha256": "98cfd77d531a57913ec4ac0f836cd031f3b437a4c859efc0d16a58ec90e56778"
+  },
+  "applications": [
+    {
+      "id": "proton-vpn",
+      "name": "Proton VPN",
+      "packageName": "ch.protonvpn.android",
+      "storePreference": [
+        "amazon",
+        "google-play",
+        "github"
+      ],
+      "storeUris": {
+        "amazon": "amzn://apps/android?p=ch.protonvpn.android",
+        "google-play": "market://details?id=ch.protonvpn.android"
+      },
+      "artifacts": [],
+      "required": true
+    }
+  ],
+  "repositories": [],
+  "addons": [],
+  "skin": {
+    "addonId": "skin.kodisetup",
+    "homeMenu": [
+      {
+        "id": "movies",
+        "label": "Movies",
+        "action": {
+          "type": "kodi-window",
+          "target": "videos"
+        },
+        "widgets": []
+      },
+      {
+        "id": "tv",
+        "label": "TV Shows",
+        "action": {
+          "type": "kodi-window",
+          "target": "tvshows"
+        },
+        "widgets": []
+      },
+      {
+        "id": "addons",
+        "label": "Add-ons",
+        "action": {
+          "type": "kodi-window",
+          "target": "addons"
+        },
+        "widgets": []
+      },
+      {
+        "id": "settings",
+        "label": "Settings",
+        "action": {
+          "type": "kodi-window",
+          "target": "settings"
+        },
+        "widgets": []
+      }
+    ]
+  },
+  "telemetry": {
+    "enabled": true,
+    "diagnosticsRequireConsent": true
+  },
+  "signature": {
+    "keyId": "release-1",
+    "algorithm": "Ed25519",
+    "value": "2-zU62bFgSPlj1istH80Gw8VTiw-oG2eFmDxFQDl6qEaOLWYo8NUf2EXntaS-wZp_dx5z9Gch3yeZ0PSBiA5DQ"
+  }
+}

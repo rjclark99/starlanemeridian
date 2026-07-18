@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="repository.kodisetup" name="Kodi Setup Bootstrap" version="1.0.0" provider-name="Kodi Setup Platform">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+  </requires>
+  <extension point="xbmc.addon.repository" name="Kodi Setup Repository">
+    <dir>
+      <info>${REPOSITORY_BASE_URL}/addons.xml</info>
+      <checksum>${REPOSITORY_BASE_URL}/addons.xml.sha256</checksum>
+      <datadir>${REPOSITORY_BASE_URL}/</datadir>
+      <hashes>sha256</hashes>
+    </dir>
+  </extension>
+  <extension point="xbmc.service" library="service.py" />
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Securely installs an allowlisted Kodi configuration.</summary>
+    <description lang="en_GB">Fetches a signed setup manifest, installs configured repositories and add-ons, and applies non-secret settings.</description>
+    <platform>all</platform>
+    <license>MIT</license>
+  </extension>
+</addon>

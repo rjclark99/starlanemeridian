@@ -1,0 +1,74 @@
+name: Signed release
+on:
+  workflow_dispatch:
+    inputs:
+      tag: { description: "Release tag", required: true }
+      repositoryBaseUrl: { description: "Public Kodi repository base URL", required: true }
+      kodiSourceUrl: { description: "Reviewed Kodi source ZIP URL", required: true }
+      kodiSourceSha256: { description: "Expected source ZIP SHA-256", required: true }
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.13" }
+      - run: pip install -r tools/requirements.txt
+      - name: Prepare signing material
+        env:
+          MANIFEST_KEY: ${{ secrets.MANIFEST_PRIVATE_KEY_BASE64 }}
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p .secrets artifacts/skin
+          echo "$MANIFEST_KEY" | base64 -d > .secrets/manifest.key
+          echo "$ANDROID_KEYSTORE" | base64 -d > .secrets/release.jks
+      - name: Validate and sign stable manifest
+        run: python tools/release.py sign config/manifest.json --private-key .secrets/manifest.key
+      - name: Build branded skin from pinned source
+        env:
+          SOURCE_URL: ${{ inputs.kodiSourceUrl }}
+          SOURCE_SHA: ${{ inputs.kodiSourceSha256 }}
+        run: |
+          curl --fail --location "$SOURCE_URL" --output artifacts/kodi-source.zip
+          echo "$SOURCE_SHA  artifacts/kodi-source.zip" | sha256sum --check
+          python tools/skin_builder.py --upstream-archive artifacts/kodi-source.zip --manifest config/manifest.json --output artifacts/skin
+      - run: python tools/release.py kodi --output artifacts/kodi --base-url "${{ inputs.repositoryBaseUrl }}"
+      - name: Build signed Android APK
+        working-directory: android-app
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          MANIFEST_URL: ${{ secrets.PUBLIC_MANIFEST_URL }}
+          MANIFEST_PUBLIC_KEY: ${{ secrets.MANIFEST_PUBLIC_KEY }}
+          CONTROL_API_URL: ${{ secrets.CONTROL_API_URL }}
+        run: gradle :app:assembleRelease -PreleaseStoreFile=../.secrets/release.jks -PreleaseStorePassword="$STORE_PASSWORD" -PreleaseKeyAlias="$KEY_ALIAS" -PreleaseKeyPassword="$KEY_PASSWORD" -PmanifestUrl="$MANIFEST_URL" -PmanifestPublicKey="$MANIFEST_PUBLIC_KEY" -PcontrolApiUrl="$CONTROL_API_URL"
+      - run: cp android-app/app/build/outputs/apk/release/app-release.apk artifacts/setup.apk
+      - name: Publish self-contained Windows portal
+        run: |
+          dotnet publish admin-portal/KodiSetup.Admin.csproj -c Release -r win-x64 --self-contained true -o artifacts/admin-win-x64
+          (cd artifacts && zip -r KodiSetup.Admin-win-x64.zip admin-win-x64)
+      - uses: anchore/sbom-action@v0
+        with: { path: ".", output-file: "artifacts/sbom.spdx.json", format: "spdx-json" }
+      - run: find artifacts -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: |
+            artifacts/setup.apk
+            artifacts/KodiSetup.Admin-win-x64.zip
+            artifacts/SHA256SUMS
+            artifacts/sbom.spdx.json
+            artifacts/kodi/**/*
+            config/manifest.json

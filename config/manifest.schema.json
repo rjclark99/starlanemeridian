@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/rjclark99/starlanemeridian/main/config/manifest.schema.json",
+  "title": "Kodi Setup Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "configVersion", "stage", "minimumSetupAppVersion", "kodi", "bootstrap", "applications", "repositories", "addons", "skin", "telemetry", "signature"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "configVersion": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{2}\\.[0-9]+$" },
+    "stage": { "enum": ["draft", "test", "stable", "revoked"] },
+    "minimumSetupAppVersion": { "type": "integer", "minimum": 1 },
+    "kodi": {
+      "type": "object", "additionalProperties": false,
+      "required": ["channel", "packageName", "architectures"],
+      "properties": {
+        "channel": { "const": "stable" },
+        "packageName": { "const": "org.xbmc.kodi" },
+        "architectures": {
+          "type": "object", "additionalProperties": false, "minProperties": 1,
+          "properties": {
+            "armeabi-v7a": { "$ref": "#/$defs/artifact" },
+            "arm64-v8a": { "$ref": "#/$defs/artifact" }
+          }
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object", "additionalProperties": false, "required": ["url", "sha256"],
+      "properties": { "url": { "$ref": "#/$defs/httpsUrl" }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "applications": {
+      "type": "array", "maxItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "name", "packageName", "storePreference", "storeUris", "artifacts", "required"],
+        "properties": {
+          "id": { "$ref": "#/$defs/safeId" },
+          "name": { "$ref": "#/$defs/label" },
+          "packageName": { "$ref": "#/$defs/packageName" },
+          "storePreference": { "type": "array", "uniqueItems": true, "items": { "enum": ["amazon", "google-play", "github"] } },
+          "storeUris": {
+            "type": "object", "additionalProperties": false,
+            "properties": { "amazon": { "$ref": "#/$defs/storeUri" }, "google-play": { "$ref": "#/$defs/storeUri" } }
+          },
+          "artifacts": { "type": "array", "items": { "$ref": "#/$defs/abiArtifact" } },
+          "required": { "type": "boolean" }
+        }
+      }
+    },
+    "repositories": {
+      "type": "array", "maxItems": 32,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "name", "addonId", "source", "sha256", "enabled"],
+        "properties": {
+          "id": { "$ref": "#/$defs/addonId" }, "name": { "$ref": "#/$defs/label" }, "addonId": { "$ref": "#/$defs/addonId" },
+          "source": {
+            "type": "object", "additionalProperties": false, "required": ["type", "repository", "assetPattern", "resolvedUrl"],
+            "properties": {
+              "type": { "const": "github-release" },
+              "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+              "assetPattern": { "type": "string", "pattern": "^[A-Za-z0-9_.?*-]+$", "maxLength": 128 },
+              "resolvedUrl": { "$ref": "#/$defs/httpsUrl" }
+            }
+          },
+          "sha256": { "$ref": "#/$defs/sha256" }, "enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "addons": {
+      "type": "array", "maxItems": 128,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "name", "repositoryId", "required", "enabled", "settings", "authAdapter"],
+        "properties": {
+          "id": { "$ref": "#/$defs/addonId" }, "name": { "$ref": "#/$defs/label" }, "repositoryId": { "$ref": "#/$defs/addonId" },
+          "required": { "type": "boolean" }, "enabled": { "type": "boolean" },
+          "settings": { "type": "object", "maxProperties": 32, "propertyNames": { "pattern": "^[A-Za-z0-9_.-]{1,64}$" }, "additionalProperties": { "type": ["string", "boolean", "integer"], "maxLength": 256 } },
+          "authAdapter": { "type": ["string", "null"], "enum": [null, "real-debrid-device-v1"] }
+        }
+      }
+    },
+    "skin": {
+      "type": "object", "additionalProperties": false, "required": ["addonId", "homeMenu"],
+      "properties": {
+        "addonId": { "$ref": "#/$defs/addonId" },
+        "homeMenu": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "$ref": "#/$defs/menuItem" } }
+      }
+    },
+    "telemetry": {
+      "type": "object", "additionalProperties": false, "required": ["enabled", "diagnosticsRequireConsent"],
+      "properties": { "enabled": { "type": "boolean" }, "diagnosticsRequireConsent": { "const": true } }
+    },
+    "signature": {
+      "type": "object", "additionalProperties": false, "required": ["keyId", "algorithm", "value"],
+      "properties": { "keyId": { "$ref": "#/$defs/safeId" }, "algorithm": { "const": "Ed25519" }, "value": { "type": "string", "pattern": "^[A-Za-z0-9_-]{0,128}$" } }
+    }
+  },
+  "$defs": {
+    "safeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$" },
+    "addonId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9_-]+)+$", "maxLength": 128 },
+    "packageName": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$" },
+    "label": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^<>\\x00-\\x1F]+$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "httpsUrl": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 2048 },
+    "storeUri": { "type": "string", "pattern": "^(market|amzn|https)://", "maxLength": 512 },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["url", "sha256", "signerSha256"],
+      "properties": { "url": { "$ref": "#/$defs/httpsUrl" }, "sha256": { "$ref": "#/$defs/sha256" }, "signerSha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "abiArtifact": {
+      "type": "object", "additionalProperties": false, "required": ["abi", "url", "sha256", "signerSha256"],
+      "properties": {
+        "abi": { "enum": ["armeabi-v7a", "arm64-v8a"] },
+        "url": { "$ref": "#/$defs/httpsUrl" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "signerSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "menuItem": {
+      "type": "object", "additionalProperties": false, "required": ["id", "label", "action", "widgets"],
+      "properties": {
+        "id": { "$ref": "#/$defs/safeId" }, "label": { "$ref": "#/$defs/label" },
+        "action": {
+          "type": "object", "additionalProperties": false, "required": ["type", "target"],
+          "properties": { "type": { "enum": ["kodi-window", "addon", "favourite", "noop"] }, "target": { "type": "string", "pattern": "^[A-Za-z0-9_./:-]{0,256}$" } }
+        },
+        "widgets": {
+          "type": "array", "maxItems": 8,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["id", "label", "provider", "limit"],
+            "properties": { "id": { "$ref": "#/$defs/safeId" }, "label": { "$ref": "#/$defs/label" }, "provider": { "type": "string", "pattern": "^plugin://[a-zA-Z0-9_.-]+(/[A-Za-z0-9_./?=&%-]*)?$", "maxLength": 512 }, "limit": { "type": "integer", "minimum": 1, "maximum": 50 } }
+          }
+        }
+      }
+    }
+  }
+}
