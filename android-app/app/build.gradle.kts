@@ -24,7 +24,7 @@ android {
     if (releaseStoreFile != null) {
         signingConfigs {
             create("release") {
-                storeFile = file(releaseStoreFile)
+                storeFile = rootProject.file(releaseStoreFile)
                 storePassword = providers.gradleProperty("releaseStorePassword").get()
                 keyAlias = providers.gradleProperty("releaseKeyAlias").get()
                 keyPassword = providers.gradleProperty("releaseKeyPassword").get()
