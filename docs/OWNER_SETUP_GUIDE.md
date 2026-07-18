@@ -521,7 +521,7 @@ Use this exact public URL:
 https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk
 ```
 
-Open the AFTVnews code generator at `https://go.aftvnews.com/`, submit the URL, and record the resulting public numeric code.
+The current verified public Downloader code is `3467018` (`https://aftv.news/3467018`). It resolves to the permanent URL above.
 
 Test the code on a clean Fire TV. Treat the code as public; it must never resolve to a URL containing credentials or tokens.
 

@@ -38,6 +38,8 @@ Publish an asset named `setup.apk`. Point a single AFTVnews code to:
 
 `https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk`
 
+Current public Downloader code: `3467018` (`https://aftv.news/3467018`).
+
 AFTVnews codes and target URLs are public. Do not encode credentials or private tokens in that URL.
 
 ## Hosted API
