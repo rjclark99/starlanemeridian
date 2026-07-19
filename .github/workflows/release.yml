@@ -27,14 +27,12 @@ jobs:
       - run: python tools/build_brand_assets.py
       - name: Prepare signing material
         env:
-          MANIFEST_KEY: ${{ secrets.MANIFEST_PRIVATE_KEY_BASE64 }}
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           mkdir -p .secrets artifacts/skin
-          echo "$MANIFEST_KEY" | base64 -d > .secrets/manifest.key
           echo "$ANDROID_KEYSTORE" | base64 -d > .secrets/release.jks
-      - name: Validate and sign stable manifest
-        run: python tools/release.py sign config/manifest.json --private-key .secrets/manifest.key
+      - name: Verify offline-signed manifest
+        run: python tools/release.py verify config/manifest.json --public-key config/manifest.pub
       - name: Build branded skin from pinned source
         env:
           SOURCE_URL: ${{ inputs.kodiSourceUrl }}

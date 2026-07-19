@@ -88,6 +88,22 @@ def sign_manifest(path: Path, private_path: Path) -> None:
     path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def verify_manifest(path: Path, public_path: Path) -> None:
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+    document = validate_manifest(path)
+    signature = document["signature"]["value"]
+    if not signature:
+        raise SystemExit("Manifest is unsigned")
+    try:
+        public_value = public_path.read_text(encoding="ascii").strip()
+        public = Ed25519PublicKey.from_public_bytes(base64.urlsafe_b64decode(public_value + "=" * (-len(public_value) % 4)))
+        public.verify(base64.urlsafe_b64decode(signature + "=" * (-len(signature) % 4)), canonical_payload(document))
+    except (ValueError, InvalidSignature) as error:
+        raise SystemExit("Manifest signature verification failed") from error
+
+
 def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
@@ -146,6 +162,9 @@ def parse_args() -> argparse.Namespace:
     sign = sub.add_parser("sign")
     sign.add_argument("manifest", type=Path)
     sign.add_argument("--private-key", type=Path, required=True)
+    verify = sub.add_parser("verify")
+    verify.add_argument("manifest", type=Path)
+    verify.add_argument("--public-key", type=Path, required=True)
     kodi = sub.add_parser("kodi")
     kodi.add_argument("--output", type=Path, required=True)
     kodi.add_argument("--base-url", required=True)
@@ -162,6 +181,9 @@ def main() -> None:
     elif args.command == "sign":
         sign_manifest(args.manifest, args.private_key)
         print("Manifest signed")
+    elif args.command == "verify":
+        verify_manifest(args.manifest, args.public_key)
+        print("Manifest signature verified")
     elif args.command == "kodi":
         build_kodi(args.output, args.base_url)
         print(f"Kodi repository written to {args.output}")

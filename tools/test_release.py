@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from release import build_kodi, canonical_payload, safe_zip_tree
+from release import build_kodi, canonical_payload, safe_zip_tree, verify_manifest
 
 
 class ReleaseTests(unittest.TestCase):
@@ -20,6 +20,18 @@ class ReleaseTests(unittest.TestCase):
         key = Ed25519PrivateKey.generate()
         signature = key.sign(canonical_payload(value))
         key.public_key().verify(signature, canonical_payload(value))
+
+    def test_offline_signature_verification(self):
+        from cryptography.hazmat.primitives import serialization
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            document = json.loads((Path(__file__).resolve().parents[1] / "config" / "manifest.example.json").read_text(encoding="utf-8"))
+            key = Ed25519PrivateKey.generate()
+            document["signature"]["value"] = base64.urlsafe_b64encode(key.sign(canonical_payload(document))).decode("ascii").rstrip("=")
+            manifest = root / "manifest.json"; manifest.write_text(json.dumps(document), encoding="utf-8")
+            public = key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+            public_path = root / "manifest.pub"; public_path.write_text(base64.urlsafe_b64encode(public).decode("ascii").rstrip("="), encoding="ascii")
+            verify_manifest(manifest, public_path)
 
     def test_kodi_pure_python_verifier_matches_release_signer(self):
         module_path = Path(__file__).resolve().parents[1] / "kodi" / "repository.kodisetup" / "resources" / "lib" / "ed25519_verify.py"
