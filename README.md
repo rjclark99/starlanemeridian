@@ -46,4 +46,4 @@ Use [docs/OWNER_SETUP_GUIDE.md](docs/OWNER_SETUP_GUIDE.md) for the full checklis
 - Third-party Kodi repositories and add-ons remain empty until legally allowlisted.
 - Telemetry is limited to setup state and version/expiry metadata.
 - Diagnostics require explicit device consent.
-- Custom-skin activation is disabled until the skin package is built and tested.
+- The interim manifest keeps Kodi's built-in Estuary skin until the custom skin is tested.

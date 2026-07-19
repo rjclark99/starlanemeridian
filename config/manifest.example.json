@@ -40,7 +40,6 @@
   "repositories": [],
   "addons": [],
   "skin": {
-    "enabled": false,
     "addonId": "skin.kodisetup",
     "homeMenu": [
       { "id": "movies", "label": "Movies", "action": { "type": "kodi-window", "target": "videos" }, "widgets": [] },

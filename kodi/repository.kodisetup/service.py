@@ -106,16 +106,15 @@ def run():
             log(failures[-1], xbmc.LOGERROR)
             if item["required"]:
                 continue
-    if document["skin"].get("enabled", False):
-        try:
-            skin_id = document["skin"]["addonId"]
-            xbmc.executebuiltin("InstallAddon(%s)" % skin_id, True)
-            request = {"jsonrpc": "2.0", "id": 1, "method": "Settings.SetSettingValue", "params": {"setting": "lookandfeel.skin", "value": skin_id}}
-            result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
-            if "error" in result:
-                failures.append("skin: " + result["error"].get("message", "activation failed"))
-        except Exception as error:
-            failures.append("skin: " + str(error))
+    try:
+        skin_id = document["skin"]["addonId"]
+        xbmc.executebuiltin("InstallAddon(%s)" % skin_id, True)
+        request = {"jsonrpc": "2.0", "id": 1, "method": "Settings.SetSettingValue", "params": {"setting": "lookandfeel.skin", "value": skin_id}}
+        result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
+        if "error" in result:
+            failures.append("skin: " + result["error"].get("message", "activation failed"))
+    except Exception as error:
+        failures.append("skin: " + str(error))
     if failures:
         notify("Setup finished with %d issue(s)" % len(failures))
         return

@@ -39,8 +39,8 @@ enters the signed manifest.
 
 ## Next phase: custom skin
 
-The current manifest has `skin.enabled: false`, so bootstrap 1.0.2 does not attempt
-to activate a nonexistent skin. The next phase will:
+The current schema-v1 manifest points to Kodi's built-in `skin.estuary`, preserving
+compatibility with already-installed setup app 0.1.0. The next phase will:
 
 1. Choose the legal add-on/repository allowlist from the reference inventory.
 2. Define home menus, submenus, widgets, actions, and artwork.

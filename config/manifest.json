@@ -21,7 +21,7 @@
   },
   "bootstrap": {
     "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip",
-    "sha256": "c4fae62fb8d474bc0748b4ec9e6640f68c0875122795175138fa47a6bcf4c9ea"
+    "sha256": "c643bb1a8d6931853b0a2377d294c487c1a07c5f26fbe37fc68b7c79ab847393"
   },
   "applications": [
     {
@@ -44,8 +44,7 @@
   "repositories": [],
   "addons": [],
   "skin": {
-    "enabled": false,
-    "addonId": "skin.kodisetup",
+    "addonId": "skin.estuary",
     "homeMenu": [
       {
         "id": "movies",
@@ -92,6 +91,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "OX46EuvgoJ0ayx7pkdcGmwvyoRmSKYPI2Y0YL2V5j6_J79JX7GNdl3nberX0vZ56WY5BJ5zYwuIXGY3Vq25fCA"
+    "value": "dTX7GYHi3BmO_856PVmD2u_OIfUwjMbiDPaphTrzMMzpTn_oe1zvOQLRWa7-eBYr89kSmrDwIBLBTaAmfvHhCw"
   }
 }

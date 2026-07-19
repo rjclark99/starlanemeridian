@@ -55,8 +55,6 @@ def validate(document):
             raise ValueError("unsupported authorization adapter")
         if any(not SAFE_SETTING.fullmatch(key) or isinstance(value, (dict, list)) for key, value in addon.get("settings", {}).items()):
             raise ValueError("unsafe add-on setting")
-    if not isinstance(document["skin"].get("enabled"), bool):
-        raise ValueError("invalid skin activation flag")
     for item in document["skin"]["homeMenu"]:
         if item["action"]["type"] not in ALLOWED_MENU_ACTIONS:
             raise ValueError("unsafe menu action")

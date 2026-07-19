@@ -20,16 +20,11 @@ class KodiManifestTests(unittest.TestCase):
             "kodi": {"channel": "stable", "packageName": "org.xbmc.kodi"},
             "repositories": [],
             "addons": [],
-            "skin": {"enabled": False, "addonId": "skin.kodisetup", "homeMenu": [{"action": {"type": "noop"}}]},
+            "skin": {"addonId": "skin.estuary", "homeMenu": [{"action": {"type": "noop"}}]},
         }
 
-    def test_disabled_skin_is_valid_before_skin_release(self):
+    def test_builtin_skin_is_valid_before_custom_skin_release(self):
         self.module.validate(self.document)
-
-    def test_skin_flag_must_be_boolean(self):
-        self.document["skin"]["enabled"] = "false"
-        with self.assertRaisesRegex(ValueError, "activation flag"):
-            self.module.validate(self.document)
 
     def test_arbitrary_menu_actions_are_rejected(self):
         self.document["skin"]["homeMenu"][0]["action"]["type"] = "shell"

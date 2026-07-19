@@ -26,7 +26,7 @@ data class SetupManifest(
 @Serializable data class RepositoryConfig(val id: String, val name: String, val addonId: String, val source: RepositorySource, val sha256: String, val enabled: Boolean)
 @Serializable data class RepositorySource(val type: String, val repository: String, val assetPattern: String, val resolvedUrl: String)
 @Serializable data class AddonConfig(val id: String, val name: String, val repositoryId: String, val required: Boolean, val enabled: Boolean, val settings: Map<String, JsonElement>, val authAdapter: String?)
-@Serializable data class SkinConfig(val enabled: Boolean = true, val addonId: String, val homeMenu: List<HomeMenuItem>)
+@Serializable data class SkinConfig(val addonId: String, val homeMenu: List<HomeMenuItem>)
 @Serializable data class HomeMenuItem(val id: String, val label: String, val action: MenuAction, val widgets: List<Widget>)
 @Serializable data class MenuAction(val type: String, val target: String)
 @Serializable data class Widget(val id: String, val label: String, val provider: String, val limit: Int)

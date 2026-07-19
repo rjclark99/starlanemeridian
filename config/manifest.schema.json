@@ -82,9 +82,8 @@
       }
     },
     "skin": {
-      "type": "object", "additionalProperties": false, "required": ["enabled", "addonId", "homeMenu"],
+      "type": "object", "additionalProperties": false, "required": ["addonId", "homeMenu"],
       "properties": {
-        "enabled": { "type": "boolean" },
         "addonId": { "$ref": "#/$defs/addonId" },
         "homeMenu": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "$ref": "#/$defs/menuItem" } }
       }
