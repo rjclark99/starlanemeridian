@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Net;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace KodiSetup.Admin.Services;
 
@@ -12,21 +14,18 @@ public sealed partial class AdbService
     public Task<string> Devices(CancellationToken cancellation) => Run(["devices", "-l"], cancellation);
     public Task<string> Connect(string address, CancellationToken cancellation)
     {
-        if (!AddressPattern().IsMatch(address)) throw new ArgumentException("Use an IPv4/hostname and optional port only");
-        return Run(["connect", address.Contains(':') ? address : address + ":5555"], cancellation);
+        return Run(["connect", NormalizeAddress(address)], cancellation);
     }
     public Task<string> Install(string address, string apkPath, CancellationToken cancellation)
     {
         if (!File.Exists(apkPath) || !apkPath.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("APK path is invalid");
-        if (!AddressPattern().IsMatch(address)) throw new ArgumentException("Device address is invalid");
-        return Run(["-s", address.Contains(':') ? address : address + ":5555", "install", "-r", apkPath], cancellation);
+        return Run(["-s", NormalizeAddress(address), "install", "-r", apkPath], cancellation);
     }
 
     public async Task<string> DeployBootstrap(string address, string zipPath, CancellationToken cancellation)
     {
         if (!File.Exists(zipPath) || !zipPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Bootstrap ZIP path is invalid");
-        if (!AddressPattern().IsMatch(address)) throw new ArgumentException("Device address is invalid");
-        var serial = address.Contains(':') ? address : address + ":5555";
+        var serial = NormalizeAddress(address);
         const string addons = "/sdcard/Android/data/org.xbmc.kodi/files/.kodi/addons";
         const string probe = addons + "/.kodisetup_probe";
         var temporary = Path.Combine(Path.GetTempPath(), "kodi-setup-" + Guid.NewGuid().ToString("N"));
@@ -53,9 +52,27 @@ public sealed partial class AdbService
         }
     }
 
-    private static void ValidateAndExtractBootstrap(string zipPath, string destination)
+    internal static string NormalizeAddress(string address)
+    {
+        if (string.IsNullOrWhiteSpace(address) || address != address.Trim() || address.Count(character => character == ':') > 1)
+            throw new ArgumentException("Use an IPv4/hostname and optional port only");
+        var separator = address.LastIndexOf(':');
+        var host = separator < 0 ? address : address[..separator];
+        var portText = separator < 0 ? "5555" : address[(separator + 1)..];
+        if (!int.TryParse(portText, out var port) || port is < 1 or > 65535)
+            throw new ArgumentException("Device port must be between 1 and 65535");
+        var numericLooking = host.All(character => char.IsDigit(character) || character == '.');
+        if ((numericLooking && (!IPAddress.TryParse(host, out var ip) || ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)) ||
+            (!numericLooking && !HostnamePattern().IsMatch(host)))
+            throw new ArgumentException("Use a valid IPv4 address or DNS hostname");
+        return $"{host}:{port}";
+    }
+
+    internal static void ValidateAndExtractBootstrap(string zipPath, string destination)
     {
         using var archive = ZipFile.OpenRead(zipPath);
+        if (archive.Entries.Count > 512 || archive.Entries.Sum(entry => entry.Length) > 25L * 1024 * 1024)
+            throw new ArgumentException("Bootstrap ZIP is too large");
         if (!archive.Entries.Any(entry => entry.FullName.Replace('\\', '/').Equals("repository.kodisetup/addon.xml", StringComparison.Ordinal)))
             throw new ArgumentException("ZIP must contain repository.kodisetup/addon.xml");
         foreach (var entry in archive.Entries)
@@ -63,6 +80,13 @@ public sealed partial class AdbService
             var name = entry.FullName.Replace('\\', '/');
             if (name.StartsWith('/') || name.Split('/').Any(part => part == "..") || (!string.IsNullOrEmpty(name) && !name.StartsWith("repository.kodisetup/", StringComparison.Ordinal)))
                 throw new ArgumentException("Bootstrap ZIP contains an unsafe or unexpected path");
+        }
+        var addonEntry = archive.GetEntry("repository.kodisetup/addon.xml")!;
+        using (var stream = addonEntry.Open())
+        {
+            var addon = XDocument.Load(stream, LoadOptions.None).Root;
+            if (addon?.Name.LocalName != "addon" || addon.Attribute("id")?.Value != "repository.kodisetup")
+                throw new ArgumentException("Bootstrap addon.xml ID is invalid");
         }
         Directory.CreateDirectory(destination);
         archive.ExtractToDirectory(destination);
@@ -80,5 +104,6 @@ public sealed partial class AdbService
         return result.Trim();
     }
 
-    [GeneratedRegex("^[A-Za-z0-9.-]+(:[0-9]{1,5})?$")] private static partial Regex AddressPattern();
+    [GeneratedRegex("^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$")]
+    private static partial Regex HostnamePattern();
 }

@@ -48,6 +48,7 @@ Run the baseline checks:
 python tools\release.py validate config\manifest.example.json
 python -m unittest discover -s tools -p 'test_*.py'
 dotnet build admin-portal\KodiSetup.Admin.csproj -c Release
+dotnet run --project admin-portal.tests\KodiSetup.Admin.Tests.csproj -c Release
 Set-Location control-api
 pnpm check
 pnpm test

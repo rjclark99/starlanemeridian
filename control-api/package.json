@@ -10,10 +10,11 @@
     "db:migrate": "wrangler d1 migrations apply kodi-setup-control"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.18.6",
     "@cloudflare/workers-types": "^5.20260718.1",
     "@types/node": "^24.0.0",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.0",
     "wrangler": "^4.24.3"
   }
 }

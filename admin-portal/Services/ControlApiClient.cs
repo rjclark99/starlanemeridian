@@ -5,6 +5,12 @@ namespace KodiSetup.Admin.Services;
 
 public sealed class ControlApiClient
 {
+    private static readonly HashSet<string> AllowedCommands =
+    [
+        "START_SETUP", "INSTALL_KODI", "INSTALL_PROTON", "PREPARE_BOOTSTRAP",
+        "OPEN_KODI", "BEGIN_REAL_DEBRID_AUTH", "SYNC_CONFIG",
+        "RETRY_CURRENT_STEP", "RETRY_STEP", "OPEN_AUTHORIZATION", "REQUEST_DIAGNOSTICS"
+    ];
     private readonly HttpClient client;
     public ControlApiClient(IConfiguration configuration)
     {
@@ -18,19 +24,19 @@ public sealed class ControlApiClient
     public async Task<JsonElement> CreatePairingCode(string alias, CancellationToken cancellation) => await Post("/v1/admin/pairing-codes", new { householdAlias = alias }, cancellation);
     public async Task<JsonElement> Command(Guid deviceId, string kind, CancellationToken cancellation)
     {
-        var allowed = new[]
-        {
-            "START_SETUP", "INSTALL_KODI", "INSTALL_PROTON", "PREPARE_BOOTSTRAP",
-            "OPEN_KODI", "BEGIN_REAL_DEBRID_AUTH", "SYNC_CONFIG",
-            "RETRY_CURRENT_STEP", "RETRY_STEP", "OPEN_AUTHORIZATION", "REQUEST_DIAGNOSTICS"
-        };
-        if (!allowed.Contains(kind, StringComparer.Ordinal)) throw new ArgumentException("Unsupported command");
+        if (!IsSupportedCommand(kind)) throw new ArgumentException("Unsupported command");
         object payload = kind == "REQUEST_DIAGNOSTICS" ? new { requiresConsent = true, reason = "Administrator requested setup diagnostics" } : new { };
         return await Post($"/v1/admin/devices/{deviceId}/commands", new { kind, payload }, cancellation);
     }
+    internal static bool IsSupportedCommand(string kind) => AllowedCommands.Contains(kind);
     public async Task Delete(Guid deviceId, CancellationToken cancellation)
     {
         using var response = await client.DeleteAsync($"/v1/admin/devices/{deviceId}", cancellation);
+        await Ensure(response);
+    }
+    public async Task DeleteHousehold(Guid householdId, CancellationToken cancellation)
+    {
+        using var response = await client.DeleteAsync($"/v1/admin/households/{householdId}", cancellation);
         await Ensure(response);
     }
     private async Task<JsonElement> Get(string path, CancellationToken cancellation) { using var response = await client.GetAsync(path, cancellation); return await Read(response, cancellation); }

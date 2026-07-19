@@ -51,11 +51,13 @@ compatibility with already-installed setup app 0.1.0. The next phase will:
 ## Tests completed
 
 - Python release/profile/Kodi-manifest tests: 10 passed.
-- Control API tests: 7 passed; TypeScript check passed.
+- Control API tests: 9 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
 - Android unit tests, release compilation, lint-vital, and packaging passed.
-- Windows portal Release build and self-contained publish passed with no warnings.
+- Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.
 - Production Worker deployment and `/health` passed.
 - Production Fire TV device record and safe command round-trip passed.
+- Production async authentication errors return controlled JSON 4xx responses.
+- Device deletion removes status, nonces, and commands; household deletion cascades all household cloud records. Audit metadata expires under the configured retention policy.
 
 An Android TV/Google TV hardware pass remains outstanding because no such device is
 currently available. Fire TV coverage does not substitute for that compatibility test.

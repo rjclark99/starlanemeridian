@@ -27,6 +27,7 @@ jobs:
         with: { dotnet-version: "8.0.x" }
       - run: dotnet restore admin-portal/KodiSetup.Admin.csproj
       - run: dotnet build admin-portal/KodiSetup.Admin.csproj -c Release --no-restore
+      - run: dotnet run --project admin-portal.tests/KodiSetup.Admin.Tests.csproj -c Release
 
   control-api:
     runs-on: ubuntu-latest

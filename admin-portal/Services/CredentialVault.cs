@@ -22,9 +22,12 @@ public sealed class CredentialVault : IDisposable
 
     public CredentialVault(IConfiguration configuration)
     {
-        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KodiSetupAdmin");
+        var configuredPath = configuration["Vault:Path"];
+        var root = configuredPath is null
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KodiSetupAdmin")
+            : Path.GetDirectoryName(Path.GetFullPath(configuredPath)) ?? throw new ArgumentException("Vault path must include a directory");
         Directory.CreateDirectory(root);
-        path = Path.Combine(root, "households.vault");
+        path = configuredPath is null ? Path.Combine(root, "households.vault") : Path.GetFullPath(configuredPath);
         autoLock = TimeSpan.FromMinutes(configuration.GetValue("Vault:AutoLockMinutes", 15));
         timer = new Timer(_ => CheckAutoLock(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     }

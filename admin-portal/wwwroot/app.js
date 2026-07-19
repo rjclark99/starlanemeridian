@@ -21,7 +21,7 @@ const setupActions=[
 async function loadDevices(){
   try{
     const x=await api('/api/control/devices');
-    $('deviceList').innerHTML=(x.devices||[]).map(d=>`<div class="household device-card"><strong>${escapeHtml(d.householdAlias)} — ${escapeHtml(d.model)}</strong><span>${escapeHtml(d.setupStep||'not started')} · Config ${escapeHtml(d.configVersion||'none')} · Last seen ${d.lastSeenAt?new Date(d.lastSeenAt*1000).toLocaleString():'never'}</span>${d.errorCode?`<span class="error">Error: ${escapeHtml(d.errorCode)}</span>`:''}<div class="actions device-actions"><select aria-label="Remote setup action" data-action-choice="${d.id}">${setupActions.map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select><button data-action-run="${d.id}">Send action</button></div><p class="command-result" data-command-result="${d.id}" aria-live="polite"></p></div>`).join('')||'<p>No paired devices yet.</p>';
+    $('deviceList').innerHTML=(x.devices||[]).map(d=>`<div class="household device-card"><strong>${escapeHtml(d.householdAlias)} — ${escapeHtml(d.model)}</strong><span>${escapeHtml(d.setupStep||'not started')} · Config ${escapeHtml(d.configVersion||'none')} · Last seen ${d.lastSeenAt?new Date(d.lastSeenAt*1000).toLocaleString():'never'}</span>${d.errorCode?`<span class="error">Error: ${escapeHtml(d.errorCode)}</span>`:''}<div class="actions device-actions"><select aria-label="Remote setup action" data-action-choice="${d.id}">${setupActions.map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select><button data-action-run="${d.id}">Send action</button><button class="secondary" data-device-delete="${d.id}">Remove device</button><button class="secondary" data-household-delete="${d.householdId}">Delete cloud household</button></div><p class="command-result" data-command-result="${d.id}" aria-live="polite"></p></div>`).join('')||'<p>No paired devices yet.</p>';
     document.querySelectorAll('[data-action-run]').forEach(button=>button.onclick=async()=>{
       const device=button.dataset.actionRun,choice=document.querySelector(`[data-action-choice="${device}"]`),result=document.querySelector(`[data-command-result="${device}"]`);
       button.disabled=true;result.textContent='Sending…';
@@ -29,6 +29,8 @@ async function loadDevices(){
       catch(e){result.textContent=e.message;result.classList.add('error')}
       finally{button.disabled=false}
     });
+    document.querySelectorAll('[data-device-delete]').forEach(button=>button.onclick=async()=>{if(!confirm('Permanently revoke this device and delete its cloud status and pending commands?'))return;await api(`/api/control/devices/${button.dataset.deviceDelete}`,{method:'DELETE'});await loadDevices()});
+    document.querySelectorAll('[data-household-delete]').forEach(button=>button.onclick=async()=>{if(!confirm('Permanently delete this household and all of its paired-device cloud data? Local vault records are not affected.'))return;await api(`/api/control/households/${button.dataset.householdDelete}`,{method:'DELETE'});await loadDevices()});
   }catch(e){$('deviceList').innerHTML=`<p class="error">${escapeHtml(e.message)}</p>`}
 }
 $('deviceRefresh').onclick=loadDevices;

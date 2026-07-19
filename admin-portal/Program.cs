@@ -39,6 +39,7 @@ app.MapGet("/api/control/devices", async (ControlApiClient control, Cancellation
 app.MapPost("/api/control/pairing", async (PairingCodeRequest input, ControlApiClient control, CancellationToken cancellation) => await control.CreatePairingCode(input.HouseholdAlias, cancellation));
 app.MapPost("/api/control/devices/{id:guid}/commands/{kind}", async (Guid id, string kind, ControlApiClient control, CancellationToken cancellation) => await control.Command(id, kind, cancellation));
 app.MapDelete("/api/control/devices/{id:guid}", async (Guid id, ControlApiClient control, CancellationToken cancellation) => { await control.Delete(id, cancellation); return Results.NoContent(); });
+app.MapDelete("/api/control/households/{id:guid}", async (Guid id, ControlApiClient control, CancellationToken cancellation) => { await control.DeleteHousehold(id, cancellation); return Results.NoContent(); });
 
 app.Run();
 

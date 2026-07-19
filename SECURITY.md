@@ -9,6 +9,8 @@
 - Device requests include a timestamp, nonce, body hash, and ECDSA signature. The API rejects stale or replayed nonces.
 - Real-Debrid OAuth tokens remain encrypted on the TV device. Only premium-expiry status may be reported.
 - Household credentials remain inside the Windows-local vault. The cloud API has no credential fields.
+- Removing a cloud device hard-deletes its status, authentication token hash, request nonces, and pending commands. Deleting a cloud household cascades all of its pairing and device records.
+- Pairing codes and request nonces are short-lived; administrator audit metadata is removed after the configured retention window.
 
 ## Account and payment boundary
 
@@ -17,4 +19,3 @@ The portal may generate a suggested username and strong password, record consent
 ## Reporting
 
 Do not open a public issue containing credentials, tokens, device pairing codes, signing keys, private configuration, or logs with personal data. Rotate the affected key and use a private security advisory.
-

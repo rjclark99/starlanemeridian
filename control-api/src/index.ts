@@ -11,19 +11,21 @@ export default {
       if (crypto.getRandomValues(new Uint8Array(1))[0] === 0) context.waitUntil(cleanup(env));
       const url = new URL(request.url);
       if (request.method === "GET" && url.pathname === "/health") return response({ status: "ok" });
-      if (request.method === "POST" && url.pathname === "/v1/devices/pair") return pair(request, env);
+      if (request.method === "POST" && url.pathname === "/v1/devices/pair") return await pair(request, env);
       const statusMatch = url.pathname.match(/^\/v1\/devices\/([0-9a-f-]{36})\/status$/i);
-      if (request.method === "POST" && statusMatch?.[1]) return deviceStatus(request, env, statusMatch[1]);
+      if (request.method === "POST" && statusMatch?.[1]) return await deviceStatus(request, env, statusMatch[1]);
       const commandsMatch = url.pathname.match(/^\/v1\/devices\/([0-9a-f-]{36})\/commands$/i);
-      if (request.method === "GET" && commandsMatch?.[1]) return deviceCommands(request, env, commandsMatch[1]);
+      if (request.method === "GET" && commandsMatch?.[1]) return await deviceCommands(request, env, commandsMatch[1]);
       if (url.pathname.startsWith("/v1/admin/")) {
         requireAdmin(request);
-        if (request.method === "POST" && url.pathname === "/v1/admin/pairing-codes") return createPairingCode(request, env);
-        if (request.method === "GET" && url.pathname === "/v1/admin/devices") return listDevices(env);
+        if (request.method === "POST" && url.pathname === "/v1/admin/pairing-codes") return await createPairingCode(request, env);
+        if (request.method === "GET" && url.pathname === "/v1/admin/devices") return await listDevices(env);
         const adminCommand = url.pathname.match(/^\/v1\/admin\/devices\/([0-9a-f-]{36})\/commands$/i);
-        if (request.method === "POST" && adminCommand?.[1]) return createCommand(request, env, adminCommand[1]);
+        if (request.method === "POST" && adminCommand?.[1]) return await createCommand(request, env, adminCommand[1]);
         const adminDevice = url.pathname.match(/^\/v1\/admin\/devices\/([0-9a-f-]{36})$/i);
-        if (request.method === "DELETE" && adminDevice?.[1]) return deleteDevice(request, env, adminDevice[1]);
+        if (request.method === "DELETE" && adminDevice?.[1]) return await deleteDevice(request, env, adminDevice[1]);
+        const adminHousehold = url.pathname.match(/^\/v1\/admin\/households\/([0-9a-f-]{36})$/i);
+        if (request.method === "DELETE" && adminHousehold?.[1]) return await deleteHousehold(request, env, adminHousehold[1]);
       }
       return response({ error: "not_found" }, 404);
     } catch (error) {
@@ -104,7 +106,7 @@ async function createPairingCode(request: Request, env: Env): Promise<Response> 
 }
 
 async function listDevices(env: Env): Promise<Response> {
-  const rows = await env.DB.prepare("SELECT d.id,h.alias AS householdAlias,d.model,d.os_version AS osVersion,d.app_version AS appVersion,d.config_version AS configVersion,d.setup_step AS setupStep,d.error_code AS errorCode,d.debrid_expiry AS debridExpiry,d.last_seen_at AS lastSeenAt FROM devices d JOIN households h ON h.id=d.household_id WHERE d.deleted_at IS NULL ORDER BY d.last_seen_at DESC").all();
+  const rows = await env.DB.prepare("SELECT d.id,h.id AS householdId,h.alias AS householdAlias,d.model,d.os_version AS osVersion,d.app_version AS appVersion,d.config_version AS configVersion,d.setup_step AS setupStep,d.error_code AS errorCode,d.debrid_expiry AS debridExpiry,d.last_seen_at AS lastSeenAt FROM devices d JOIN households h ON h.id=d.household_id WHERE d.deleted_at IS NULL ORDER BY d.last_seen_at DESC").all();
   return response({ devices: rows.results });
 }
 
@@ -131,8 +133,18 @@ export function validateCommandPayload(kind: string, input: unknown): Record<str
 }
 
 async function deleteDevice(request: Request, env: Env, id: string): Promise<Response> {
-  const now = Math.floor(Date.now() / 1000); await env.DB.prepare("UPDATE devices SET deleted_at=?,token_hash=? WHERE id=? AND deleted_at IS NULL").bind(now, `deleted:${crypto.randomUUID()}`, id).run();
+  const exists = await env.DB.prepare("SELECT id FROM devices WHERE id=?").bind(id).first();
+  if (!exists) throw new HttpError(404, "device_not_found");
+  await env.DB.prepare("DELETE FROM devices WHERE id=?").bind(id).run();
   await audit(env, request, "device.deleted", id, "Device access revoked"); return new Response(null, { status: 204, headers: jsonHeaders });
+}
+
+async function deleteHousehold(request: Request, env: Env, id: string): Promise<Response> {
+  const exists = await env.DB.prepare("SELECT id FROM households WHERE id=?").bind(id).first();
+  if (!exists) throw new HttpError(404, "household_not_found");
+  await audit(env, request, "household.deleted", id, "Household cloud data permanently removed");
+  await env.DB.prepare("DELETE FROM households WHERE id=?").bind(id).run();
+  return new Response(null, { status: 204, headers: jsonHeaders });
 }
 
 function requireAdmin(request: Request): void {
