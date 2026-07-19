@@ -4,20 +4,19 @@
     <category id="general" label="General">
       <group id="1">
         <setting id="manifest_url" type="string" label="Signed manifest URL">
-          <default>https://example.invalid/config/manifest.json</default>
+          <default>https://github.com/rjclark99/starlanemeridian/releases/latest/download/manifest.json</default>
           <constraints><allowempty>false</allowempty></constraints>
           <control type="edit" format="string" />
         </setting>
         <setting id="public_key" type="string" label="Ed25519 public key (base64url)">
-          <default></default>
+          <default>CvpCWgdzUG-U-nLnyaM00pzcRLx-FtYhtN3wU2zeKKc</default>
           <control type="edit" format="string" />
         </setting>
         <setting id="applied_version" type="string" label="Applied configuration" help="Read-only setup state">
-          <default></default>
+          <default>unapplied</default>
           <control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
       </group>
     </category>
   </section>
 </settings>
-

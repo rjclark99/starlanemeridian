@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.1",
+  "configVersion": "2026.07.2",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -20,8 +20,8 @@
     }
   },
   "bootstrap": {
-    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.0.zip",
-    "sha256": "98cfd77d531a57913ec4ac0f836cd031f3b437a4c859efc0d16a58ec90e56778"
+    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip",
+    "sha256": "c4fae62fb8d474bc0748b4ec9e6640f68c0875122795175138fa47a6bcf4c9ea"
   },
   "applications": [
     {
@@ -44,6 +44,7 @@
   "repositories": [],
   "addons": [],
   "skin": {
+    "enabled": false,
     "addonId": "skin.kodisetup",
     "homeMenu": [
       {
@@ -91,6 +92,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "2-zU62bFgSPlj1istH80Gw8VTiw-oG2eFmDxFQDl6qEaOLWYo8NUf2EXntaS-wZp_dx5z9Gch3yeZ0PSBiA5DQ"
+    "value": "OX46EuvgoJ0ayx7pkdcGmwvyoRmSKYPI2Y0YL2V5j6_J79JX7GNdl3nberX0vZ56WY5BJ5zYwuIXGY3Vq25fCA"
   }
 }

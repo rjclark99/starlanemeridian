@@ -88,7 +88,11 @@ async function deviceStatus(request: Request, env: Env, id: string): Promise<Res
 async function deviceCommands(request: Request, env: Env, id: string): Promise<Response> {
   await authenticateDevice(request, env, id, "");
   const rows = await env.DB.prepare("SELECT id,kind,payload,created_at FROM commands WHERE device_id=? AND delivered_at IS NULL ORDER BY created_at LIMIT 20").bind(id).all();
-  const now = Math.floor(Date.now() / 1000); await env.DB.prepare("UPDATE commands SET delivered_at=? WHERE device_id=? AND delivered_at IS NULL").bind(now, id).run();
+  const ids = rows.results.map(row => String(row.id));
+  if (ids.length) {
+    const now = Math.floor(Date.now() / 1000);
+    await env.DB.batch(ids.map(commandId => env.DB.prepare("UPDATE commands SET delivered_at=? WHERE id=? AND device_id=? AND delivered_at IS NULL").bind(now, commandId, id)));
+  }
   return response({ commands: rows.results });
 }
 

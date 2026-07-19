@@ -22,6 +22,7 @@
 .secrets/
 .tools/
 artifacts/
+backups/
 .pnpm-store/
 **/__pycache__/
 *.py[cod]

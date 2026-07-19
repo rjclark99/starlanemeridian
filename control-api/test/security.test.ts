@@ -14,4 +14,14 @@ describe("security helpers", () => {
     expect(() => validateCommandPayload("REQUEST_DIAGNOSTICS", {})).toThrow("diagnostic_consent_required");
     expect(validateCommandPayload("REQUEST_DIAGNOSTICS", { requiresConsent: true })).toEqual({ requiresConsent: true });
   });
+  it("rejects arbitrary fields for every no-payload command", () => {
+    for (const kind of ["START_SETUP", "INSTALL_KODI", "INSTALL_PROTON", "PREPARE_BOOTSTRAP", "OPEN_KODI", "BEGIN_REAL_DEBRID_AUTH", "RETRY_CURRENT_STEP"])
+      expect(() => validateCommandPayload(kind, { command: "anything" })).toThrow("invalid_payload_field");
+  });
+  it("allowlists retry steps and authorization providers", () => {
+    expect(validateCommandPayload("RETRY_STEP", { step: "KODI" })).toEqual({ step: "KODI" });
+    expect(() => validateCommandPayload("RETRY_STEP", { step: "ROOT_SHELL" })).toThrow("invalid_setup_step");
+    expect(validateCommandPayload("OPEN_AUTHORIZATION", { provider: "real-debrid" })).toEqual({ provider: "real-debrid" });
+    expect(() => validateCommandPayload("OPEN_AUTHORIZATION", { provider: "attacker" })).toThrow("invalid_provider");
+  });
 });

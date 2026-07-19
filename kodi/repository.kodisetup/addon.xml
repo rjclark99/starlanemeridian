@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="repository.kodisetup" name="Kodi Setup Bootstrap" version="1.0.0" provider-name="Kodi Setup Platform">
+<addon id="repository.kodisetup" name="Kodi Setup Bootstrap" version="1.0.2" provider-name="Starlane Meridian">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
   </requires>

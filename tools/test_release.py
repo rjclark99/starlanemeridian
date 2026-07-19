@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from release import canonical_payload, safe_zip_tree
+from release import build_kodi, canonical_payload, safe_zip_tree
 
 
 class ReleaseTests(unittest.TestCase):
@@ -40,6 +40,14 @@ class ReleaseTests(unittest.TestCase):
             first, second = root / "first.zip", root / "second.zip"
             safe_zip_tree(source, first, "addon.id"); safe_zip_tree(source, second, "addon.id")
             self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_kodi_repository_checksum_matches_published_bytes(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as name:
+            output = Path(name) / "kodi"
+            build_kodi(output, "https://github.com/example/project/releases/latest/download")
+            expected = (output / "addons.xml.sha256").read_text(encoding="ascii").strip()
+            self.assertEqual(hashlib.sha256((output / "addons.xml").read_bytes()).hexdigest(), expected)
 
 
 if __name__ == "__main__":

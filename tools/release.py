@@ -129,8 +129,10 @@ def build_kodi(output: Path, base_url: str) -> None:
                 skin_root = ElementTree.fromstring(archive.read("skin.kodisetup/addon.xml"))
                 metadata.append(ElementTree.tostring(skin_root, encoding="unicode"))
         addons_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addons>\n" + "\n".join(metadata) + "\n</addons>\n"
-        (output / "addons.xml").write_text(addons_xml, encoding="utf-8")
-        (output / "addons.xml.sha256").write_text(hashlib.sha256(addons_xml.encode()).hexdigest() + "\n", encoding="ascii")
+        addons_bytes = addons_xml.encode("utf-8")
+        # Write exact bytes so the published checksum is platform-independent on Windows and Linux.
+        (output / "addons.xml").write_bytes(addons_bytes)
+        (output / "addons.xml.sha256").write_bytes((hashlib.sha256(addons_bytes).hexdigest() + "\n").encode("ascii"))
 
 
 def parse_args() -> argparse.Namespace:
@@ -146,7 +148,7 @@ def parse_args() -> argparse.Namespace:
     sign.add_argument("--private-key", type=Path, required=True)
     kodi = sub.add_parser("kodi")
     kodi.add_argument("--output", type=Path, required=True)
-    kodi.add_argument("--base-url", default="https://example.invalid/kodi")
+    kodi.add_argument("--base-url", required=True)
     return parser.parse_args()
 
 

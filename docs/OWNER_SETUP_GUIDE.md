@@ -359,13 +359,13 @@ python tools\release.py kodi `
 Verify the generated bootstrap ZIP and calculate its hash:
 
 ```powershell
-$BootstrapZip = 'docs\kodi\repository.kodisetup\repository.kodisetup-1.0.0.zip'
+$BootstrapZip = 'docs\kodi\repository.kodisetup\repository.kodisetup-1.0.2.zip'
 Get-FileHash $BootstrapZip -Algorithm SHA256
 ```
 
 Update `config/manifest.json`:
 
-- Set `bootstrap.url` to `https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.0.zip`.
+- Set `bootstrap.url` to `https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip`.
 - Set `bootstrap.sha256` to the generated ZIP hash.
 
 Changing the embedded manifest URL, public key, repository base URL, or bootstrap add-on source changes this hash. Rebuild and recalculate it after any such change.
@@ -383,7 +383,7 @@ After GitHub Pages deploys, confirm these return HTTP 200:
 ```text
 https://rjclark99.github.io/starlanemeridian/kodi/addons.xml
 https://rjclark99.github.io/starlanemeridian/kodi/addons.xml.sha256
-https://rjclark99.github.io/starlanemeridian/kodi/repository.kodisetup/repository.kodisetup-1.0.0.zip
+https://rjclark99.github.io/starlanemeridian/kodi/repository.kodisetup/repository.kodisetup-1.0.2.zip
 ```
 
 ## 10. Validate and stage the manifest
@@ -445,7 +445,7 @@ The workflow builds and publishes:
 
 - `setup.apk`
 - `KodiSetup.Admin-win-x64.zip`
-- `repository.kodisetup-1.0.0.zip`
+- `repository.kodisetup-1.0.2.zip`
 - branded skin and Kodi repository artifacts
 - signed `manifest.json`
 - `SHA256SUMS`
@@ -458,7 +458,7 @@ Confirm the permanent URLs:
 ```powershell
 Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk' -Method Head
 Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/manifest.json' -Method Head
-Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.0.zip' -Method Head
+Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip' -Method Head
 ```
 
 GitHub's `/releases/latest/download/<asset>` URL follows the latest non-prerelease release. If you mark the release as a prerelease, it will not become the `/latest` target.
@@ -560,7 +560,7 @@ In the Windows portal:
 3. Select **Connect** and accept the fingerprint on the TV.
 4. Select the downloaded `setup.apk` and choose **Install setup APK**.
 5. Install Kodi through the TV workflow.
-6. Select the verified `repository.kodisetup-1.0.0.zip` and choose **Deploy bootstrap**.
+6. Select the verified `repository.kodisetup-1.0.2.zip` and choose **Deploy bootstrap**.
 
 The portal probes Kodi's external add-on directory. When it is writable, the repository/service is pushed directly. Otherwise, the ZIP is copied to Downloads and you must complete the guided Kodi installation.
 

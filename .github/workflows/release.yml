@@ -3,9 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       tag: { description: "Release tag", required: true }
-      repositoryBaseUrl: { description: "Public Kodi repository base URL", required: true }
-      kodiSourceUrl: { description: "Reviewed Kodi source ZIP URL", required: true }
-      kodiSourceSha256: { description: "Expected source ZIP SHA-256", required: true }
+      kodiSourceUrl: { description: "Optional reviewed Kodi skin source ZIP URL", required: false }
+      kodiSourceSha256: { description: "Required only when building the skin", required: false }
 
 permissions:
   contents: write
@@ -36,6 +35,7 @@ jobs:
       - name: Validate and sign stable manifest
         run: python tools/release.py sign config/manifest.json --private-key .secrets/manifest.key
       - name: Build branded skin from pinned source
+        if: ${{ inputs.kodiSourceUrl != '' }}
         env:
           SOURCE_URL: ${{ inputs.kodiSourceUrl }}
           SOURCE_SHA: ${{ inputs.kodiSourceSha256 }}
@@ -43,7 +43,7 @@ jobs:
           curl --fail --location "$SOURCE_URL" --output artifacts/kodi-source.zip
           echo "$SOURCE_SHA  artifacts/kodi-source.zip" | sha256sum --check
           python tools/skin_builder.py --upstream-archive artifacts/kodi-source.zip --manifest config/manifest.json --output artifacts/skin
-      - run: python tools/release.py kodi --output artifacts/kodi --base-url "${{ inputs.repositoryBaseUrl }}"
+      - run: python tools/release.py kodi --output artifacts/kodi --base-url "https://github.com/rjclark99/starlanemeridian/releases/latest/download"
       - name: Build signed Android APK
         working-directory: android-app
         env:

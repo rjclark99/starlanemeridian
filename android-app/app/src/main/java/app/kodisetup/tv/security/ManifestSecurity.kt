@@ -89,13 +89,25 @@ object ManifestSecurity {
     }
 
     fun archiveSignerSha256(context: Context, apk: File): String {
-        val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES
+        // Fire OS 7 (Android 9/API 28) can return a null SigningInfo for a valid
+        // archive even though its legacy signatures field is populated. Request
+        // both representations and prefer SigningInfo on platforms that provide it.
+        @Suppress("DEPRECATION")
+        val flags = if (Build.VERSION.SDK_INT >= 28) {
+            PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_SIGNATURES
+        } else {
+            PackageManager.GET_SIGNATURES
+        }
         val info = requireNotNull(context.packageManager.getPackageArchiveInfo(apk.absolutePath, flags)) { "Invalid APK" }
         val signatures = if (Build.VERSION.SDK_INT >= 28) {
-            requireNotNull(info.signingInfo?.apkContentsSigners) { "APK has no signing certificates" }
+            @Suppress("DEPRECATION")
+            info.signingInfo?.apkContentsSigners?.takeIf { it.isNotEmpty() }
+                ?: info.signatures?.takeIf { it.isNotEmpty() }
+                ?: throw IllegalArgumentException("APK has no signing certificates")
         } else {
             @Suppress("DEPRECATION")
-            requireNotNull(info.signatures) { "APK has no signing certificates" }
+            info.signatures?.takeIf { it.isNotEmpty() }
+                ?: throw IllegalArgumentException("APK has no signing certificates")
         }
         require(signatures.size == 1) { "APK must have exactly one current signer" }
         val signature = signatures[0]
