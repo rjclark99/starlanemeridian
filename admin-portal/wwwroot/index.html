@@ -13,18 +13,22 @@
   <div class="actions"><a id="export" href="/api/vault/export">Export encrypted backup</a><button id="lock">Lock vault</button></div>
 </header>
 <main>
-  <section id="unlock" class="card">
-    <h2>Encrypted credential vault</h2>
-    <p>The vault is bound to this Windows profile and protected by your master password.</p>
-    <input id="master" type="password" autocomplete="current-password" placeholder="Master password (14+ characters)">
-    <div class="actions"><button id="unlockButton">Unlock</button><button id="createButton" class="secondary">Create vault</button></div>
-    <p id="unlockError" class="error"></p>
-  </section>
-  <div id="dashboard" hidden>
-    <nav><button data-tab="households" class="active">Households</button><button data-tab="devices">Devices &amp; ADB</button><button data-tab="audit">Audit</button></nav>
+  <div id="dashboard">
+    <nav><button data-tab="households" class="active">Credential vault</button><button data-tab="devices">Devices &amp; ADB</button><button data-tab="audit">Audit</button></nav>
     <section id="households" class="tab">
-      <div class="split">
-        <div><h2>Households</h2><div id="householdList"></div></div>
+      <section id="unlock" class="card">
+        <h2>Encrypted credential vault</h2>
+        <p>The vault is bound to this Windows profile and protected by your master password. Cloud devices remain available on the Devices &amp; ADB tab while this vault is locked.</p>
+        <input id="master" type="password" autocomplete="current-password" placeholder="Master password (14+ characters)">
+        <div class="actions"><button id="unlockButton">Unlock</button><button id="createButton" class="secondary">Create vault</button></div>
+        <p id="unlockError" class="error"></p>
+      </section>
+      <div id="credentialContent" class="split" hidden>
+        <div>
+          <h2>Encrypted household credentials</h2>
+          <p class="section-intro">These records stay encrypted on this Windows PC. Pairing a TV creates a separate cloud household and does not create a credential record here.</p>
+          <div id="householdList"></div>
+        </div>
         <form id="householdForm" class="card">
           <h2>Credential record</h2>
           <input id="householdId" type="hidden">
@@ -46,12 +50,14 @@
       </div>
     </section>
     <section id="devices" class="tab" hidden>
-      <h2>Paired devices</h2>
+      <h2>Cloud households &amp; paired devices</h2>
+      <p class="section-intro">These non-secret records come from the hosted control service. They contain setup status and device metadata, never locally vaulted credentials.</p>
       <div class="card">
-        <label>Household alias<input id="pairingAlias" maxlength="80"></label>
+        <label>New cloud household alias<input id="pairingAlias" maxlength="80"></label>
         <div class="actions"><button id="pairingCreate">Create 10-minute pairing code</button><button id="deviceRefresh" class="secondary">Refresh devices</button></div>
-        <strong id="pairingCode"></strong><div id="deviceList"></div>
+        <strong id="pairingCode"></strong>
       </div>
+      <div id="deviceList" aria-live="polite"></div>
       <h2>Fire TV / Android TV via ADB</h2>
       <div class="card">
         <p>Developer Options and ADB approval must be completed on the TV first.</p>
