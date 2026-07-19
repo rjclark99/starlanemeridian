@@ -18,6 +18,22 @@ app.Use(async (context, next) =>
 });
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.Use(async (context, next) =>
+{
+    var requestPath = context.Request.Path.Value;
+    if (context.Request.Path.StartsWithSegments("/api") &&
+        requestPath is not "/api/vault/status" and not "/api/vault/create" and not "/api/vault/unlock")
+    {
+        var vault = context.RequestServices.GetRequiredService<CredentialVault>();
+        if (!vault.IsUnlocked)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new { error = "Unlock the administration vault to continue" });
+            return;
+        }
+    }
+    await next();
+});
 
 app.MapGet("/api/vault/status", (CredentialVault vault) => new { vault.Exists, vault.IsUnlocked });
 app.MapPost("/api/vault/create", CreateVault);

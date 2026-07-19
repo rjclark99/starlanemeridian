@@ -23,7 +23,7 @@ function escapeHtml(value) {
 async function status() {
   const state = await api("/api/vault/status");
   $("unlock").hidden = state.isUnlocked;
-  $("dashboard").hidden = false;
+  $("dashboard").hidden = !state.isUnlocked;
   $("credentialContent").hidden = !state.isUnlocked;
   $("lock").hidden = !state.isUnlocked;
   $("export").hidden = !state.isUnlocked;
@@ -32,7 +32,7 @@ async function status() {
   $("master").autocomplete = state.exists ? "current-password" : "new-password";
   $("master").placeholder = state.exists ? "Enter existing master password" : "Choose master password (14+ characters)";
   if (state.isUnlocked) await Promise.all([households(), loadDevices()]);
-  else await loadDevices();
+  else $("deviceList").innerHTML = "";
 }
 
 async function unlock(create) {

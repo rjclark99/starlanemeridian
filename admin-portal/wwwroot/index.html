@@ -10,19 +10,19 @@
 <body>
 <header>
   <div><small>LOCAL ADMINISTRATION</small><h1>Starlane Meridian</h1></div>
-  <div class="actions"><a id="export" href="/api/vault/export">Export encrypted backup</a><button id="lock">Lock vault</button></div>
+  <div class="actions"><a id="export" href="/api/vault/export" hidden>Export encrypted backup</a><button id="lock" hidden>Lock vault</button></div>
 </header>
 <main>
-  <div id="dashboard">
+  <section id="unlock" class="card">
+    <h2>Password-protected administration</h2>
+    <p>Unlock the local encrypted vault to access credential records, cloud households, paired devices, remote setup actions, ADB tools, and audit history.</p>
+    <input id="master" type="password" autocomplete="current-password" placeholder="Master password (14+ characters)">
+    <div class="actions"><button id="unlockButton">Unlock</button><button id="createButton" class="secondary">Create vault</button></div>
+    <p id="unlockError" class="error"></p>
+  </section>
+  <div id="dashboard" hidden>
     <nav><button data-tab="households" class="active">Credential vault</button><button data-tab="devices">Devices &amp; ADB</button><button data-tab="audit">Audit</button></nav>
     <section id="households" class="tab">
-      <section id="unlock" class="card">
-        <h2>Encrypted credential vault</h2>
-        <p>The vault is bound to this Windows profile and protected by your master password. Cloud devices remain available on the Devices &amp; ADB tab while this vault is locked.</p>
-        <input id="master" type="password" autocomplete="current-password" placeholder="Master password (14+ characters)">
-        <div class="actions"><button id="unlockButton">Unlock</button><button id="createButton" class="secondary">Create vault</button></div>
-        <p id="unlockError" class="error"></p>
-      </section>
       <div id="credentialContent" class="split" hidden>
         <div>
           <h2>Encrypted household credentials</h2>
