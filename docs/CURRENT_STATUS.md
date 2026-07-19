@@ -10,7 +10,8 @@ Last verified: 19 July 2026.
 - Downloader code: `3467018`.
 - Test device: Amazon AFTKAUK001, Fire OS / Android 9.
 - Kodi 21.3 and Proton VPN are installed.
-- Kodi Setup Bootstrap 1.0.1 applied configuration `2026.07.1`; release 1.0.2 and config `2026.07.2` are prepared for publication.
+- Signed setup app 0.2.0 (version code 2) is installed over the original app with its pairing and account state preserved.
+- Kodi Setup Bootstrap 1.0.2 is installed and has applied signed configuration `2026.07.2`.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 
 ## Verified behavior
@@ -56,6 +57,8 @@ compatibility with already-installed setup app 0.1.0. The next phase will:
 - Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.
 - Production Worker deployment and `/health` passed.
 - Production Fire TV device record and safe command round-trip passed.
+- Physical Fire TV 0.2.0 upgrade regression passed: the setup screen remained on `COMPLETE`, no Android crash was logged, and the cloud record reported app version 2, configuration `2026.07.2`, no error, and the preserved Real-Debrid expiry.
+- Physical Kodi bootstrap 1.0.2 regression passed: Kodi loaded the add-on, advanced its idempotent applied-version marker to `2026.07.2`, and logged no bootstrap or repository error.
 - Production async authentication errors return controlled JSON 4xx responses.
 - Device deletion removes status, nonces, and commands; household deletion cascades all household cloud records. Audit metadata expires under the configured retention policy.
 
