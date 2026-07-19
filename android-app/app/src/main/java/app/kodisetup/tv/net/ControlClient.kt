@@ -15,7 +15,30 @@ class ControlClient(private val baseUrl: String, private val identity: DeviceIde
 
     @Serializable data class PairRequest(val code: String, val publicKey: String, val model: String, val osVersion: String)
     @Serializable data class PairResponse(val deviceId: String, val token: String)
-    @Serializable data class Status(val setupStep: String, val appVersion: Int, val configVersion: String?, val errorCode: String?, val debridExpiry: String?)
+    @Serializable data class Status(
+        val setupStep: String,
+        val appVersion: Int,
+        val configVersion: String?,
+        val errorCode: String?,
+        val debridExpiry: String?,
+        val setupPhase: String,
+        val progressPercent: Int,
+        val statusMessage: String,
+        val busy: Boolean,
+        val manufacturer: String,
+        val product: String,
+        val apiLevel: Int,
+        val architecture: String,
+        val securityPatch: String,
+        val freeStorageMb: Int,
+        val totalStorageMb: Int,
+        val totalMemoryMb: Int,
+        val kodiVersion: String?,
+        val protonVersion: String?,
+        val installPermission: Boolean,
+        val bootstrapReady: Boolean,
+        val automaticSetup: Boolean,
+    )
     @Serializable data class Command(val id: String, val kind: String, val payload: String, val created_at: Long)
     @Serializable data class Commands(val commands: List<Command>)
 

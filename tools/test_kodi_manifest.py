@@ -20,10 +20,10 @@ class KodiManifestTests(unittest.TestCase):
             "kodi": {"channel": "stable", "packageName": "org.xbmc.kodi"},
             "repositories": [],
             "addons": [],
-            "skin": {"addonId": "skin.estuary", "homeMenu": [{"action": {"type": "noop"}}]},
+            "skin": {"addonId": "skin.starlanemeridian", "homeMenu": [{"action": {"type": "noop"}}]},
         }
 
-    def test_builtin_skin_is_valid_before_custom_skin_release(self):
+    def test_custom_skin_is_allowlisted_by_manifest_contract(self):
         self.module.validate(self.document)
 
     def test_arbitrary_menu_actions_are_rejected(self):

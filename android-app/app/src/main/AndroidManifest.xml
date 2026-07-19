@@ -13,8 +13,8 @@
     </queries>
     <application
         android:allowBackup="false"
-        android:banner="@drawable/tv_banner"
-        android:icon="@drawable/app_icon"
+        android:banner="@drawable/starlane_tv_banner"
+        android:icon="@drawable/starlane_icon"
         android:label="Starlane Meridian"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"

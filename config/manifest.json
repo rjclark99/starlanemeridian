@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.2",
+  "configVersion": "2026.07.3",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -20,8 +20,8 @@
     }
   },
   "bootstrap": {
-    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip",
-    "sha256": "c643bb1a8d6931853b0a2377d294c487c1a07c5f26fbe37fc68b7c79ab847393"
+    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.0.zip",
+    "sha256": "5472de70549f3d26e00d826889a61e654c28da76db8cc2703b2568e80a46f515"
   },
   "applications": [
     {
@@ -44,7 +44,7 @@
   "repositories": [],
   "addons": [],
   "skin": {
-    "addonId": "skin.estuary",
+    "addonId": "skin.starlanemeridian",
     "homeMenu": [
       {
         "id": "movies",
@@ -74,6 +74,15 @@
         "widgets": []
       },
       {
+        "id": "favourites",
+        "label": "Favourites",
+        "action": {
+          "type": "favourite",
+          "target": ""
+        },
+        "widgets": []
+      },
+      {
         "id": "settings",
         "label": "Settings",
         "action": {
@@ -91,6 +100,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "dTX7GYHi3BmO_856PVmD2u_OIfUwjMbiDPaphTrzMMzpTn_oe1zvOQLRWa7-eBYr89kSmrDwIBLBTaAmfvHhCw"
+    "value": "F61DyiyjzEmDV-rU9VLyFIq-L6QQFd5XDPIwIMMdabZCyUchOjbKac6v05UBl_T0L1NK0R1_bBlKu7hgrRrVDg"
   }
 }

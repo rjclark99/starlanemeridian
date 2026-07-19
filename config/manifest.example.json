@@ -40,11 +40,12 @@
   "repositories": [],
   "addons": [],
   "skin": {
-    "addonId": "skin.kodisetup",
+    "addonId": "skin.starlanemeridian",
     "homeMenu": [
       { "id": "movies", "label": "Movies", "action": { "type": "kodi-window", "target": "videos" }, "widgets": [] },
       { "id": "tv", "label": "TV Shows", "action": { "type": "kodi-window", "target": "tvshows" }, "widgets": [] },
       { "id": "addons", "label": "Add-ons", "action": { "type": "kodi-window", "target": "addons" }, "widgets": [] },
+      { "id": "favourites", "label": "Favourites", "action": { "type": "favourite", "target": "" }, "widgets": [] },
       { "id": "settings", "label": "Settings", "action": { "type": "kodi-window", "target": "settings" }, "widgets": [] }
     ]
   },

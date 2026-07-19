@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun KodiSetupTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = darkColorScheme(primary = Color(0xFF52B8FF), background = Color(0xFF07111F), surface = Color(0xFF10233A)), content = content)
+    MaterialTheme(colorScheme = darkColorScheme(primary = Color(0xFF61C8FF), secondary = Color(0xFF67E8C4), background = Color(0xFF050B14), surface = Color(0xFF102A42)), content = content)
 }
 
 @Composable
@@ -64,10 +64,10 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
     LaunchedEffect(state.step, state.busy) {
         if (!state.busy && state.step != SetupStep.COMPLETE) runCatching { primaryFocus.requestFocus() }
     }
-    Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF07111F), Color(0xFF14335A)))).padding(56.dp)) {
+    Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF050B14), Color(0xFF102A42)))).padding(56.dp)) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("STARLANE MERIDIAN", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF52B8FF))
+                Text("STARLANE MERIDIAN", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF67E8C4))
                 Spacer(Modifier.height(12.dp))
                 Text(titleFor(state.step), fontSize = 40.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 Spacer(Modifier.height(12.dp))
@@ -84,7 +84,7 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
                     SetupStep.ACCOUNT_LINK -> { Action("Link Real-Debrid", Modifier.focusRequester(primaryFocus)) { model.beginRealDebrid() }; state.debridCode?.let { Text("Code: $it  ${state.debridUrl.orEmpty()}", color = Color.White, fontSize = 18.sp) }; Action("Finish") { model.markComplete() } }
                     SetupStep.COMPLETE -> Text("Setup can now be monitored from the Windows portal.", color = Color.White, fontSize = 18.sp)
                 }
-                if (state.busy) Text("Working...", color = Color(0xFF52B8FF), fontSize = 18.sp)
+                if (state.busy) Text("Working...", color = Color(0xFF61C8FF), fontSize = 18.sp)
             }
             StepBar(state.step)
         }
@@ -113,7 +113,7 @@ private fun Action(label: String, modifier: Modifier = Modifier, action: () -> U
 @Composable
 private fun StepBar(current: SetupStep) {
     val steps = listOf(SetupStep.WELCOME, SetupStep.CONFIGURATION, SetupStep.KODI, SetupStep.PROTON, SetupStep.BOOTSTRAP, SetupStep.COMPLETE)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { steps.forEach { Box(Modifier.height(5.dp).weight(1f).background(if (steps.indexOf(it) <= steps.indexOf(current)) Color(0xFF52B8FF) else Color(0xFF34506D))) } }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { steps.forEach { Box(Modifier.height(5.dp).weight(1f).background(if (steps.indexOf(it) <= steps.indexOf(current)) Color(0xFF61C8FF) else Color(0xFF34506D))) } }
 }
 
 private fun titleFor(step: SetupStep) = when (step) {

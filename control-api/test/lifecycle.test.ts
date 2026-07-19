@@ -83,13 +83,30 @@ describe.sequential("control-plane lifecycle", () => {
     expect(reused.status).toBe(401);
     expect(await reused.json()).toEqual({ error: "invalid_or_expired_pairing_code" });
 
-    const statusBody = JSON.stringify({ setupStep: "COMPLETE", appVersion: 2, configVersion: "2026.07.2", errorCode: null, debridExpiry: "2026-11-26T21:52:35.000Z" });
+    const statusBody = JSON.stringify({
+      setupStep: "COMPLETE", setupPhase: "COMPLETE", progressPercent: 100, statusMessage: "Core setup complete", busy: false,
+      appVersion: 3, configVersion: "2026.07.2", errorCode: null, debridExpiry: "2026-11-26T21:52:35.000Z",
+      manufacturer: "Amazon", product: "sheldonp", apiLevel: 28, architecture: "armeabi-v7a", securityPatch: "2025-10-01",
+      freeStorageMb: 2148, totalStorageMb: 5890, totalMemoryMb: 1944, kodiVersion: "21.3", protonVersion: "5.14.0",
+      installPermission: true, bootstrapReady: true, automaticSetup: false,
+    });
     const status = await SELF.fetch(await signedRequest(keys.privateKey, "POST", `/v1/devices/${paired.deviceId}/status`, statusBody, paired.token));
     expect(status.status).toBe(200);
 
     const listed = await (await SELF.fetch("https://control.test/v1/admin/devices", { headers: adminHeaders })).json<{ devices: Array<Record<string, unknown>> }>();
     expect(listed.devices).toHaveLength(1);
-    expect(listed.devices[0]).toMatchObject({ householdAlias: "Isolated Household", model: "Integration TV", appVersion: 2, configVersion: "2026.07.2", setupStep: "COMPLETE", errorCode: null });
+    expect(listed.devices[0]).toMatchObject({
+      householdAlias: "Isolated Household", model: "Integration TV", manufacturer: "Amazon", product: "sheldonp",
+      appVersion: 3, configVersion: "2026.07.2", setupStep: "COMPLETE", setupPhase: "COMPLETE", progressPercent: 100,
+      statusMessage: "Core setup complete", busy: 0, apiLevel: 28, architecture: "armeabi-v7a", kodiVersion: "21.3",
+      protonVersion: "5.14.0", installPermission: 1, bootstrapReady: 1, automaticSetup: 0, errorCode: null,
+    });
+    expect(listed.devices[0]!.events).toEqual([expect.objectContaining({ setupPhase: "COMPLETE", progressPercent: 100, statusMessage: "Core setup complete" })]);
+
+    const repeatedStatus = await SELF.fetch(await signedRequest(keys.privateKey, "POST", `/v1/devices/${paired.deviceId}/status`, statusBody, paired.token));
+    expect(repeatedStatus.status).toBe(200);
+    const eventCount = await bindings.DB.prepare("SELECT COUNT(*) AS count FROM device_status_events WHERE device_id=?").bind(paired.deviceId).first<{ count: number }>();
+    expect(eventCount?.count).toBe(1);
 
     const command = await SELF.fetch(`https://control.test/v1/admin/devices/${paired.deviceId}/commands`, {
       method: "POST", headers: adminHeaders, body: JSON.stringify({ kind: "SYNC_CONFIG", payload: { configVersion: "2026.07.2" } }),
@@ -143,10 +160,12 @@ describe.sequential("control-plane lifecycle", () => {
       bindings.DB.prepare("INSERT INTO devices(id,household_id,public_key_spki,token_hash,model,os_version,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)").bind(deviceId, householdId, "test-key", "test-token", "Retention TV", "9", now - 1000, now - 1000),
       bindings.DB.prepare("INSERT INTO request_nonces(device_id,nonce,expires_at) VALUES(?,?,?)").bind(deviceId, crypto.randomUUID(), now - 1),
       bindings.DB.prepare("INSERT INTO audit(id,actor,action,target_id,detail,created_at) VALUES(?,?,?,?,?,?)").bind(crypto.randomUUID(), "test", "old", householdId, "expired", now - 91 * 86400),
+      bindings.DB.prepare("INSERT INTO device_status_events(id,device_id,setup_step,setup_phase,progress_percent,status_message,error_code,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), deviceId, "KODI", "KODI_READY", 45, "old", null, now - 91 * 86400),
     ]);
     await worker.scheduled({} as ScheduledController, bindings);
     expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM pairing_codes WHERE code_hash='expired-code'").first<{ count: number }>())?.count).toBe(0);
     expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM audit WHERE action='old'").first<{ count: number }>())?.count).toBe(0);
     expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM request_nonces WHERE device_id=?").bind(deviceId).first<{ count: number }>())?.count).toBe(0);
+    expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM device_status_events WHERE device_id=?").bind(deviceId).first<{ count: number }>())?.count).toBe(0);
   });
 });

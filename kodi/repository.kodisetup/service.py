@@ -12,7 +12,7 @@ import xbmcvfs
 from resources.lib.manifest import fetch_and_verify, sha256
 
 ADDON = xbmcaddon.Addon()
-LOG_PREFIX = "[Kodi Setup] "
+LOG_PREFIX = "[Starlane Meridian] "
 
 
 def log(message, level=xbmc.LOGINFO):
@@ -20,7 +20,38 @@ def log(message, level=xbmc.LOGINFO):
 
 
 def notify(message):
-    xbmc.executebuiltin("Notification(Kodi Setup,%s,5000)" % message.replace(",", " "))
+    xbmc.executebuiltin("Notification(Starlane Meridian,%s,5000)" % message.replace(",", " "))
+
+
+def skin_setting():
+    request = {"jsonrpc": "2.0", "id": 1, "method": "Settings.GetSettingValue", "params": {"setting": "lookandfeel.skin"}}
+    result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
+    return result.get("result", {}).get("value")
+
+
+def set_skin(value):
+    request = {"jsonrpc": "2.0", "id": 1, "method": "Settings.SetSettingValue", "params": {"setting": "lookandfeel.skin", "value": value}}
+    result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
+    if "error" in result:
+        raise ValueError(result["error"].get("message", "skin activation failed"))
+
+
+def recover_pending_skin():
+    target = ADDON.getSettingString("pending_skin")
+    if not target:
+        return
+    current = skin_setting()
+    if current == target:
+        ADDON.setSettingString("pending_skin", "")
+        ADDON.setSettingString("previous_skin", "")
+        log("Skin activation confirmed: " + target)
+        return
+    previous = ADDON.getSettingString("previous_skin") or "skin.estuary"
+    log("Skin activation did not persist; restoring " + previous, xbmc.LOGWARNING)
+    set_skin(previous)
+    ADDON.setSettingString("pending_skin", "")
+    ADDON.setSettingString("previous_skin", "")
+    notify("Skin load failed; the previous Kodi skin was restored")
 
 
 def download(url, destination, expected_hash):
@@ -79,6 +110,7 @@ def apply_addon(item):
 
 
 def run():
+    recover_pending_skin()
     manifest_url = ADDON.getSettingString("manifest_url")
     public_key = ADDON.getSettingString("public_key")
     if not public_key:
@@ -109,10 +141,12 @@ def run():
     try:
         skin_id = document["skin"]["addonId"]
         xbmc.executebuiltin("InstallAddon(%s)" % skin_id, True)
-        request = {"jsonrpc": "2.0", "id": 1, "method": "Settings.SetSettingValue", "params": {"setting": "lookandfeel.skin", "value": skin_id}}
-        result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
-        if "error" in result:
-            failures.append("skin: " + result["error"].get("message", "activation failed"))
+        if not xbmc.getCondVisibility("System.HasAddon(%s)" % skin_id):
+            raise ValueError("skin package is not installed")
+        previous = skin_setting() or "skin.estuary"
+        ADDON.setSettingString("previous_skin", previous)
+        ADDON.setSettingString("pending_skin", skin_id)
+        set_skin(skin_id)
     except Exception as error:
         failures.append("skin: " + str(error))
     if failures:

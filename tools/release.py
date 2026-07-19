@@ -120,13 +120,13 @@ def build_kodi(output: Path, base_url: str) -> None:
         shutil.copy2(staged / "icon.png", addon_dir / "icon.png") if (staged / "icon.png").exists() else None
 
         metadata = [ElementTree.tostring(root, encoding="unicode")]
-        skin_zip = next((ROOT / "artifacts" / "skin").glob("skin.kodisetup-*.zip"), None) if (ROOT / "artifacts" / "skin").exists() else None
+        skin_zip = next((ROOT / "artifacts" / "skin").glob("skin.starlanemeridian-*.zip"), None) if (ROOT / "artifacts" / "skin").exists() else None
         if skin_zip:
-            skin_dir = output / "skin.kodisetup"
+            skin_dir = output / "skin.starlanemeridian"
             skin_dir.mkdir(exist_ok=True)
             shutil.copy2(skin_zip, skin_dir / skin_zip.name)
             with zipfile.ZipFile(skin_zip) as archive:
-                skin_root = ElementTree.fromstring(archive.read("skin.kodisetup/addon.xml"))
+                skin_root = ElementTree.fromstring(archive.read("skin.starlanemeridian/addon.xml"))
                 metadata.append(ElementTree.tostring(skin_root, encoding="unicode"))
         addons_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addons>\n" + "\n".join(metadata) + "\n</addons>\n"
         addons_bytes = addons_xml.encode("utf-8")

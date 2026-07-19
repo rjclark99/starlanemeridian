@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       tag: { description: "Release tag", required: true }
-      kodiSourceUrl: { description: "Optional reviewed Kodi skin source ZIP URL", required: false }
-      kodiSourceSha256: { description: "Required only when building the skin", required: false }
+      kodiSourceUrl: { description: "Reviewed Kodi skin source ZIP URL", required: true, default: "https://github.com/xbmc/xbmc/archive/refs/tags/21.3-Omega.zip" }
+      kodiSourceSha256: { description: "Pinned SHA-256 for the reviewed Kodi source", required: true, default: "5710900629c2aedb63df0665c7d78c1b50325a625297e2f9bafc262d65d8c075" }
 
 permissions:
   contents: write
@@ -24,6 +24,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.13" }
       - run: pip install -r tools/requirements.txt
+      - run: python tools/build_brand_assets.py
       - name: Prepare signing material
         env:
           MANIFEST_KEY: ${{ secrets.MANIFEST_PRIVATE_KEY_BASE64 }}
@@ -35,7 +36,6 @@ jobs:
       - name: Validate and sign stable manifest
         run: python tools/release.py sign config/manifest.json --private-key .secrets/manifest.key
       - name: Build branded skin from pinned source
-        if: ${{ inputs.kodiSourceUrl != '' }}
         env:
           SOURCE_URL: ${{ inputs.kodiSourceUrl }}
           SOURCE_SHA: ${{ inputs.kodiSourceSha256 }}

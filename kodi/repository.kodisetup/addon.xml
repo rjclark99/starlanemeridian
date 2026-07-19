@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="repository.kodisetup" name="Kodi Setup Bootstrap" version="1.0.2" provider-name="Starlane Meridian">
+<addon id="repository.kodisetup" name="Starlane Meridian Bootstrap" version="1.1.0" provider-name="Starlane Meridian">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
   </requires>
-  <extension point="xbmc.addon.repository" name="Kodi Setup Repository">
+  <extension point="xbmc.addon.repository" name="Starlane Meridian Repository">
     <dir>
       <info>${REPOSITORY_BASE_URL}/addons.xml</info>
       <checksum>${REPOSITORY_BASE_URL}/addons.xml.sha256</checksum>

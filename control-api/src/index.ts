@@ -1,4 +1,4 @@
-import { commandKinds, DeviceRow, Env, setupSteps } from "./types";
+import { commandKinds, DeviceRow, Env, setupPhases, setupSteps } from "./types";
 import { HttpError, randomToken, sha256, verifyDeviceSignature } from "./security";
 
 const jsonHeaders = { "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
@@ -46,6 +46,7 @@ async function cleanup(env: Env): Promise<void> {
     env.DB.prepare("DELETE FROM request_nonces WHERE expires_at < ?").bind(now),
     env.DB.prepare("DELETE FROM pairing_codes WHERE expires_at < ? OR used_at IS NOT NULL").bind(now),
     env.DB.prepare("DELETE FROM audit WHERE created_at < ?").bind(now - Number(env.STATUS_RETENTION_DAYS) * 86400),
+    env.DB.prepare("DELETE FROM device_status_events WHERE created_at < ?").bind(now - Number(env.STATUS_RETENTION_DAYS) * 86400),
   ]);
 }
 
@@ -80,10 +81,35 @@ async function authenticateDevice(request: Request, env: Env, id: string, body: 
 }
 
 async function deviceStatus(request: Request, env: Env, id: string): Promise<Response> {
-  const bodyText = await limitedBody(request); await authenticateDevice(request, env, id, bodyText); const body = parseObject(bodyText);
+  const bodyText = await limitedBody(request); const row = await authenticateDevice(request, env, id, bodyText); const body = parseObject(bodyText);
   const setupStep = text(body.setupStep, 1, 32); if (!setupSteps.includes(setupStep as typeof setupSteps[number])) throw new HttpError(400, "invalid_setup_step");
   const appVersion = integer(body.appVersion, 1, 1_000_000_000); const configVersion = optionalText(body.configVersion, 32); const errorCode = optionalText(body.errorCode, 64); const expiry = optionalIsoDate(body.debridExpiry);
-  await env.DB.prepare("UPDATE devices SET setup_step=?,app_version=?,config_version=?,error_code=?,debrid_expiry=?,last_seen_at=? WHERE id=?").bind(setupStep, appVersion, configVersion, errorCode, expiry, Math.floor(Date.now() / 1000), id).run();
+  const phase = optionalText(body.setupPhase, 48); if (phase && !setupPhases.includes(phase as typeof setupPhases[number])) throw new HttpError(400, "invalid_setup_phase");
+  const progress = optionalInteger(body.progressPercent, 0, 100); const statusMessage = optionalText(body.statusMessage, 160);
+  const manufacturer = optionalText(body.manufacturer, 64); const product = optionalText(body.product, 96);
+  const apiLevel = optionalInteger(body.apiLevel, 1, 100); const architecture = optionalText(body.architecture, 32); const securityPatch = optionalText(body.securityPatch, 16);
+  const freeStorageMb = optionalInteger(body.freeStorageMb, 0, 10_000_000); const totalStorageMb = optionalInteger(body.totalStorageMb, 0, 10_000_000); const totalMemoryMb = optionalInteger(body.totalMemoryMb, 0, 10_000_000);
+  const kodiVersion = optionalText(body.kodiVersion, 64); const protonVersion = optionalText(body.protonVersion, 64);
+  const installPermission = optionalBooleanInteger(body.installPermission); const bootstrapReady = optionalBooleanInteger(body.bootstrapReady);
+  const automaticSetup = optionalBooleanInteger(body.automaticSetup); const busy = optionalBooleanInteger(body.busy);
+  const eventPhase = phase ?? setupStep;
+  const eventProgress = progress ?? ({ WELCOME: 0, CONFIGURATION: 15, KODI: 45, PROTON: 65, BOOTSTRAP: 80, ACCOUNT_LINK: 94, COMPLETE: 100 } as Record<string, number>)[setupStep] ?? 0;
+  const now = Math.floor(Date.now() / 1000);
+  await env.DB.prepare(`UPDATE devices SET
+    setup_step=?,app_version=?,config_version=?,error_code=?,debrid_expiry=?,last_seen_at=?,
+    manufacturer=COALESCE(?,manufacturer),product=COALESCE(?,product),api_level=COALESCE(?,api_level),architecture=COALESCE(?,architecture),security_patch=COALESCE(?,security_patch),
+    free_storage_mb=COALESCE(?,free_storage_mb),total_storage_mb=COALESCE(?,total_storage_mb),total_memory_mb=COALESCE(?,total_memory_mb),
+    kodi_version=COALESCE(?,kodi_version),proton_version=COALESCE(?,proton_version),install_permission=COALESCE(?,install_permission),bootstrap_ready=COALESCE(?,bootstrap_ready),
+    automatic_setup=COALESCE(?,automatic_setup),setup_phase=COALESCE(?,setup_phase),progress_percent=COALESCE(?,progress_percent),status_message=COALESCE(?,status_message),busy=COALESCE(?,busy)
+    WHERE id=?`).bind(
+      setupStep, appVersion, configVersion, errorCode, expiry, now,
+      manufacturer, product, apiLevel, architecture, securityPatch, freeStorageMb, totalStorageMb, totalMemoryMb,
+      kodiVersion, protonVersion, installPermission, bootstrapReady, automaticSetup, eventPhase, eventProgress, statusMessage, busy, id,
+    ).run();
+  if (rowChanged(row, eventPhase, statusMessage, errorCode)) {
+    await env.DB.prepare("INSERT INTO device_status_events(id,device_id,setup_step,setup_phase,progress_percent,status_message,error_code,created_at) VALUES(?,?,?,?,?,?,?,?)")
+      .bind(crypto.randomUUID(), id, setupStep, eventPhase, eventProgress, statusMessage, errorCode, now).run();
+  }
   return response({ accepted: true });
 }
 
@@ -106,8 +132,21 @@ async function createPairingCode(request: Request, env: Env): Promise<Response> 
 }
 
 async function listDevices(env: Env): Promise<Response> {
-  const rows = await env.DB.prepare("SELECT d.id,h.id AS householdId,h.alias AS householdAlias,d.model,d.os_version AS osVersion,d.app_version AS appVersion,d.config_version AS configVersion,d.setup_step AS setupStep,d.error_code AS errorCode,d.debrid_expiry AS debridExpiry,d.last_seen_at AS lastSeenAt FROM devices d JOIN households h ON h.id=d.household_id WHERE d.deleted_at IS NULL ORDER BY d.last_seen_at DESC").all();
-  return response({ devices: rows.results });
+  const rows = await env.DB.prepare(`SELECT d.id,h.id AS householdId,h.alias AS householdAlias,d.model,d.os_version AS osVersion,
+    d.manufacturer,d.product,d.api_level AS apiLevel,d.architecture,d.security_patch AS securityPatch,
+    d.app_version AS appVersion,d.config_version AS configVersion,d.setup_step AS setupStep,d.setup_phase AS setupPhase,
+    d.progress_percent AS progressPercent,d.status_message AS statusMessage,d.busy,d.error_code AS errorCode,d.debrid_expiry AS debridExpiry,
+    d.free_storage_mb AS freeStorageMb,d.total_storage_mb AS totalStorageMb,d.total_memory_mb AS totalMemoryMb,
+    d.kodi_version AS kodiVersion,d.proton_version AS protonVersion,d.install_permission AS installPermission,
+    d.bootstrap_ready AS bootstrapReady,d.automatic_setup AS automaticSetup,d.created_at AS createdAt,d.last_seen_at AS lastSeenAt
+    FROM devices d JOIN households h ON h.id=d.household_id WHERE d.deleted_at IS NULL ORDER BY d.last_seen_at DESC`).all();
+  const devices = await Promise.all(rows.results.map(async device => {
+    const events = await env.DB.prepare(`SELECT setup_step AS setupStep,setup_phase AS setupPhase,progress_percent AS progressPercent,
+      status_message AS statusMessage,error_code AS errorCode,created_at AS createdAt
+      FROM device_status_events WHERE device_id=? ORDER BY created_at DESC LIMIT 20`).bind(String(device.id)).all();
+    return { ...device, events: events.results.reverse() };
+  }));
+  return response({ devices });
 }
 
 async function createCommand(request: Request, env: Env, deviceId: string): Promise<Response> {
@@ -157,5 +196,10 @@ function parseObject(value: string): Record<string, unknown> { let parsed: unkno
 function text(value: unknown, minimum: number, maximum: number): string { if (typeof value !== "string" || value.length < minimum || value.length > maximum || /[\x00-\x1f<>]/.test(value)) throw new HttpError(400, "invalid_text"); return value; }
 function optionalText(value: unknown, maximum: number): string | null { return value === null || value === undefined ? null : text(value, 1, maximum); }
 function integer(value: unknown, minimum: number, maximum: number): number { if (!Number.isInteger(value) || (value as number) < minimum || (value as number) > maximum) throw new HttpError(400, "invalid_integer"); return value as number; }
+function optionalInteger(value: unknown, minimum: number, maximum: number): number | null { return value === null || value === undefined ? null : integer(value, minimum, maximum); }
+function optionalBooleanInteger(value: unknown): number | null { if (value === null || value === undefined) return null; if (typeof value !== "boolean") throw new HttpError(400, "invalid_boolean"); return value ? 1 : 0; }
+function rowChanged(row: DeviceRow, phase: string, message: string | null, errorCode: string | null): boolean {
+  return row.setup_phase !== phase || row.status_message !== message || row.error_code !== errorCode;
+}
 function optionalIsoDate(value: unknown): string | null { if (value === null || value === undefined) return null; const textValue = text(value, 10, 40); if (!Number.isFinite(Date.parse(textValue))) throw new HttpError(400, "invalid_date"); return textValue; }
 function constantTime(left: string, right: string): boolean { if (left.length !== right.length) return false; let difference = 0; for (let index = 0; index < left.length; index++) difference |= left.charCodeAt(index) ^ right.charCodeAt(index); return difference === 0; }
