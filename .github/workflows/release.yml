@@ -41,7 +41,7 @@ jobs:
           curl --fail --location "$SOURCE_URL" --output artifacts/kodi-source.zip
           echo "$SOURCE_SHA  artifacts/kodi-source.zip" | sha256sum --check
           python tools/skin_builder.py --upstream-archive artifacts/kodi-source.zip --manifest config/manifest.json --output artifacts/skin
-      - run: python tools/release.py kodi --output artifacts/kodi --base-url "https://github.com/rjclark99/starlanemeridian/releases/latest/download"
+      - run: python tools/release.py kodi --output artifacts/kodi --base-url "https://github.com/rjclark99/starlanemeridian/releases/latest/download" --data-url "https://control.starlanemeridian.uk/v1/public/kodi"
       - name: Build signed Android APK
         working-directory: android-app
         env:

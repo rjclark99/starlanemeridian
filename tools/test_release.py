@@ -61,6 +61,19 @@ class ReleaseTests(unittest.TestCase):
             expected = (output / "addons.xml.sha256").read_text(encoding="ascii").strip()
             self.assertEqual(hashlib.sha256((output / "addons.xml").read_bytes()).hexdigest(), expected)
 
+    def test_kodi_repository_uses_routable_data_layout_and_zip_sidecars(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as name:
+            output = Path(name) / "kodi"
+            build_kodi(output, "https://github.com/example/project/releases/latest/download", "https://control.example.test/v1/public/kodi")
+            repository_zip = next((output / "repository.kodisetup").glob("repository.kodisetup-*.zip"))
+            sidecar = repository_zip.with_name(repository_zip.name + ".sha256")
+            self.assertEqual(sidecar.read_text(encoding="ascii").strip(), hashlib.sha256(repository_zip.read_bytes()).hexdigest())
+            with __import__("zipfile").ZipFile(repository_zip) as archive:
+                addon_xml = archive.read("repository.kodisetup/addon.xml").decode("utf-8")
+            self.assertIn('<datadir zip="true">https://control.example.test/v1/public/kodi/</datadir>', addon_xml)
+            self.assertNotIn("${REPOSITORY_", addon_xml)
+
 
 if __name__ == "__main__":
     unittest.main()

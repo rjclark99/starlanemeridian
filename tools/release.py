@@ -117,15 +117,24 @@ def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None)
                 archive.writestr(info, file.read_bytes())
 
 
-def build_kodi(output: Path, base_url: str) -> None:
+def write_sha256_sidecar(path: Path) -> None:
+    path.with_name(path.name + ".sha256").write_text(hashlib.sha256(path.read_bytes()).hexdigest() + "\n", encoding="ascii")
+
+
+def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None:
     if not base_url.startswith("https://"):
         raise SystemExit("Kodi repository base URL must use HTTPS")
+    data_url = data_url or base_url
+    if not data_url.startswith("https://"):
+        raise SystemExit("Kodi repository data URL must use HTTPS")
     output.mkdir(parents=True, exist_ok=True)
     source = ROOT / "kodi" / "repository.kodisetup"
     with tempfile.TemporaryDirectory() as temp_name:
         staged = Path(temp_name) / "repository.kodisetup"
         shutil.copytree(source, staged)
-        addon_xml = staged.joinpath("addon.xml").read_text(encoding="utf-8").replace("${REPOSITORY_BASE_URL}", base_url.rstrip("/"))
+        addon_xml = staged.joinpath("addon.xml").read_text(encoding="utf-8")
+        addon_xml = addon_xml.replace("${REPOSITORY_BASE_URL}", base_url.rstrip("/"))
+        addon_xml = addon_xml.replace("${REPOSITORY_DATA_URL}", data_url.rstrip("/"))
         staged.joinpath("addon.xml").write_text(addon_xml, encoding="utf-8")
         root = ElementTree.fromstring(addon_xml)
         version = root.attrib["version"]
@@ -133,6 +142,7 @@ def build_kodi(output: Path, base_url: str) -> None:
         addon_dir.mkdir(exist_ok=True)
         zip_path = addon_dir / f"repository.kodisetup-{version}.zip"
         safe_zip_tree(staged, zip_path, "repository.kodisetup")
+        write_sha256_sidecar(zip_path)
         shutil.copy2(staged / "icon.png", addon_dir / "icon.png") if (staged / "icon.png").exists() else None
 
         metadata = [ElementTree.tostring(root, encoding="unicode")]
@@ -141,6 +151,7 @@ def build_kodi(output: Path, base_url: str) -> None:
             skin_dir = output / "skin.starlanemeridian"
             skin_dir.mkdir(exist_ok=True)
             shutil.copy2(skin_zip, skin_dir / skin_zip.name)
+            write_sha256_sidecar(skin_dir / skin_zip.name)
             with zipfile.ZipFile(skin_zip) as archive:
                 skin_root = ElementTree.fromstring(archive.read("skin.starlanemeridian/addon.xml"))
                 metadata.append(ElementTree.tostring(skin_root, encoding="unicode"))
@@ -168,6 +179,7 @@ def parse_args() -> argparse.Namespace:
     kodi = sub.add_parser("kodi")
     kodi.add_argument("--output", type=Path, required=True)
     kodi.add_argument("--base-url", required=True)
+    kodi.add_argument("--data-url")
     return parser.parse_args()
 
 
@@ -185,7 +197,7 @@ def main() -> None:
         verify_manifest(args.manifest, args.public_key)
         print("Manifest signature verified")
     elif args.command == "kodi":
-        build_kodi(args.output, args.base_url)
+        build_kodi(args.output, args.base_url, args.data_url)
         print(f"Kodi repository written to {args.output}")
 
 

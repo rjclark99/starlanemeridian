@@ -11,6 +11,7 @@ export default {
       if (crypto.getRandomValues(new Uint8Array(1))[0] === 0) context.waitUntil(cleanup(env));
       const url = new URL(request.url);
       if (request.method === "GET" && url.pathname === "/health") return response({ status: "ok" });
+      if ((request.method === "GET" || request.method === "HEAD") && url.pathname.startsWith("/v1/public/kodi/")) return kodiArtifact(request, url);
       if (request.method === "POST" && url.pathname === "/v1/devices/pair") return await pair(request, env);
       const statusMatch = url.pathname.match(/^\/v1\/devices\/([0-9a-f-]{36})\/status$/i);
       if (request.method === "POST" && statusMatch?.[1]) return await deviceStatus(request, env, statusMatch[1]);
@@ -39,6 +40,20 @@ export default {
     await cleanup(env);
   },
 } satisfies ExportedHandler<Env>;
+
+export function kodiArtifact(request: Request, url: URL): Response {
+  const match = url.pathname.match(/^\/v1\/public\/kodi\/(repository\.kodisetup|skin\.starlanemeridian)\/((repository\.kodisetup|skin\.starlanemeridian)-([0-9]+\.){2}[0-9]+\.zip(?:\.sha256)?)$/);
+  if (!match || match[1] !== match[3]) return response({ error: "not_found" }, 404);
+  const target = `https://github.com/rjclark99/starlanemeridian/releases/latest/download/${encodeURIComponent(match[2]!)}`;
+  return new Response(null, {
+    status: 307,
+    headers: {
+      Location: target,
+      "Cache-Control": "public, max-age=300",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
 
 async function cleanup(env: Env): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
