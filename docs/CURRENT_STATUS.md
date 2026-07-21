@@ -70,16 +70,19 @@ signature-verified locally and is unaffected. Before using automated release aga
 restore and verify the Android signing and public-configuration secrets in GitHub's
 `release` environment.
 
-The scheduled vendor monitor successfully generated candidate data but GitHub blocked
-its final pull-request step because the repository does not currently allow Actions to
-create or approve pull requests. This has no effect on released configuration. Enable
-that repository Actions setting before relying on automatic candidate pull requests.
-GitHub also reported Node.js 20 deprecation warnings for older action revisions; these
-are maintenance warnings, not product or release failures.
+GitHub Actions pull-request permission was enabled on 21 July. The vendor monitor was
+rerun successfully and opened review-only PR #1. Review caught a parser defect that
+ignored Kodi's two-part `21.3` version and initially proposed `18.7.2`; commit
+`23f374f` corrected the parser and added regression tests. A second successful monitor
+run updated PR #1 to Kodi 21.3 for ARM32/ARM64 and Proton VPN 5.19.43.0. The PR changes
+only `config/vendor-candidates.json`, retains null Kodi hash/signer fields, and remains
+unmerged pending artifact verification. GitHub still reports Node.js 20 deprecation
+warnings for older action revisions; these are maintenance warnings, not product or
+release failures.
 
 ## Tests completed
 
-- Python release/profile/Kodi-manifest/skin tests: 14 passed.
+- Python release/profile/Kodi-manifest/skin/vendor-monitor tests: 16 passed.
 - Control API tests: 9 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
 - Android unit tests, release compilation, lint-vital, and packaging passed.
 - Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.
@@ -91,6 +94,7 @@ are maintenance warnings, not product or release failures.
 - Device deletion removes status, nonces, and commands; household deletion cascades all household cloud records. Audit metadata expires under the configured retention policy.
 - Production D1 migration `0003_device_observability.sql` was applied without losing the existing device or household records. The production Worker is healthy at `https://control.starlanemeridian.uk/health`.
 - GitHub CI passed for both the observability/skin implementation and the offline-manifest verification change.
+- GitHub CI passed all four jobs for vendor-monitor parser fix `23f374f`; corrected vendor-monitor run `29866492916` also passed.
 
 ## Outstanding physical checks
 
