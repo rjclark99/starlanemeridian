@@ -107,7 +107,17 @@ private fun PairingActions(model: SetupViewModel, initialFocus: FocusRequester) 
 
 @Composable
 private fun Action(label: String, modifier: Modifier = Modifier, action: () -> Unit) {
-    Button(onClick = action, modifier = modifier) { Text(label, Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color.White, fontSize = 18.sp) }
+    Button(
+        onClick = action,
+        modifier = modifier,
+        colors = ButtonDefaults.colors(
+            containerColor = Color(0xFF294866),
+            focusedContainerColor = Color(0xFF1B5573),
+            pressedContainerColor = Color(0xFF153F57),
+        ),
+    ) {
+        Text(label, Modifier.padding(horizontal = 12.dp, vertical = 6.dp), color = Color.White, fontSize = 18.sp)
+    }
 }
 
 @Composable
