@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from release import build_kodi, canonical_payload, safe_zip_tree, verify_manifest
+from release import build_kodi, canonical_payload, latest_skin_zip, safe_zip_tree, verify_manifest
 
 
 class ReleaseTests(unittest.TestCase):
@@ -52,6 +52,13 @@ class ReleaseTests(unittest.TestCase):
             first, second = root / "first.zip", root / "second.zip"
             safe_zip_tree(source, first, "addon.id"); safe_zip_tree(source, second, "addon.id")
             self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_latest_skin_artifact_is_selected_semantically(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            for version in ("1.0.9", "1.1.0", "1.0.10"):
+                root.joinpath(f"skin.starlanemeridian-{version}.zip").touch()
+            self.assertEqual(latest_skin_zip(root).name, "skin.starlanemeridian-1.1.0.zip")
 
     def test_kodi_repository_checksum_matches_published_bytes(self):
         import hashlib

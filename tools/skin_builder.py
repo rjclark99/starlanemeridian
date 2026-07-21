@@ -16,12 +16,45 @@ from release import safe_zip_tree, validate_manifest
 
 SKIN_ID = "skin.starlanemeridian"
 SKIN_NAME = "Starlane Meridian"
-WINDOWS = {"videos": "Videos", "tvshows": "Videos,tvshowtitles", "movies": "Videos,movietitles", "addons": "AddonBrowser", "settings": "Settings", "music": "Music", "pictures": "Pictures", "favourites": "Favourites"}
+SKIN_VERSION = "1.1.0"
+WINDOWS = {
+    "home": "Home",
+    "videos": "Videos",
+    "tvshows": "Videos,tvshowtitles",
+    "movies": "Videos,movietitles",
+    "live-tv": "TVChannels",
+    "kids-family": "Videos,special://skin/playlists/meridian_family_movies.xsp,return",
+    "addons": "AddonBrowser",
+    "settings": "Settings",
+    "music": "Music",
+    "pictures": "Pictures",
+    "favourites": "Favourites",
+}
+
+ALLOWED_WIDGET_PROVIDERS = {
+    "special://skin/playlists/inprogress_movies.xsp",
+    "special://skin/playlists/recent_unwatched_movies.xsp",
+    "special://skin/playlists/recent_unwatched_episodes.xsp",
+    "special://skin/playlists/unwatched_tvshows.xsp",
+    "special://skin/playlists/meridian_family_movies.xsp",
+    "special://skin/playlists/meridian_family_tvshows.xsp",
+    "pvr://channels/tv/*",
+}
+
+SECTION_DESCRIPTIONS = {
+    "home": "Resume what you started and discover the newest additions to your library.",
+    "tv-shows": "Continue through recent episodes and browse series waiting in your library.",
+    "movies": "Pick up a film in progress or choose from your latest movie additions.",
+    "live-tv": "Open the channel list supplied by your configured Kodi PVR service.",
+    "kids-family": "A calm, dedicated route to Family and Animation titles in your library.",
+}
 
 
 def action(value: dict) -> str:
     kind, target = value["type"], value["target"]
     if kind == "kodi-window":
+        if target == "search":
+            return "ActivateWindow(Videos,plugin://plugin.video.themoviedb.helper/?info=search,return)"
         if target not in WINDOWS:
             raise SystemExit(f"Unsupported Kodi window target: {target}")
         return f"ActivateWindow({WINDOWS[target]})"
@@ -34,60 +67,181 @@ def action(value: dict) -> str:
     return "Noop"
 
 
+def onclick_markup(value: dict) -> str:
+    """Compile a closed set of actions; search degrades safely when helpers are absent."""
+    if value["type"] == "kodi-window" and value["target"] == "search":
+        return """<onclick condition="System.HasAddon(plugin.video.themoviedb.helper)">ActivateWindow(Videos,plugin://plugin.video.themoviedb.helper/?info=search,return)</onclick>
+            <onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + System.HasAddon(script.globalsearch)">RunAddon(script.globalsearch)</onclick>
+            <onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + !System.HasAddon(script.globalsearch)">Notification(Starlane Meridian,Install TMDb Helper for search,5000)</onclick>"""
+    return f"<onclick>{html.escape(action(value))}</onclick>"
+
+
+def _widget_xml(menu_id: str, widget: dict, control_id: int, top: int, previous_id: int | None, next_id: int | None) -> str:
+    provider = widget["provider"]
+    if provider not in ALLOWED_WIDGET_PROVIDERS:
+        raise SystemExit(f"Unsupported widget provider: {provider}")
+    up = previous_id or 9000
+    down = next_id or control_id
+    target = "tvchannels" if provider.startswith("pvr://") else "videos"
+    return f"""
+      <control type="group">
+        <visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(menu_id)})</visible>
+        <left>432</left><top>{top}</top>
+        <control type="label"><left>0</left><top>0</top><width>1398</width><height>42</height><font>Meridian_Section</font><label>{html.escape(widget['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
+        <control type="fixedlist" id="{control_id}">
+          <left>-10</left><top>46</top><width>1450</width><height>170</height><orientation>horizontal</orientation><scrolltime>180</scrolltime><preloaditems>1</preloaditems>
+          <onleft>9000</onleft><onup>{up}</onup><ondown>{down}</ondown>
+          <itemlayout width="270" height="166">
+            <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><aspectratio align="center" aligny="center">scale</aspectratio><texture fallback="DefaultVideo.png">$INFO[ListItem.Art(fanart)]</texture></control>
+            <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><texture colordiffuse="26050B14">colors/white.png</texture></control>
+            <control type="textbox"><left>10</left><top>130</top><width>250</width><height>34</height><font>Meridian_Card</font><label>$INFO[ListItem.Label]</label><textcolor>FFB6C7D8</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
+          </itemlayout>
+          <focusedlayout width="270" height="166">
+            <control type="image"><left>4</left><top>0</top><width>262</width><height>132</height><texture colordiffuse="FF61C8FF">colors/white.png</texture></control>
+            <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><aspectratio align="center" aligny="center">scale</aspectratio><texture fallback="DefaultVideo.png">$INFO[ListItem.Art(fanart)]</texture></control>
+            <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><texture colordiffuse="18050B14">colors/white.png</texture></control>
+            <control type="textbox"><left>10</left><top>130</top><width>250</width><height>34</height><font>Meridian_CardFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
+            <animation effect="zoom" start="96" end="100" center="135,66" time="150">Focus</animation>
+          </focusedlayout>
+          <content target="{target}" limit="{widget['limit']}" browse="never">{html.escape(provider)}</content>
+        </control>
+        <control type="label"><visible>Integer.IsEqual(Container({control_id}).NumItems,0)</visible><left>0</left><top>68</top><width>900</width><height>44</height><font>Meridian_Body</font><label>No items available yet</label><textcolor>FF607991</textcolor></control>
+      </control>"""
+
+
 def home_xml(menu: list[dict]) -> str:
     items = []
     widgets = []
+    backdrops = []
+    hero_details = []
+    first_widget_ids: dict[str, int] = {}
     for index, item in enumerate(menu):
-        items.append(f"""          <item id=\"{index + 1}\"><label>{html.escape(item['label'])}</label><label2>{index + 1:02d}</label2><onclick>{html.escape(action(item['action']))}</onclick><property name=\"MenuId\">{html.escape(item['id'])}</property></item>""")
+        widget_ids = [9100 + index * 10 + widget_index for widget_index, _ in enumerate(item["widgets"])]
+        if widget_ids:
+            first_widget_ids[item["id"]] = widget_ids[0]
+        items.append(f"""          <item id=\"{index + 1}\"><label>{html.escape(item['label'])}</label>{onclick_markup(item['action'])}<property name=\"MenuId\">{html.escape(item['id'])}</property></item>""")
         for widget_index, widget in enumerate(item["widgets"]):
-            control_id = 11000 + index * 100 + widget_index
-            widgets.append(f"""
-      <control type=\"group\">
-        <visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])})</visible>
-        <top>{390 + widget_index * 250}</top><left>610</left>
-        <control type=\"label\"><width>1180</width><height>45</height><font>font20_title</font><label>{html.escape(widget['label'])}</label><textcolor>white</textcolor></control>
-        <control type=\"panel\" id=\"{control_id}\"><top>55</top><width>1210</width><height>190</height><orientation>horizontal</orientation><content target=\"videos\" limit=\"{widget['limit']}\" browse=\"auto\">{html.escape(widget['provider'])}</content></control>
+            control_id = widget_ids[widget_index]
+            widgets.append(_widget_xml(item["id"], widget, control_id, 580 + widget_index * 215,
+                                       widget_ids[widget_index - 1] if widget_index else None,
+                                       widget_ids[widget_index + 1] if widget_index + 1 < len(widget_ids) else None))
+        if widget_ids:
+            first = widget_ids[0]
+            backdrops.append(f"""
+    <control type="image"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])}) + !String.IsEmpty(Container({first}).ListItem.Art(fanart))</visible><left>650</left><top>0</top><width>1270</width><height>650</height><aspectratio align="right" aligny="top">scale</aspectratio><texture background="true">$INFO[Container({first}).ListItem.Art(fanart)]</texture><fadetime>250</fadetime></control>""")
+            description = SECTION_DESCRIPTIONS.get(item["id"], "Browse this section of your Kodi library.")
+            hero_details.append(f"""
+      <control type="group"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])}) + Integer.IsGreater(Container({first}).NumItems,0)</visible>
+        <control type="textbox"><left>0</left><top>0</top><width>970</width><height>116</height><font>Meridian_Hero</font><label>$INFO[Container({first}).ListItem.Title,{html.escape(item['label'])}: ]</label><textcolor>FFF4FAFF</textcolor><aligny>bottom</aligny><autoscroll>false</autoscroll></control>
+        <control type="label"><left>0</left><top>122</top><width>950</width><height>32</height><font>Meridian_Meta</font><label>$INFO[Container({first}).ListItem.Year]  $INFO[Container({first}).ListItem.Duration]  $INFO[Container({first}).ListItem.Genre]</label><textcolor>FF67E8C4</textcolor></control>
+        <control type="textbox"><left>0</left><top>164</top><width>930</width><height>98</height><font>Meridian_Body</font><label>$INFO[Container({first}).ListItem.Plot]</label><textcolor>FFB6C7D8</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
+      </control>
+      <control type="group"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])}) + Integer.IsEqual(Container({first}).NumItems,0)</visible>
+        <control type="label"><left>0</left><top>34</top><width>970</width><height>72</height><font>Meridian_Hero</font><label>{html.escape(item['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
+        <control type="textbox"><left>0</left><top>128</top><width>900</width><height>98</height><font>Meridian_Body</font><label>{html.escape(description)}</label><textcolor>FFB6C7D8</textcolor><autoscroll>false</autoscroll></control>
       </control>""")
+        else:
+            hero_details.append(f"""
+      <control type="group"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])})</visible>
+        <control type="label"><left>0</left><top>36</top><width>970</width><height>72</height><font>Meridian_Hero</font><label>{html.escape(item['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
+        <control type="textbox"><left>0</left><top>130</top><width>900</width><height>98</height><font>Meridian_Body</font><label>Search your library and online catalogue. TMDb Helper is used when installed; Global Search is the lightweight fallback.</label><textcolor>FFB6C7D8</textcolor><autoscroll>false</autoscroll></control>
+      </control>""")
+    nav_right = "\n".join(
+        f"      <onright condition=\"String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(menu_id)})\">{control_id}</onright>"
+        for menu_id, control_id in first_widget_ids.items()
+    )
     return f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <window>
   <defaultcontrol always=\"true\">9000</defaultcontrol>
-  <animation effect=\"fade\" start=\"0\" end=\"100\" time=\"280\">WindowOpen</animation>
-  <animation effect=\"fade\" start=\"100\" end=\"0\" time=\"180\">WindowClose</animation>
+  <backgroundcolor>FF050B14</backgroundcolor>
+  <animation effect=\"fade\" start=\"0\" end=\"100\" time=\"220\">WindowOpen</animation>
+  <animation effect=\"fade\" start=\"100\" end=\"0\" time=\"150\">WindowClose</animation>
   <controls>
-    <control type=\"image\"><left>0</left><top>0</top><width>1920</width><height>1080</height><aspectratio>scale</aspectratio><texture>brand/home.jpg</texture></control>
-    <control type=\"image\"><left>0</left><top>0</top><width>1920</width><height>1080</height><texture colordiffuse=\"B808111D\">colors/white.png</texture></control>
-    <control type=\"image\"><left>72</left><top>58</top><width>72</width><height>72</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture></control>
-    <control type=\"label\"><left>162</left><top>63</top><width>900</width><height>42</height><font>font30_title</font><label>STARLANE MERIDIAN</label><textcolor>white</textcolor></control>
-    <control type=\"label\"><left>164</left><top>105</top><width>700</width><height>30</height><font>font12</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
-    <control type=\"label\"><right>74</right><top>64</top><width>400</width><height>40</height><align>right</align><font>font30_title</font><label>$INFO[System.Time]</label><textcolor>white</textcolor></control>
-    <control type=\"label\"><right>76</right><top>107</top><width>400</width><height>28</height><align>right</align><font>font12</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
-    <control type=\"image\"><left>70</left><top>194</top><width>4</width><height>690</height><texture colordiffuse=\"4052B8FF\">colors/white.png</texture></control>
-    <control type=\"fixedlist\" id=\"9000\"><left>98</left><top>210</top><width>430</width><height>650</height><orientation>vertical</orientation><focusposition>2</focusposition>
-      <itemlayout width=\"430\" height=\"88\">
-        <control type=\"label\"><left>8</left><top>9</top><width>44</width><height>64</height><font>font12</font><label>$INFO[ListItem.Label2]</label><textcolor>FF5F7891</textcolor><aligny>center</aligny></control>
-        <control type=\"label\"><left>64</left><top>9</top><width>345</width><height>64</height><font>font20</font><label>$INFO[ListItem.Label]</label><textcolor>FF91A8C0</textcolor><aligny>center</aligny></control>
+    <control type=\"image\"><left>0</left><top>0</top><width>1920</width><height>1080</height><aspectratio>scale</aspectratio><texture background=\"true\">brand/horizon.png</texture></control>
+{''.join(backdrops)}
+    <control type=\"image\"><left>0</left><top>0</top><width>1920</width><height>1080</height><texture colordiffuse=\"9E050B14\">colors/white.png</texture></control>
+    <control type=\"image\"><left>0</left><top>520</top><width>1920</width><height>560</height><texture colordiffuse=\"D9050B14\">colors/white.png</texture></control>
+    <control type=\"image\"><left>58</left><top>46</top><width>66</width><height>66</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture></control>
+    <control type=\"label\"><left>142</left><top>48</top><width>720</width><height>38</height><font>Meridian_Wordmark</font><label>STARLANE MERIDIAN</label><textcolor>FFF4FAFF</textcolor></control>
+    <control type=\"label\"><left>144</left><top>87</top><width>620</width><height>28</height><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
+    <control type=\"label\"><right>62</right><top>50</top><width>390</width><height>40</height><align>right</align><font>Meridian_Clock</font><label>$INFO[System.Time]</label><textcolor>FFF4FAFF</textcolor></control>
+    <control type=\"label\"><right>64</right><top>91</top><width>390</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
+    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>596</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
+    <control type=\"list\" id=\"9000\"><left>74</left><top>190</top><width>314</width><height>454</height><orientation>vertical</orientation><scrolltime>150</scrolltime>
+{nav_right}
+      <ondown>9050</ondown>
+      <itemlayout width=\"314\" height=\"68\">
+        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FF91A8C0</textcolor><aligny>center</aligny><scroll>false</scroll></control>
       </itemlayout>
-      <focusedlayout width=\"430\" height=\"88\">
-        <control type=\"image\"><left>0</left><top>6</top><width>420</width><height>70</height><texture colordiffuse=\"EAF4FAFF\" border=\"21\">buttons/button-fo.png</texture></control>
-        <control type=\"image\"><left>0</left><top>20</top><width>4</width><height>42</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
-        <control type=\"label\"><left>16</left><top>9</top><width>44</width><height>64</height><font>font12</font><label>$INFO[ListItem.Label2]</label><textcolor>FF0A1825</textcolor><aligny>center</aligny></control>
-        <control type=\"label\"><left>72</left><top>9</top><width>332</width><height>64</height><font>font20_title</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny></control>
-        <animation effect=\"slide\" start=\"-8,0\" end=\"0,0\" time=\"150\">Focus</animation>
+      <focusedlayout width=\"314\" height=\"68\">
+        <control type=\"image\"><left>0</left><top>4</top><width>306</width><height>60</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control>
+        <control type=\"image\"><left>0</left><top>15</top><width>5</width><height>38</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
+        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_NavFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <animation effect=\"slide\" start=\"-6,0\" end=\"0,0\" time=\"140\">Focus</animation>
       </focusedlayout>
       <content>
 {chr(10).join(items)}
       </content>
     </control>
-    <control type=\"group\"><left>610</left><top>224</top>
-      <control type=\"label\"><width>1150</width><height>52</height><font>font45_title</font><label>$INFO[Container(9000).ListItem.Label]</label><textcolor>white</textcolor></control>
-      <control type=\"label\"><top>62</top><width>1040</width><height>62</height><font>font14</font><label>Navigate your library, add-ons and settings from one clear horizon.</label><textcolor>FF91A8C0</textcolor><wrapmultiline>true</wrapmultiline></control>
-      <control type=\"image\"><top>142</top><width>90</width><height>3</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
+    <control type=\"button\" id=\"9050\"><left>74</left><top>682</top><width>146</width><height>52</height><font>Meridian_Meta</font><label>SETTINGS</label><align>center</align><textcolor>FF91A8C0</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"22102A42\">colors/white.png</texturenofocus><onup>9000</onup><onright>9051</onright><onclick>ActivateWindow(Settings)</onclick></control>
+    <control type=\"button\" id=\"9051\"><left>230</left><top>682</top><width>150</width><height>52</height><font>Meridian_Meta</font><label>POWER</label><align>center</align><textcolor>FF91A8C0</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"22102A42\">colors/white.png</texturenofocus><onup>9000</onup><onleft>9050</onleft><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
+    <control type=\"group\"><left>432</left><top>220</top><width>1000</width><height>300</height>
+{''.join(hero_details)}
     </control>
 {''.join(widgets)}
-    <control type=\"label\"><left>74</left><bottom>55</bottom><width>1200</width><height>30</height><font>font12</font><label>KODI $INFO[System.BuildVersion]  |  STARLANE MERIDIAN</label><textcolor>FF5F7891</textcolor></control>
+    <control type=\"label\"><left>62</left><bottom>34</bottom><width>830</width><height>26</height><font>Meridian_Meta</font><label>KODI $INFO[System.BuildVersion]  ·  STARLANE MERIDIAN</label><textcolor>FF607991</textcolor></control>
+    <control type=\"label\"><right>62</right><bottom>34</bottom><width>720</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>OK SELECTS  ·  BACK RETURNS  ·  MENU OPENS OPTIONS</label><textcolor>FF607991</textcolor></control>
   </controls>
 </window>
 """
+
+
+def startup_xml() -> str:
+    return """<?xml version="1.0" encoding="UTF-8"?>
+<window>
+  <onload>AlarmClock(StarlaneMeridianStartup,ReplaceWindow($INFO[System.StartupWindow]),00:02,silent)</onload>
+  <backgroundcolor>FF050B14</backgroundcolor>
+  <controls>
+    <control type="image"><left>0</left><top>0</top><width>1920</width><height>1080</height><aspectratio>scale</aspectratio><texture>brand/horizon.png</texture></control>
+    <control type="image"><left>0</left><top>0</top><width>1920</width><height>1080</height><texture colordiffuse="78050B14">colors/white.png</texture></control>
+    <control type="image"><left>820</left><top>328</top><width>280</width><height>280</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture><animation effect="fade" start="0" end="100" time="500">WindowOpen</animation></control>
+    <control type="label"><left>460</left><top>634</top><width>1000</width><height>64</height><align>center</align><font>Meridian_Splash</font><label>STARLANE MERIDIAN</label><textcolor>FFF4FAFF</textcolor><animation effect="fade" start="0" end="100" delay="160" time="500">WindowOpen</animation></control>
+    <control type="image"><left>820</left><top>718</top><width>280</width><height>3</height><texture colordiffuse="FF67E8C4">colors/white.png</texture></control>
+    <control type="label"><left>560</left><top>748</top><width>800</width><height>34</height><align>center</align><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF91A8C0</textcolor></control>
+  </controls>
+</window>
+"""
+
+
+def apply_brand_fonts(path: Path) -> None:
+    root = ElementTree.parse(path).getroot()
+    specifications = (
+        ("Meridian_Meta", 18, False), ("Meridian_Card", 20, False), ("Meridian_CardFocus", 20, True),
+        ("Meridian_Body", 24, False), ("Meridian_Nav", 28, False), ("Meridian_NavFocus", 28, True),
+        ("Meridian_Section", 26, True), ("Meridian_Wordmark", 30, True), ("Meridian_Clock", 32, False),
+        ("Meridian_Hero", 52, True), ("Meridian_Splash", 46, True),
+    )
+    for fontset in root.findall("fontset"):
+        filename = "arial.ttf" if fontset.attrib.get("id") == "Arial" else "NotoSans-Regular.ttf"
+        for name, size, bold in specifications:
+            node = ElementTree.SubElement(fontset, "font")
+            ElementTree.SubElement(node, "name").text = name
+            ElementTree.SubElement(node, "filename").text = filename
+            ElementTree.SubElement(node, "size").text = str(size)
+            if bold:
+                ElementTree.SubElement(node, "style").text = "bold"
+    ElementTree.indent(root)
+    path.write_text('<?xml version="1.0" encoding="UTF-8"?>\n' + ElementTree.tostring(root, encoding="unicode") + "\n", encoding="utf-8")
+
+
+def apply_family_playlists(staged: Path) -> None:
+    playlists = staged / "playlists"
+    playlists.joinpath("meridian_family_movies.xsp").write_text("""<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<smartplaylist type="movies"><name>Kids &amp; Family Movies</name><match>one</match><rule field="genre" operator="contains"><value>Family</value></rule><rule field="genre" operator="contains"><value>Animation</value></rule><limit>30</limit><order direction="descending">dateadded</order></smartplaylist>
+""", encoding="utf-8")
+    playlists.joinpath("meridian_family_tvshows.xsp").write_text("""<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<smartplaylist type="tvshows"><name>Kids &amp; Family TV</name><match>one</match><rule field="genre" operator="contains"><value>Family</value></rule><rule field="genre" operator="contains"><value>Animation</value></rule><limit>30</limit><order direction="descending">dateadded</order></smartplaylist>
+""", encoding="utf-8")
 
 
 def find_estuary(extracted: Path) -> Path:
@@ -116,12 +270,14 @@ def brand_metadata(root: ElementTree.Element) -> None:
 def apply_brand_assets(staged: Path, branding: Path) -> None:
     emblem = branding / "starlane-meridian-emblem-v2.png"
     background = branding / "starlane-meridian-home-1920x1080.jpg"
-    if not emblem.is_file() or not background.is_file():
-        raise SystemExit("Brand emblem and home background must be generated before building the skin")
+    horizon = branding / "starlane-meridian-horizon.png"
+    if not emblem.is_file() or not background.is_file() or not horizon.is_file():
+        raise SystemExit("Brand emblem, fanart, and horizon artwork must be generated before building the skin")
     brand_media = staged / "media" / "brand"
     brand_media.mkdir(parents=True, exist_ok=True)
     shutil.copy2(emblem, brand_media / "emblem.png")
     shutil.copy2(background, brand_media / "home.jpg")
+    shutil.copy2(horizon, brand_media / "horizon.png")
     shutil.copy2(emblem, staged / "resources" / "icon.png")
     shutil.copy2(background, staged / "resources" / "fanart.jpg")
     (staged / "colors" / "defaults.xml").write_text("""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -156,6 +312,9 @@ def build(archive: Path, manifest_path: Path, output: Path, version: str, brandi
         ElementTree.indent(root)
         addon_path.write_text('<?xml version="1.0" encoding="UTF-8"?>\n' + ElementTree.tostring(root, encoding="unicode") + "\n", encoding="utf-8")
         (staged / "xml" / "Home.xml").write_text(home_xml(manifest["skin"]["homeMenu"]), encoding="utf-8")
+        (staged / "xml" / "Startup.xml").write_text(startup_xml(), encoding="utf-8")
+        apply_brand_fonts(staged / "xml" / "Font.xml")
+        apply_family_playlists(staged)
         apply_brand_assets(staged, branding)
         output.mkdir(parents=True, exist_ok=True)
         destination = output / f"{SKIN_ID}-{version}.zip"
@@ -168,7 +327,7 @@ if __name__ == "__main__":
     parser.add_argument("--upstream-archive", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--version", default="1.0.0")
+    parser.add_argument("--version", default=SKIN_VERSION)
     parser.add_argument("--branding", type=Path, default=Path(__file__).resolve().parents[1] / "assets" / "branding")
     args = parser.parse_args()
     build(args.upstream_archive, args.manifest, args.output, args.version, args.branding)

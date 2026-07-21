@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.5",
+  "configVersion": "2026.07.6",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -47,49 +47,117 @@
     "addonId": "skin.starlanemeridian",
     "homeMenu": [
       {
-        "id": "movies",
-        "label": "Movies",
+        "id": "home",
+        "label": "Home",
         "action": {
           "type": "kodi-window",
-          "target": "videos"
+          "target": "home"
+        },
+        "widgets": [
+          {
+            "id": "continue-watching",
+            "label": "Continue Watching",
+            "provider": "special://skin/playlists/inprogress_movies.xsp",
+            "limit": 12
+          },
+          {
+            "id": "recent-movies",
+            "label": "Recently Added",
+            "provider": "special://skin/playlists/recent_unwatched_movies.xsp",
+            "limit": 12
+          }
+        ]
+      },
+      {
+        "id": "search",
+        "label": "Search",
+        "action": {
+          "type": "kodi-window",
+          "target": "search"
         },
         "widgets": []
       },
       {
-        "id": "tv",
+        "id": "tv-shows",
         "label": "TV Shows",
         "action": {
           "type": "kodi-window",
           "target": "tvshows"
         },
-        "widgets": []
+        "widgets": [
+          {
+            "id": "recent-episodes",
+            "label": "Latest Episodes",
+            "provider": "special://skin/playlists/recent_unwatched_episodes.xsp",
+            "limit": 12
+          },
+          {
+            "id": "unwatched-shows",
+            "label": "Unwatched TV Shows",
+            "provider": "special://skin/playlists/unwatched_tvshows.xsp",
+            "limit": 12
+          }
+        ]
       },
       {
-        "id": "addons",
-        "label": "Add-ons",
+        "id": "movies",
+        "label": "Movies",
         "action": {
           "type": "kodi-window",
-          "target": "addons"
+          "target": "movies"
         },
-        "widgets": []
+        "widgets": [
+          {
+            "id": "movie-progress",
+            "label": "Continue Watching",
+            "provider": "special://skin/playlists/inprogress_movies.xsp",
+            "limit": 12
+          },
+          {
+            "id": "latest-movies",
+            "label": "Recently Added Movies",
+            "provider": "special://skin/playlists/recent_unwatched_movies.xsp",
+            "limit": 12
+          }
+        ]
       },
       {
-        "id": "favourites",
-        "label": "Favourites",
-        "action": {
-          "type": "favourite",
-          "target": ""
-        },
-        "widgets": []
-      },
-      {
-        "id": "settings",
-        "label": "Settings",
+        "id": "live-tv",
+        "label": "Live TV",
         "action": {
           "type": "kodi-window",
-          "target": "settings"
+          "target": "live-tv"
         },
-        "widgets": []
+        "widgets": [
+          {
+            "id": "live-channels",
+            "label": "Live Channels",
+            "provider": "pvr://channels/tv/*",
+            "limit": 12
+          }
+        ]
+      },
+      {
+        "id": "kids-family",
+        "label": "Kids & Family",
+        "action": {
+          "type": "kodi-window",
+          "target": "kids-family"
+        },
+        "widgets": [
+          {
+            "id": "family-movies",
+            "label": "Family Movies",
+            "provider": "special://skin/playlists/meridian_family_movies.xsp",
+            "limit": 12
+          },
+          {
+            "id": "family-tv",
+            "label": "Family TV Shows",
+            "provider": "special://skin/playlists/meridian_family_tvshows.xsp",
+            "limit": 12
+          }
+        ]
       }
     ]
   },
@@ -100,6 +168,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "_twaNYqexHujjsWvFlPCA2KkvRb9kq6YL65EA6cE7syCCSoDdI3zrON3dQd7L2MirZLex8hnFIk6Zad9XjVeBw"
+    "value": "hhaevmEdNG3ReiQsCkn1hgFGwPW1cBEO9_JwYpfvAd0GyxybgHqh0TxJuvNcHXvFZmc7TT4hwZnq-nahAQ4lDA"
   }
 }

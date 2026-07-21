@@ -346,8 +346,10 @@ python tools\skin_builder.py `
   --upstream-archive build\vendor\kodi-source.zip `
   --manifest config\manifest.json `
   --output artifacts\skin `
-  --version 1.0.0
+  --version 1.1.0
 ```
+
+The default 1.1.0 home order is Home, Search, TV Shows, Movies, Live TV, then Kids & Family. Search uses TMDb Helper when installed and otherwise Global Search; neither is required to render the home screen. Settings and Power remain separate utility controls beneath the content destinations.
 
 ### 9.3 Generate the GitHub Pages hierarchy
 

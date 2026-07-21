@@ -122,6 +122,15 @@ def write_sha256_sidecar(path: Path) -> None:
     path.with_name(path.name + ".sha256").write_bytes((hashlib.sha256(path.read_bytes()).hexdigest() + "\n").encode("ascii"))
 
 
+def latest_skin_zip(directory: Path) -> Path | None:
+    candidates = list(directory.glob("skin.starlanemeridian-*.zip")) if directory.exists() else []
+    def version(path: Path) -> tuple[int, int, int]:
+        value = path.stem.removeprefix("skin.starlanemeridian-")
+        parts = value.split(".")
+        return tuple(map(int, parts)) if len(parts) == 3 and all(part.isdigit() for part in parts) else (0, 0, 0)
+    return max(candidates, key=version, default=None)
+
+
 def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None:
     if not base_url.startswith("https://"):
         raise SystemExit("Kodi repository base URL must use HTTPS")
@@ -147,7 +156,7 @@ def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None
         shutil.copy2(staged / "icon.png", addon_dir / "icon.png") if (staged / "icon.png").exists() else None
 
         metadata = [ElementTree.tostring(root, encoding="unicode")]
-        skin_zip = next((ROOT / "artifacts" / "skin").glob("skin.starlanemeridian-*.zip"), None) if (ROOT / "artifacts" / "skin").exists() else None
+        skin_zip = latest_skin_zip(ROOT / "artifacts" / "skin")
         if skin_zip:
             skin_dir = output / "skin.starlanemeridian"
             skin_dir.mkdir(exist_ok=True)

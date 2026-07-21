@@ -20,7 +20,9 @@ Download a reviewed Kodi source release archive corresponding to the supported s
 
 `python tools/skin_builder.py --upstream-archive kodi-source.zip --manifest config/manifest.json --output artifacts/skin`
 
-The builder copies the complete upstream Estuary skin (including its GPL license and all fallback windows), changes its add-on identity, and generates a constrained Home screen from the manifest. Build the Kodi repository only after the skin artifact exists.
+The builder copies the complete upstream Estuary skin (including its GPL license and all fallback windows), changes its add-on identity, and generates the constrained Meridian home and startup windows from the manifest. Skin 1.1.0 uses six ordered content destinations, capped local-library/PVR widgets, dedicated Family/Animation smart playlists, and optional TMDb Helper or Global Search routing. Neither helper is a required dependency. Build the Kodi repository only after the skin artifact exists.
+
+Widget providers are compiled from a closed allowlist. The selected section alone is visible, list sizes are capped, background loading is limited, and automatic trailers are not used. Do not add arbitrary plugin URLs or helper-service dependencies to the manifest.
 
 ## Fire TV managed setup
 

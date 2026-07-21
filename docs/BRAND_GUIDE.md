@@ -42,4 +42,6 @@ TV transitions use restrained fades and 8-pixel focus slides between 150 and 280
 
 ## Source artwork
 
-The emblem and home background were generated with the built-in image-generation workflow, then stored in `assets/branding`. Android and web derivatives are reproducibly created by `tools/build_brand_assets.py`. The Kodi skin builder embeds the same production assets so every surface presents one coherent identity.
+The emblem, home background, and `starlane-meridian-horizon.png` startup/home artwork were generated with the built-in image-generation workflow, then stored in `assets/branding`. Android and web derivatives are reproducibly created by `tools/build_brand_assets.py`. The Kodi skin builder embeds the production assets so every surface presents one coherent identity.
+
+The horizon artwork intentionally keeps the centre and upper-left quiet for TV-safe typography. Route detail is concentrated at the lower-right edge, so it can also sit behind focused library fanart without competing with titles or navigation.

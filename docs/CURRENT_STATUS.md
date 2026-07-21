@@ -11,7 +11,7 @@ Last verified: 21 July 2026.
 - Test device: Amazon AFTKAUK001, Fire OS / Android 9.
 - Kodi 21.3 and Proton VPN are installed.
 - Signed setup app 0.3.0 (version code 3) is installed on the reference Fire TV; the in-place upgrade preserved pairing and account status.
-- Kodi Setup Bootstrap 1.1.2, signed configuration `2026.07.5`, and `skin.starlanemeridian` 1.0.0 are installed and active on the reference Fire TV.
+- Kodi Setup Bootstrap 1.1.2 and `skin.starlanemeridian` 1.1.0 are installed and active on the reference Fire TV. Signed configuration `2026.07.6` is prepared for the skin release.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 
 ## Verified behavior
@@ -43,7 +43,8 @@ enters the signed manifest.
 - The control plane accepts a strictly allowlisted, signed status payload and stores a bounded 90-day event timeline. It records model/platform facts, app versions, coarse storage and memory, install permission, bootstrap readiness, current setup phase, progress percentage, and a non-secret status message.
 - The password-protected local dashboard shows live presence, installation progress, a step rail, device facts, package versions, readiness checks, Real-Debrid expiry, and the most recent 20 status events. It refreshes every 30 seconds.
 - Setup app 0.3.0 sends a heartbeat every 30 seconds while it is active. It never reports credentials, OAuth tokens, payment details, Kodi activity, filenames, or browsing history.
-- `skin.starlanemeridian` 1.0.0 is a complete Estuary-derived Kodi 21 skin with an original Starlane Meridian home screen, remote-friendly focus states, five allowlisted home actions, and separately updateable artwork.
+- `skin.starlanemeridian` 1.1.0 is a complete Estuary-derived Kodi 21 skin with an original Meridian startup transition, cinematic hero region, six ordered content destinations, two-row local/PVR widgets, Family/Animation smart playlists, full-width D-pad focus states, compact Settings/Power controls, and separately updateable artwork.
+- Home order is Home, Search, TV Shows, Movies, Live TV, then Kids & Family. TMDb Helper and Global Search are optional search adapters; the home screen has no helper-service dependency, automatic trailers, or remote widget requirement.
 - Bootstrap 1.1.2 records the previous skin before activation and restores it (or Estuary) if activation fails. A graceful restart confirmed the new skin persisted and cleared both recovery markers.
 - Add-on and repository entries intentionally remain schema-driven placeholders until an owner-approved legal allowlist is supplied. The reference profile remains review-only and cannot silently copy a Kodi home directory.
 
@@ -92,7 +93,7 @@ revisions; these are maintenance warnings, not product or release failures.
 
 ## Tests completed
 
-- Python release/profile/Kodi-manifest/skin/vendor-monitor tests: 18 passed.
+- Python release/profile/Kodi-manifest/skin/vendor-monitor tests: 24 passed, including expanded menu-order, XML, typography-width, startup, provider-allowlist, performance-bound, search-fallback, utility-control, and semantic-artifact-selection coverage.
 - Control API tests: 10 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
 - Android unit tests, release compilation, lint-vital, and packaging passed.
 - Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.
@@ -110,15 +111,16 @@ revisions; these are maintenance warnings, not product or release failures.
 - Remote `SYNC_CONFIG` and `PREPARE_BOOTSTRAP` commands passed. The TV exported Bootstrap 1.1.2 with SHA-256 `63a45209194465114b011a50f68b90a9f009029e25a65cb79243e6d084d8b340`, exactly matching the signed manifest.
 - Physical Bootstrap/skin installation passed after two contained defects were discovered and fixed: Kodi rejected empty internal string defaults in 1.1.0, and the first repository package route/hash sidecar was incompatible with Kodi's layout/literal hash parsing. Estuary remained active during both failures.
 - `skin.starlanemeridian` 1.0.0 installed from the public repository, activated, survived a graceful Kodi restart, and Bootstrap logged confirmation before clearing its pending/previous recovery values.
+- Skin 1.1.0 was then hot-deployed as a skin-only physical regression. Kodi loaded the new version without XML/skin errors; Home opens first; all six destinations remain visible through D-pad traversal; Kids & Family, Settings, and Search fallback text fit without clipping; and the branded two-second startup transition was captured after Kodi's native splash. The original installed skin was backed up under the ignored `build/device-backups` area before deployment.
 - The setup app and production dashboard record now finish at `COMPLETE`, phase `COMPLETE`, 100%, app version 3, configuration `2026.07.5`, Kodi 21.3, Proton VPN 5.5.68.0, Bootstrap ready, and no error. The event timeline records download, verification, Bootstrap-ready, account-link, and completion transitions.
 - CI passed for Bootstrap recovery commit `0b7b006`, artifact routing commit `bbe3f75`, and exact-sidecar commit `7dd4de5`.
 
 ## Outstanding physical checks
 
-The reference Fire TV regression is complete. Its current Starlane Meridian home
-screen deliberately remains the first minimal Estuary-derived design; menu-label
-clipping and the next widget-led visual system are design work for the upcoming skin
-discussion, not unresolved installation failures.
+The reference Fire TV skin regression is complete for an empty local library. A later
+content-populated pass should validate real poster/fanart crops, two-line long-title
+wrapping, PVR channel artwork, and optional TMDb Helper search results. Those checks do
+not block the navigation, startup, packaging, or empty-state behavior verified here.
 
 An Android TV/Google TV hardware pass remains outstanding because no such device is
 currently available. Fire TV coverage does not substitute for that compatibility test.

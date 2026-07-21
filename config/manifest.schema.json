@@ -130,7 +130,7 @@
           "type": "array", "maxItems": 8,
           "items": {
             "type": "object", "additionalProperties": false, "required": ["id", "label", "provider", "limit"],
-            "properties": { "id": { "$ref": "#/$defs/safeId" }, "label": { "$ref": "#/$defs/label" }, "provider": { "type": "string", "pattern": "^plugin://[a-zA-Z0-9_.-]+(/[A-Za-z0-9_./?=&%-]*)?$", "maxLength": 512 }, "limit": { "type": "integer", "minimum": 1, "maximum": 50 } }
+            "properties": { "id": { "$ref": "#/$defs/safeId" }, "label": { "$ref": "#/$defs/label" }, "provider": { "type": "string", "pattern": "^(plugin://[a-zA-Z0-9_.-]+(/[A-Za-z0-9_./?=&%-]*)?|special://skin/playlists/[A-Za-z0-9_.-]+\\.xsp|pvr://channels/tv/\\*)$", "maxLength": 512 }, "limit": { "type": "integer", "minimum": 1, "maximum": 50 } }
           }
         }
       }
