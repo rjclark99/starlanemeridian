@@ -44,7 +44,9 @@ export default {
 export function kodiArtifact(request: Request, url: URL): Response {
   const match = url.pathname.match(/^\/v1\/public\/kodi\/(repository\.kodisetup|skin\.starlanemeridian)\/((repository\.kodisetup|skin\.starlanemeridian)-([0-9]+\.){2}[0-9]+\.zip(?:\.sha256)?)$/);
   if (!match || match[1] !== match[3]) return response({ error: "not_found" }, 404);
-  const target = `https://github.com/rjclark99/starlanemeridian/releases/latest/download/${encodeURIComponent(match[2]!)}`;
+  // GitHub's release CDN can retain a replaced asset at the bare latest/download URL.
+  // download=1 selects the current release asset response and avoids that stale edge object.
+  const target = `https://github.com/rjclark99/starlanemeridian/releases/latest/download/${encodeURIComponent(match[2]!)}?download=1`;
   return new Response(null, {
     status: 307,
     headers: {

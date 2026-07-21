@@ -10,8 +10,8 @@ Last verified: 21 July 2026.
 - Downloader code: `3467018`.
 - Test device: Amazon AFTKAUK001, Fire OS / Android 9.
 - Kodi 21.3 and Proton VPN are installed.
-- Signed setup app 0.2.0 (version code 2) is installed on the reference Fire TV. Setup app 0.3.0 (version code 3) is published and ready for the next physical upgrade pass.
-- Kodi Setup Bootstrap 1.0.2 is installed on the reference Fire TV. Bootstrap 1.1.0 and signed configuration `2026.07.3` are published and ready for the next physical skin test.
+- Signed setup app 0.3.0 (version code 3) is installed on the reference Fire TV; the in-place upgrade preserved pairing and account status.
+- Kodi Setup Bootstrap 1.1.2, signed configuration `2026.07.5`, and `skin.starlanemeridian` 1.0.0 are installed and active on the reference Fire TV.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 
 ## Verified behavior
@@ -44,21 +44,28 @@ enters the signed manifest.
 - The password-protected local dashboard shows live presence, installation progress, a step rail, device facts, package versions, readiness checks, Real-Debrid expiry, and the most recent 20 status events. It refreshes every 30 seconds.
 - Setup app 0.3.0 sends a heartbeat every 30 seconds while it is active. It never reports credentials, OAuth tokens, payment details, Kodi activity, filenames, or browsing history.
 - `skin.starlanemeridian` 1.0.0 is a complete Estuary-derived Kodi 21 skin with an original Starlane Meridian home screen, remote-friendly focus states, five allowlisted home actions, and separately updateable artwork.
-- Bootstrap 1.1.0 records the previous skin before activation and restores it (or Estuary) if activation fails.
+- Bootstrap 1.1.2 records the previous skin before activation and restores it (or Estuary) if activation fails. A graceful restart confirmed the new skin persisted and cleared both recovery markers.
 - Add-on and repository entries intentionally remain schema-driven placeholders until an owner-approved legal allowlist is supplied. The reference profile remains review-only and cannot silently copy a Kodi home directory.
 
-## Published v0.3.0 release
+## Published v0.3.2 test release
 
-The GitHub release `v0.3.0-test` is promoted as the latest release. The permanent
+The GitHub release `v0.3.2-test` is promoted as the latest release. The permanent
 Downloader URL remains:
 
 `https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk`
 
-Published assets include setup app 0.3.0, Bootstrap 1.1.0, the Starlane Meridian
-skin 1.0.0, signed manifest `2026.07.3`, Kodi repository metadata, the Windows
+Published assets include setup app 0.3.0, Bootstrap 1.1.2, the Starlane Meridian
+skin 1.0.0, signed manifest `2026.07.5`, Kodi repository metadata, per-package
+SHA-256 sidecars, the Windows
 administrator bundle, and SHA-256 checksums. The published manifest was downloaded,
 cryptographically verified against `config/manifest.pub`, and matched the local
 release byte-for-byte.
+
+Kodi's repository layout requires `/datadir/addon.id/addon.id-version.zip`. GitHub
+Release assets are flat, so the production Worker now exposes a strictly allowlisted
+public redirect for only `repository.kodisetup` and `skin.starlanemeridian` versioned
+ZIP/hash paths. Physical testing found and corrected Windows CRLF in package hash
+sidecars; release generation now writes exact LF-only bytes and tests that contract.
 
 The release workflow now verifies an offline-signed manifest and never uploads the
 manifest private key to GitHub. Its two manually triggered runs did not publish or
@@ -85,8 +92,8 @@ revisions; these are maintenance warnings, not product or release failures.
 
 ## Tests completed
 
-- Python release/profile/Kodi-manifest/skin/vendor-monitor tests: 16 passed.
-- Control API tests: 9 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
+- Python release/profile/Kodi-manifest/skin/vendor-monitor tests: 18 passed.
+- Control API tests: 10 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
 - Android unit tests, release compilation, lint-vital, and packaging passed.
 - Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.
 - Production Worker deployment and `/health` passed.
@@ -98,13 +105,20 @@ revisions; these are maintenance warnings, not product or release failures.
 - Production D1 migration `0003_device_observability.sql` was applied without losing the existing device or household records. The production Worker is healthy at `https://control.starlanemeridian.uk/health`.
 - GitHub CI passed for both the observability/skin implementation and the offline-manifest verification change.
 - GitHub CI passed all four jobs for vendor-monitor parser fix `23f374f`; corrected vendor-monitor run `29866492916` also passed.
+- Physical Fire TV in-place upgrade from setup app 0.2.0 to 0.3.0 passed with the original first-install timestamp, signing identity, pairing, and Real-Debrid expiry preserved.
+- Expanded device telemetry passed on production: Amazon/AFTKAUK001 identity, Fire OS/API/security patch, ARM ABI, storage/RAM, Kodi/Proton versions, install permission, Bootstrap readiness, progress, and bounded event history all registered without secrets.
+- Remote `SYNC_CONFIG` and `PREPARE_BOOTSTRAP` commands passed. The TV exported Bootstrap 1.1.2 with SHA-256 `63a45209194465114b011a50f68b90a9f009029e25a65cb79243e6d084d8b340`, exactly matching the signed manifest.
+- Physical Bootstrap/skin installation passed after two contained defects were discovered and fixed: Kodi rejected empty internal string defaults in 1.1.0, and the first repository package route/hash sidecar was incompatible with Kodi's layout/literal hash parsing. Estuary remained active during both failures.
+- `skin.starlanemeridian` 1.0.0 installed from the public repository, activated, survived a graceful Kodi restart, and Bootstrap logged confirmation before clearing its pending/previous recovery values.
+- The setup app and production dashboard record now finish at `COMPLETE`, phase `COMPLETE`, 100%, app version 3, configuration `2026.07.5`, Kodi 21.3, Proton VPN 5.5.68.0, Bootstrap ready, and no error. The event timeline records download, verification, Bootstrap-ready, account-link, and completion transitions.
+- CI passed for Bootstrap recovery commit `0b7b006`, artifact routing commit `bbe3f75`, and exact-sidecar commit `7dd4de5`.
 
 ## Outstanding physical checks
 
-The reference Fire TV has not yet been upgraded from setup app 0.2.0 to 0.3.0 and has
-not physically loaded `skin.starlanemeridian` 1.0.0. The TV is available, but the
-owner asked on 21 July to hold this installation. This does not affect the published
-artifacts or cloud migration.
+The reference Fire TV regression is complete. Its current Starlane Meridian home
+screen deliberately remains the first minimal Estuary-derived design; menu-label
+clipping and the next widget-led visual system are design work for the upcoming skin
+discussion, not unresolved installation failures.
 
 An Android TV/Google TV hardware pass remains outstanding because no such device is
 currently available. Fire TV coverage does not substitute for that compatibility test.

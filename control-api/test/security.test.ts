@@ -7,7 +7,7 @@ describe("security helpers", () => {
     const valid = new Request("https://control.test/v1/public/kodi/skin.starlanemeridian/skin.starlanemeridian-1.0.0.zip.sha256", { method: "HEAD" });
     const redirected = kodiArtifact(valid, new URL(valid.url));
     expect(redirected.status).toBe(307);
-    expect(redirected.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/latest/download/skin.starlanemeridian-1.0.0.zip.sha256");
+    expect(redirected.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/latest/download/skin.starlanemeridian-1.0.0.zip.sha256?download=1");
     const mismatched = new Request("https://control.test/v1/public/kodi/skin.starlanemeridian/repository.kodisetup-1.0.0.zip");
     expect(kodiArtifact(mismatched, new URL(mismatched.url)).status).toBe(404);
     const traversal = new Request("https://control.test/v1/public/kodi/skin.starlanemeridian/%2e%2e%2fmanifest.json");
