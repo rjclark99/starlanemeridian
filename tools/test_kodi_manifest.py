@@ -2,6 +2,7 @@ import importlib
 import sys
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree
 
 
 def load_manifest_module():
@@ -30,6 +31,20 @@ class KodiManifestTests(unittest.TestCase):
         self.document["skin"]["homeMenu"][0]["action"]["type"] = "shell"
         with self.assertRaisesRegex(ValueError, "unsafe menu action"):
             self.module.validate(self.document)
+
+    def test_bootstrap_string_settings_have_kodi_readable_defaults(self):
+        settings_path = Path(__file__).resolve().parents[1] / "kodi" / "repository.kodisetup" / "resources" / "settings.xml"
+        root = ElementTree.parse(settings_path).getroot()
+        string_settings = [item for item in root.iter("setting") if item.attrib.get("type") == "string"]
+        self.assertGreater(len(string_settings), 0)
+        for item in string_settings:
+            default = item.find("default")
+            self.assertIsNotNone(default, item.attrib["id"])
+            self.assertTrue(default.text, item.attrib["id"])
+
+        defaults = {item.attrib["id"]: item.findtext("default") for item in string_settings}
+        self.assertEqual("__unset__", defaults["pending_skin"])
+        self.assertEqual("__unset__", defaults["previous_skin"])
 
 
 if __name__ == "__main__":

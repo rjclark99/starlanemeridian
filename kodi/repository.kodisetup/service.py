@@ -13,6 +13,7 @@ from resources.lib.manifest import fetch_and_verify, sha256
 
 ADDON = xbmcaddon.Addon()
 LOG_PREFIX = "[Starlane Meridian] "
+INTERNAL_UNSET = "__unset__"
 
 
 def log(message, level=xbmc.LOGINFO):
@@ -29,6 +30,15 @@ def skin_setting():
     return result.get("result", {}).get("value")
 
 
+def internal_setting(setting_id):
+    value = ADDON.getSettingString(setting_id)
+    return "" if value == INTERNAL_UNSET else value
+
+
+def set_internal_setting(setting_id, value):
+    ADDON.setSettingString(setting_id, value or INTERNAL_UNSET)
+
+
 def set_skin(value):
     request = {"jsonrpc": "2.0", "id": 1, "method": "Settings.SetSettingValue", "params": {"setting": "lookandfeel.skin", "value": value}}
     result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
@@ -37,20 +47,20 @@ def set_skin(value):
 
 
 def recover_pending_skin():
-    target = ADDON.getSettingString("pending_skin")
+    target = internal_setting("pending_skin")
     if not target:
         return
     current = skin_setting()
     if current == target:
-        ADDON.setSettingString("pending_skin", "")
-        ADDON.setSettingString("previous_skin", "")
+        set_internal_setting("pending_skin", "")
+        set_internal_setting("previous_skin", "")
         log("Skin activation confirmed: " + target)
         return
-    previous = ADDON.getSettingString("previous_skin") or "skin.estuary"
+    previous = internal_setting("previous_skin") or "skin.estuary"
     log("Skin activation did not persist; restoring " + previous, xbmc.LOGWARNING)
     set_skin(previous)
-    ADDON.setSettingString("pending_skin", "")
-    ADDON.setSettingString("previous_skin", "")
+    set_internal_setting("pending_skin", "")
+    set_internal_setting("previous_skin", "")
     notify("Skin load failed; the previous Kodi skin was restored")
 
 
@@ -144,8 +154,8 @@ def run():
         if not xbmc.getCondVisibility("System.HasAddon(%s)" % skin_id):
             raise ValueError("skin package is not installed")
         previous = skin_setting() or "skin.estuary"
-        ADDON.setSettingString("previous_skin", previous)
-        ADDON.setSettingString("pending_skin", skin_id)
+        set_internal_setting("previous_skin", previous)
+        set_internal_setting("pending_skin", skin_id)
         set_skin(skin_id)
     except Exception as error:
         failures.append("skin: " + str(error))

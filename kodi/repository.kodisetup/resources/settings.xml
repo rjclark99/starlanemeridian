@@ -17,10 +17,10 @@
           <control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
         <setting id="pending_skin" type="string" label="Pending skin activation" help="Internal recovery state">
-          <default></default><control type="edit" format="string"><enabled>false</enabled></control>
+          <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
         <setting id="previous_skin" type="string" label="Previous skin" help="Internal recovery state">
-          <default></default><control type="edit" format="string"><enabled>false</enabled></control>
+          <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
       </group>
     </category>
