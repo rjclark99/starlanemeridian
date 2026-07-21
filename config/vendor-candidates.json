@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-07-21T20:36:49.945949+00:00",
+  "reviewRequired": true,
+  "warning": "Do not promote these candidates until package identity, compatibility, SHA-256, and signer certificate are independently verified.",
+  "kodi": {
+    "armeabi-v7a": {
+      "version": "21.3",
+      "url": "https://mirrors.kodi.tv/releases/android/arm/kodi-21.3-Omega-armeabi-v7a.apk",
+      "sha256": null,
+      "signerSha256": null
+    },
+    "arm64-v8a": {
+      "version": "21.3",
+      "url": "https://mirrors.kodi.tv/releases/android/arm64-v8a/kodi-21.3-Omega-arm64-v8a.apk",
+      "sha256": null,
+      "signerSha256": null
+    }
+  },
+  "protonVpn": {
+    "version": "5.19.43.0",
+    "releaseUrl": "https://github.com/ProtonVPN/android-app/releases/tag/5.19.43.0",
+    "apkAssets": [
+      {
+        "name": "ProtonVPN-5.19.43.0.605194300.-production-vanilla-direct-release.apk",
+        "url": "https://github.com/ProtonVPN/android-app/releases/download/5.19.43.0/ProtonVPN-5.19.43.0.605194300.-production-vanilla-direct-release.apk",
+        "sha256": "sha256:e5a0b80a6cfcdb86789de95b3f325fa0352c0b44249fc8222eddb854f511e8f0"
+      }
+    ]
+  }
+}
