@@ -360,13 +360,13 @@ python tools\release.py kodi `
 Verify the generated bootstrap ZIP and calculate its hash:
 
 ```powershell
-$BootstrapZip = 'docs\kodi\repository.kodisetup\repository.kodisetup-1.0.2.zip'
+$BootstrapZip = 'docs\kodi\repository.kodisetup\repository.kodisetup-1.1.0.zip'
 Get-FileHash $BootstrapZip -Algorithm SHA256
 ```
 
 Update `config/manifest.json`:
 
-- Set `bootstrap.url` to `https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip`.
+- Set `bootstrap.url` to `https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.0.zip`.
 - Set `bootstrap.sha256` to the generated ZIP hash.
 
 Changing the embedded manifest URL, public key, repository base URL, or bootstrap add-on source changes this hash. Rebuild and recalculate it after any such change.
@@ -384,7 +384,7 @@ After GitHub Pages deploys, confirm these return HTTP 200:
 ```text
 https://rjclark99.github.io/starlanemeridian/kodi/addons.xml
 https://rjclark99.github.io/starlanemeridian/kodi/addons.xml.sha256
-https://rjclark99.github.io/starlanemeridian/kodi/repository.kodisetup/repository.kodisetup-1.0.2.zip
+https://rjclark99.github.io/starlanemeridian/kodi/repository.kodisetup/repository.kodisetup-1.1.0.zip
 ```
 
 ## 10. Validate and stage the manifest
@@ -397,7 +397,9 @@ python tools\release.py validate config\manifest.json
 
 For the first controlled household test, set `stage` to `test`. Once physical-device acceptance passes, change it to `stable` and increment `configVersion` if the payload changed.
 
-The supplied release workflow signs `config/manifest.json`. It refuses to sign a stable manifest containing placeholder hashes, `example.invalid`, or `OWNER/REPOSITORY`.
+Sign `config/manifest.json` only on the trusted owner workstation. The supplied release
+workflow verifies the committed signature and refuses a stable manifest containing
+placeholder hashes, `example.invalid`, or `OWNER/REPOSITORY`.
 
 ## 11. Add GitHub release secrets
 
@@ -405,7 +407,6 @@ Create these as secrets in the GitHub `release` environment:
 
 | Secret | Value |
 | --- | --- |
-| `MANIFEST_PRIVATE_KEY_BASE64` | Base64 of the raw `.secrets/manifest.key` bytes |
 | `ANDROID_KEYSTORE_BASE64` | Base64 of `.secrets/release.jks` |
 | `ANDROID_STORE_PASSWORD` | JKS store password |
 | `ANDROID_KEY_ALIAS` | `kodi-setup` unless you selected another alias |
@@ -414,12 +415,14 @@ Create these as secrets in the GitHub `release` environment:
 | `MANIFEST_PUBLIC_KEY` | One-line contents of `config/manifest.pub` |
 | `CONTROL_API_URL` | Final HTTPS control API base URL |
 
-With GitHub CLI authenticated, binary secrets can be uploaded without writing another plaintext copy:
+Sign `config/manifest.json` offline before committing it. The release workflow verifies
+that signature against the committed public key and deliberately has no access to the
+manifest private key.
+
+With GitHub CLI authenticated, the Android signing keystore can be uploaded without
+writing another plaintext copy:
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path '.secrets\manifest.key'))) |
-  gh secret set MANIFEST_PRIVATE_KEY_BASE64 --env release
-
 [Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path '.secrets\release.jks'))) |
   gh secret set ANDROID_KEYSTORE_BASE64 --env release
 
@@ -428,6 +431,16 @@ Get-Content config\manifest.pub -Raw |
 ```
 
 Add password and URL secrets using GitHub's masked prompt or repository web interface. Never place them in a command committed to shell history.
+
+Confirm GitHub can see all seven names before running a release:
+
+```powershell
+gh secret list --env release
+```
+
+The values remain masked. If a workflow log shows any of these environment variables
+as blank, stop: an empty keystore can produce a misleading Android `KeytoolException`.
+Do not regenerate or replace the established signing key merely to clear that error.
 
 ## 12. Run the first signed release
 
@@ -446,7 +459,7 @@ The workflow builds and publishes:
 
 - `setup.apk`
 - `KodiSetup.Admin-win-x64.zip`
-- `repository.kodisetup-1.0.2.zip`
+- `repository.kodisetup-1.1.0.zip`
 - branded skin and Kodi repository artifacts
 - signed `manifest.json`
 - `SHA256SUMS`
@@ -459,7 +472,7 @@ Confirm the permanent URLs:
 ```powershell
 Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk' -Method Head
 Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/manifest.json' -Method Head
-Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.0.2.zip' -Method Head
+Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.0.zip' -Method Head
 ```
 
 GitHub's `/releases/latest/download/<asset>` URL follows the latest non-prerelease release. If you mark the release as a prerelease, it will not become the `/latest` target.
@@ -561,7 +574,7 @@ In the Windows portal:
 3. Select **Connect** and accept the fingerprint on the TV.
 4. Select the downloaded `setup.apk` and choose **Install setup APK**.
 5. Install Kodi through the TV workflow.
-6. Select the verified `repository.kodisetup-1.0.2.zip` and choose **Deploy bootstrap**.
+6. Select the verified `repository.kodisetup-1.1.0.zip` and choose **Deploy bootstrap**.
 
 The portal probes Kodi's external add-on directory. When it is writable, the repository/service is pushed directly. Otherwise, the ZIP is copied to Downloads and you must complete the guided Kodi installation.
 
@@ -596,7 +609,7 @@ Do not call the release stable until all applicable items pass:
 
 ## 18. Routine updates
 
-The weekly vendor monitor creates a review PR containing discovery data only. It does not update the signed manifest.
+The weekly vendor monitor creates a review PR containing discovery data only. It does not update the signed manifest. In **Settings → Actions → General → Workflow permissions**, enable **Allow GitHub Actions to create and approve pull requests**; without it, candidate discovery succeeds but the final PR step is rejected by GitHub.
 
 For every Kodi or Proton update:
 

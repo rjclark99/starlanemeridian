@@ -44,6 +44,6 @@ Use [docs/OWNER_SETUP_GUIDE.md](docs/OWNER_SETUP_GUIDE.md) for the full checklis
 - Kodi uses the stable channel only.
 - Proton VPN prefers the platform store; GitHub fallback is disabled until reviewed.
 - Third-party Kodi repositories and add-ons remain empty until legally allowlisted.
-- Telemetry is limited to setup state and version/expiry metadata.
+- Telemetry is limited to allowlisted device facts, setup progress, app/configuration versions, and subscription-expiry status.
 - Diagnostics require explicit device consent.
-- The interim manifest keeps Kodi's built-in Estuary skin until the custom skin is tested.
+- The signed manifest packages `skin.starlanemeridian`; Bootstrap 1.1.0 restores the previous skin or Estuary if activation fails.
