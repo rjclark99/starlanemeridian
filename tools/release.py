@@ -118,7 +118,8 @@ def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None)
 
 
 def write_sha256_sidecar(path: Path) -> None:
-    path.with_name(path.name + ".sha256").write_text(hashlib.sha256(path.read_bytes()).hexdigest() + "\n", encoding="ascii")
+    # Kodi compares the sidecar literally; CRLF leaves a trailing carriage return in the expected hash.
+    path.with_name(path.name + ".sha256").write_bytes((hashlib.sha256(path.read_bytes()).hexdigest() + "\n").encode("ascii"))
 
 
 def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None:

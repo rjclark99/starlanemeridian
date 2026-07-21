@@ -69,6 +69,8 @@ class ReleaseTests(unittest.TestCase):
             repository_zip = next((output / "repository.kodisetup").glob("repository.kodisetup-*.zip"))
             sidecar = repository_zip.with_name(repository_zip.name + ".sha256")
             self.assertEqual(sidecar.read_text(encoding="ascii").strip(), hashlib.sha256(repository_zip.read_bytes()).hexdigest())
+            self.assertTrue(sidecar.read_bytes().endswith(b"\n"))
+            self.assertNotIn(b"\r", sidecar.read_bytes())
             with __import__("zipfile").ZipFile(repository_zip) as archive:
                 addon_xml = archive.read("repository.kodisetup/addon.xml").decode("utf-8")
             self.assertIn('<datadir zip="true">https://control.example.test/v1/public/kodi/</datadir>', addon_xml)
