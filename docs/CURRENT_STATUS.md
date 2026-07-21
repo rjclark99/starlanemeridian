@@ -74,11 +74,14 @@ GitHub Actions pull-request permission was enabled on 21 July. The vendor monito
 rerun successfully and opened review-only PR #1. Review caught a parser defect that
 ignored Kodi's two-part `21.3` version and initially proposed `18.7.2`; commit
 `23f374f` corrected the parser and added regression tests. A second successful monitor
-run updated PR #1 to Kodi 21.3 for ARM32/ARM64 and Proton VPN 5.19.43.0. The PR changes
-only `config/vendor-candidates.json`, retains null Kodi hash/signer fields, and remains
-unmerged pending artifact verification. GitHub still reports Node.js 20 deprecation
-warnings for older action revisions; these are maintenance warnings, not product or
-release failures.
+run updated PR #1 to Kodi 21.3 for ARM32/ARM64 and Proton VPN 5.19.43.0. Independent
+verification then matched both Kodi APKs to Kodi's official checksum sidecars and
+pinned signer, and matched Proton's official GitHub digest, package identity, API/ABI
+metadata, and signing certificate to the Proton version installed on the reference TV.
+PR #1 changed only `config/vendor-candidates.json` and was squash-merged as `86abb5c`;
+it did not modify the signed manifest or promote an artifact. All four PR and post-merge
+CI jobs passed. GitHub still reports Node.js 20 deprecation warnings for older action
+revisions; these are maintenance warnings, not product or release failures.
 
 ## Tests completed
 
