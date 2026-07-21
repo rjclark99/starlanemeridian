@@ -11,7 +11,7 @@ Last verified: 21 July 2026.
 - Test device: Amazon AFTKAUK001, Fire OS / Android 9.
 - Kodi 21.3 and Proton VPN are installed.
 - Signed setup app 0.3.0 (version code 3) is installed on the reference Fire TV; the in-place upgrade preserved pairing and account status.
-- Kodi Setup Bootstrap 1.1.2 and `skin.starlanemeridian` 1.1.0 are installed and active on the reference Fire TV. Signed configuration `2026.07.6` is prepared for the skin release.
+- Kodi Setup Bootstrap 1.1.2, signed configuration `2026.07.6`, and `skin.starlanemeridian` 1.1.0 are installed and active on the reference Fire TV.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 
 ## Verified behavior
@@ -48,19 +48,24 @@ enters the signed manifest.
 - Bootstrap 1.1.2 records the previous skin before activation and restores it (or Estuary) if activation fails. A graceful restart confirmed the new skin persisted and cleared both recovery markers.
 - Add-on and repository entries intentionally remain schema-driven placeholders until an owner-approved legal allowlist is supplied. The reference profile remains review-only and cannot silently copy a Kodi home directory.
 
-## Published v0.3.2 test release
+## Published v0.3.3 test release
 
-The GitHub release `v0.3.2-test` is promoted as the latest release. The permanent
+The GitHub release `v0.3.3-test` is promoted as the latest release. The permanent
 Downloader URL remains:
 
 `https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk`
 
-Published assets include setup app 0.3.0, Bootstrap 1.1.2, the Starlane Meridian
-skin 1.0.0, signed manifest `2026.07.5`, Kodi repository metadata, per-package
-SHA-256 sidecars, the Windows
-administrator bundle, and SHA-256 checksums. The published manifest was downloaded,
+Published assets include the unchanged setup app 0.3.0 and Windows administrator
+bundle, Bootstrap 1.1.2, Starlane Meridian skins 1.0.0 (rollback) and 1.1.0,
+signed manifest `2026.07.6`, Kodi repository metadata, per-package
+SHA-256 sidecars, and SHA-256 checksums. The published manifest was downloaded,
 cryptographically verified against `config/manifest.pub`, and matched the local
 release byte-for-byte.
+
+All 12 draft assets were downloaded back through GitHub's authenticated asset API
+and matched their local SHA-256 values before publication. After promotion, the
+permanent setup, manifest, repository metadata, skin 1.1.0, and Cloudflare skin-route
+URLs all returned HTTP 200. CI run `29874885686` passed for commit `12972b5`.
 
 Kodi's repository layout requires `/datadir/addon.id/addon.id-version.zip`. GitHub
 Release assets are flat, so the production Worker now exposes a strictly allowlisted
@@ -112,6 +117,7 @@ revisions; these are maintenance warnings, not product or release failures.
 - Physical Bootstrap/skin installation passed after two contained defects were discovered and fixed: Kodi rejected empty internal string defaults in 1.1.0, and the first repository package route/hash sidecar was incompatible with Kodi's layout/literal hash parsing. Estuary remained active during both failures.
 - `skin.starlanemeridian` 1.0.0 installed from the public repository, activated, survived a graceful Kodi restart, and Bootstrap logged confirmation before clearing its pending/previous recovery values.
 - Skin 1.1.0 was then hot-deployed as a skin-only physical regression. Kodi loaded the new version without XML/skin errors; Home opens first; all six destinations remain visible through D-pad traversal; Kids & Family, Settings, and Search fallback text fit without clipping; and the branded two-second startup transition was captured after Kodi's native splash. The original installed skin was backed up under the ignored `build/device-backups` area before deployment.
+- After public release, Bootstrap fetched and verified manifest `2026.07.6`, applied it on the reference TV, retained skin 1.1.0, and advanced its idempotent applied-version marker. A second Kodi start confirmed the skin and cleared both pending/previous rollback markers; the final log contains no Bootstrap or skin error.
 - The setup app and production dashboard record now finish at `COMPLETE`, phase `COMPLETE`, 100%, app version 3, configuration `2026.07.5`, Kodi 21.3, Proton VPN 5.5.68.0, Bootstrap ready, and no error. The event timeline records download, verification, Bootstrap-ready, account-link, and completion transitions.
 - CI passed for Bootstrap recovery commit `0b7b006`, artifact routing commit `bbe3f75`, and exact-sidecar commit `7dd4de5`.
 
