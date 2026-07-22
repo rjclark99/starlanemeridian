@@ -16,7 +16,7 @@ from release import safe_zip_tree, validate_manifest
 
 SKIN_ID = "skin.starlanemeridian"
 SKIN_NAME = "Starlane Meridian"
-SKIN_VERSION = "1.2.1"
+SKIN_VERSION = "1.2.2"
 WINDOWS = {
     "home": "Home",
     "videos": "Videos",
@@ -167,7 +167,7 @@ def home_xml(menu: list[dict]) -> str:
     <control type=\"label\"><left>144</left><top>87</top><width>620</width><height>28</height><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
     <control type=\"label\"><right>62</right><top>50</top><width>390</width><height>40</height><align>right</align><font>Meridian_Clock</font><label>$INFO[System.Time]</label><textcolor>FFF4FAFF</textcolor></control>
     <control type=\"label\"><right>64</right><top>91</top><width>390</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
-    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>786</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
+    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>810</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
     <control type=\"list\" id=\"9000\"><left>74</left><top>190</top><width>314</width><height>418</height><orientation>vertical</orientation><scrolltime>150</scrolltime>
 {nav_right}
       <ondown>9050</ondown>

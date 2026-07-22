@@ -103,6 +103,14 @@ class SkinBuilderTests(unittest.TestCase):
             self.assertEqual(control.findtext("aligny"), "center")
             self.assertEqual(control.findtext("texturenofocus"), "")
             self.assertEqual(control.find("texturenofocus").attrib, {})
+        pane = next(
+            control for control in root.findall(".//control[@type='image']")
+            if control.findtext("left") == "58" and control.findtext("top") == "170"
+        )
+        power = root.find(".//control[@id='9054']")
+        pane_bottom = int(pane.findtext("top")) + int(pane.findtext("height"))
+        power_bottom = int(power.findtext("top")) + int(power.findtext("height"))
+        self.assertGreaterEqual(pane_bottom - power_bottom, 32)
 
     def test_now_playing_ribbon_is_conditional_and_static(self):
         document = skin_builder.home_xml(self.menu())
