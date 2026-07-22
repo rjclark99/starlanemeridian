@@ -16,7 +16,7 @@ from release import safe_zip_tree, validate_manifest
 
 SKIN_ID = "skin.starlanemeridian"
 SKIN_NAME = "Starlane Meridian"
-SKIN_VERSION = "1.2.3"
+SKIN_VERSION = "1.2.4"
 WINDOWS = {
     "home": "Home",
     "videos": "Videos",
@@ -175,9 +175,10 @@ def home_xml(menu: list[dict]) -> str:
         <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
       </itemlayout>
       <focusedlayout width=\"314\" height=\"68\">
-        <control type=\"image\"><left>0</left><top>4</top><width>306</width><height>60</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control>
-        <control type=\"image\"><left>0</left><top>15</top><width>5</width><height>38</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
-        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_NavFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <control type=\"image\"><visible>Control.HasFocus(9000)</visible><left>0</left><top>4</top><width>306</width><height>60</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control>
+        <control type=\"image\"><visible>Control.HasFocus(9000)</visible><left>0</left><top>15</top><width>5</width><height>38</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
+        <control type=\"label\"><visible>Control.HasFocus(9000)</visible><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_NavFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <control type=\"label\"><visible>!Control.HasFocus(9000)</visible><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
         <animation effect=\"slide\" start=\"-6,0\" end=\"0,0\" time=\"140\">Focus</animation>
       </focusedlayout>
       <content>

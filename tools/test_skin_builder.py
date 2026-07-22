@@ -41,6 +41,19 @@ class SkinBuilderTests(unittest.TestCase):
         resting_labels = nav.findall("./itemlayout/control[@type='label']")
         self.assertTrue(all(label.findtext("textcolor") == "FFF4FAFF" for label in resting_labels))
 
+    def test_main_navigation_highlight_requires_actual_list_focus(self):
+        root = ElementTree.fromstring(skin_builder.home_xml(self.menu()))
+        focused_layout = root.find(".//control[@id='9000']/focusedlayout")
+        focus_surfaces = focused_layout.findall("./control[@type='image']")
+        self.assertTrue(focus_surfaces)
+        self.assertTrue(all(control.findtext("visible") == "Control.HasFocus(9000)" for control in focus_surfaces))
+        labels = focused_layout.findall("./control[@type='label']")
+        self.assertEqual(len(labels), 2)
+        self.assertEqual(labels[0].findtext("visible"), "Control.HasFocus(9000)")
+        self.assertEqual(labels[0].findtext("textcolor"), "FF07111F")
+        self.assertEqual(labels[1].findtext("visible"), "!Control.HasFocus(9000)")
+        self.assertEqual(labels[1].findtext("textcolor"), "FFF4FAFF")
+
     def test_startup_is_branded_and_valid(self):
         root = ElementTree.fromstring(skin_builder.startup_xml())
         self.assertEqual(root.findtext("backgroundcolor"), "FF050B14")
