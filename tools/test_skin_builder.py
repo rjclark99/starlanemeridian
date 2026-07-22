@@ -95,11 +95,14 @@ class SkinBuilderTests(unittest.TestCase):
             control = root.find(f".//control[@id='{control_id}']")
             self.assertEqual(control.findtext("label"), label)
             self.assertEqual(control.findtext("onclick"), action)
-            self.assertEqual(control.findtext("width"), "306")
-            self.assertGreaterEqual(int(control.findtext("left")), 74)
-            self.assertLessEqual(int(control.findtext("left")) + int(control.findtext("width")), 380)
+            self.assertEqual(control.findtext("width"), "274")
+            self.assertEqual(control.findtext("height"), "48")
+            self.assertGreaterEqual(int(control.findtext("left")), 90)
+            self.assertLessEqual(int(control.findtext("left")) + int(control.findtext("width")), 364)
             self.assertEqual(control.findtext("textcolor"), "FFF4FAFF")
             self.assertEqual(control.findtext("aligny"), "center")
+            self.assertEqual(control.findtext("texturenofocus"), "")
+            self.assertEqual(control.find("texturenofocus").attrib, {})
 
     def test_now_playing_ribbon_is_conditional_and_static(self):
         document = skin_builder.home_xml(self.menu())

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.7",
+  "configVersion": "2026.07.8",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -168,6 +168,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "o4NxU9LlM16NpHKbr6riSrxTZfW_Allbnof4qoI3xA6Olx2aSxE1eAMkLn2uTINeMBcC3FYeyOk80wuBu5aWBw"
+    "value": "Cj_arMuudwRm1xokxVwNHfgM0yxjdHYk9JjDNRUFxqi_uBwpPSDHGeHc25d4SmxPvUGg_x0zgDMC4NV-DWeHBw"
   }
 }
