@@ -85,20 +85,22 @@ class SkinBuilderTests(unittest.TestCase):
         root = ElementTree.fromstring(skin_builder.home_xml(self.menu()))
         self.assertEqual(root.findtext("menucontrol"), "9050")
         expected = {
-            "9050": ("FAVOURITES", "ActivateWindow(FavouritesBrowser)"),
-            "9051": ("ADD-ONS", "ActivateWindow(AddonBrowser)"),
-            "9052": ("PROFILES", "ActivateWindow(Profiles)"),
-            "9053": ("SETTINGS", "ActivateWindow(Settings)"),
-            "9054": ("POWER", "ActivateWindow(ShutdownMenu)"),
+            "9050": ("Favourites", "ActivateWindow(FavouritesBrowser)"),
+            "9051": ("Add-ons", "ActivateWindow(AddonBrowser)"),
+            "9052": ("Profiles", "ActivateWindow(Profiles)"),
+            "9053": ("Settings", "ActivateWindow(Settings)"),
+            "9054": ("Power", "ActivateWindow(ShutdownMenu)"),
         }
+        nav_focus_surface = root.find(".//control[@id='9000']/focusedlayout/control[@type='image']")
         for control_id, (label, action) in expected.items():
             control = root.find(f".//control[@id='{control_id}']")
             self.assertEqual(control.findtext("label"), label)
             self.assertEqual(control.findtext("onclick"), action)
-            self.assertEqual(control.findtext("width"), "274")
-            self.assertEqual(control.findtext("height"), "48")
-            self.assertGreaterEqual(int(control.findtext("left")), 90)
-            self.assertLessEqual(int(control.findtext("left")) + int(control.findtext("width")), 364)
+            self.assertEqual(control.findtext("width"), nav_focus_surface.findtext("width"))
+            self.assertEqual(control.findtext("height"), nav_focus_surface.findtext("height"))
+            self.assertEqual(control.findtext("left"), "74")
+            self.assertEqual(control.findtext("font"), "Meridian_Nav")
+            self.assertEqual(control.findtext("textoffsetx"), "28")
             self.assertEqual(control.findtext("textcolor"), "FFF4FAFF")
             self.assertEqual(control.findtext("aligny"), "center")
             self.assertEqual(control.findtext("texturenofocus"), "")

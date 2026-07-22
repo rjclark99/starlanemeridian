@@ -16,7 +16,7 @@ from release import safe_zip_tree, validate_manifest
 
 SKIN_ID = "skin.starlanemeridian"
 SKIN_NAME = "Starlane Meridian"
-SKIN_VERSION = "1.2.2"
+SKIN_VERSION = "1.2.3"
 WINDOWS = {
     "home": "Home",
     "videos": "Videos",
@@ -167,7 +167,7 @@ def home_xml(menu: list[dict]) -> str:
     <control type=\"label\"><left>144</left><top>87</top><width>620</width><height>28</height><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
     <control type=\"label\"><right>62</right><top>50</top><width>390</width><height>40</height><align>right</align><font>Meridian_Clock</font><label>$INFO[System.Time]</label><textcolor>FFF4FAFF</textcolor></control>
     <control type=\"label\"><right>64</right><top>91</top><width>390</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
-    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>810</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
+    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>820</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
     <control type=\"list\" id=\"9000\"><left>74</left><top>190</top><width>314</width><height>418</height><orientation>vertical</orientation><scrolltime>150</scrolltime>
 {nav_right}
       <ondown>9050</ondown>
@@ -184,13 +184,13 @@ def home_xml(menu: list[dict]) -> str:
 {chr(10).join(items)}
       </content>
     </control>
-    <control type=\"image\"><left>90</left><top>620</top><width>274</width><height>1</height><texture colordiffuse=\"5261C8FF\">colors/white.png</texture></control>
-    <control type=\"label\"><left>102</left><top>632</top><width>250</width><height>24</height><font>Meridian_Utility</font><label>QUICK ACCESS</label><textcolor>FF91A8C0</textcolor></control>
-    <control type=\"button\" id=\"9050\"><left>90</left><top>662</top><width>274</width><height>48</height><font>Meridian_Utility</font><label>FAVOURITES</label><align>left</align><aligny>center</aligny><textoffsetx>18</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9000</onup><ondown>9051</ondown><onright>9000</onright><onclick>ActivateWindow(FavouritesBrowser)</onclick></control>
-    <control type=\"button\" id=\"9051\"><left>90</left><top>720</top><width>274</width><height>48</height><font>Meridian_Utility</font><label>ADD-ONS</label><align>left</align><aligny>center</aligny><textoffsetx>18</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9050</onup><ondown>9052</ondown><onright>9000</onright><onclick>ActivateWindow(AddonBrowser)</onclick></control>
-    <control type=\"button\" id=\"9052\"><left>90</left><top>778</top><width>274</width><height>48</height><font>Meridian_Utility</font><label>PROFILES</label><align>left</align><aligny>center</aligny><textoffsetx>18</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9051</onup><ondown>9053</ondown><onright>9000</onright><onclick>ActivateWindow(Profiles)</onclick></control>
-    <control type=\"button\" id=\"9053\"><left>90</left><top>836</top><width>274</width><height>48</height><font>Meridian_Utility</font><label>SETTINGS</label><align>left</align><aligny>center</aligny><textoffsetx>18</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9052</onup><ondown>9054</ondown><onright>9000</onright><onclick>ActivateWindow(Settings)</onclick></control>
-    <control type=\"button\" id=\"9054\"><left>90</left><top>894</top><width>274</width><height>48</height><font>Meridian_Utility</font><label>POWER</label><align>left</align><aligny>center</aligny><textoffsetx>18</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9053</onup><ondown>9000</ondown><onright>9000</onright><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
+    <control type=\"image\"><left>90</left><top>608</top><width>274</width><height>1</height><texture colordiffuse=\"5261C8FF\">colors/white.png</texture></control>
+    <control type=\"label\"><left>102</left><top>618</top><width>250</width><height>24</height><font>Meridian_Meta</font><label>QUICK ACCESS</label><textcolor>FF91A8C0</textcolor></control>
+    <control type=\"button\" id=\"9050\"><left>74</left><top>650</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Favourites</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9000</onup><ondown>9051</ondown><onright>9000</onright><onclick>ActivateWindow(FavouritesBrowser)</onclick></control>
+    <control type=\"button\" id=\"9051\"><left>74</left><top>712</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Add-ons</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9050</onup><ondown>9052</ondown><onright>9000</onright><onclick>ActivateWindow(AddonBrowser)</onclick></control>
+    <control type=\"button\" id=\"9052\"><left>74</left><top>774</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Profiles</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9051</onup><ondown>9053</ondown><onright>9000</onright><onclick>ActivateWindow(Profiles)</onclick></control>
+    <control type=\"button\" id=\"9053\"><left>74</left><top>836</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Settings</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9052</onup><ondown>9054</ondown><onright>9000</onright><onclick>ActivateWindow(Settings)</onclick></control>
+    <control type=\"button\" id=\"9054\"><left>74</left><top>898</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Power</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9053</onup><ondown>9000</ondown><onright>9000</onright><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
     <control type=\"group\"><left>432</left><top>220</top><width>1000</width><height>300</height>
 {''.join(hero_details)}
     </control>
