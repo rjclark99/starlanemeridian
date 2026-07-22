@@ -100,7 +100,7 @@ revisions; these are maintenance warnings, not product or release failures.
 
 ## Tests completed
 
-- Python release/profile/Kodi-settings/Kodi-manifest/skin/vendor-monitor tests: 28 passed, including expanded menu-order, XML, typography-width, startup, provider-allowlist, performance-bound, search-fallback, utility-rail, power-dialog, safe advanced-settings merge, and semantic-artifact-selection coverage.
+- Python release/profile/Kodi-settings/Kodi-manifest/skin/vendor-monitor tests: 29 passed, including expanded menu-order, XML, typography-width, startup, provider-allowlist, performance-bound, search-fallback, single-focus ownership, utility-rail, power-dialog, safe advanced-settings merge, and semantic-artifact-selection coverage.
 - Control API tests: 10 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
 - Android unit tests, release compilation, lint-vital, and packaging passed.
 - Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.

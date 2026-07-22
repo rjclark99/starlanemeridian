@@ -38,6 +38,7 @@ enforced in code and documented in [SECURITY.md](SECURITY.md).
 Use [docs/OWNER_SETUP_GUIDE.md](docs/OWNER_SETUP_GUIDE.md) for the full checklist,
 [docs/OPERATIONS.md](docs/OPERATIONS.md) for routine operations, and
 [docs/CURRENT_STATUS.md](docs/CURRENT_STATUS.md) for the verified deployment state.
+New agent sessions should begin with [docs/AGENT_HANDOFF.md](docs/AGENT_HANDOFF.md).
 
 ## Current safe defaults
 
