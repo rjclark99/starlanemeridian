@@ -10,6 +10,7 @@ import xbmcaddon
 import xbmcvfs
 
 from resources.lib.manifest import fetch_and_verify, sha256
+from resources.lib.kodi_settings import disable_core_splash
 
 ADDON = xbmcaddon.Addon()
 LOG_PREFIX = "[Starlane Meridian] "
@@ -44,6 +45,18 @@ def set_skin(value):
     result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
     if "error" in result:
         raise ValueError(result["error"].get("message", "skin activation failed"))
+
+
+def configure_kodi_quality_of_life():
+    """Disable Kodi's core splash without replacing any other advanced setting."""
+    path = xbmcvfs.translatePath("special://profile/advancedsettings.xml")
+    try:
+        changed = disable_core_splash(path)
+    except (OSError, ValueError, ElementTree.ParseError) as error:
+        log("advancedsettings.xml was left unchanged: " + str(error), xbmc.LOGWARNING)
+        return
+    if changed:
+        log("Kodi core splash disabled; Meridian startup will lead on the next launch")
 
 
 def recover_pending_skin():
@@ -121,6 +134,7 @@ def apply_addon(item):
 
 def run():
     recover_pending_skin()
+    configure_kodi_quality_of_life()
     manifest_url = ADDON.getSettingString("manifest_url")
     public_key = ADDON.getSettingString("public_key")
     if not public_key:

@@ -38,6 +38,8 @@ class SkinBuilderTests(unittest.TestCase):
         self.assertTrue(nav_labels)
         self.assertTrue(all(int(label.findtext("width")) >= 260 for label in nav_labels))
         self.assertTrue(all(label.findtext("scroll") == "false" for label in nav_labels))
+        resting_labels = nav.findall("./itemlayout/control[@type='label']")
+        self.assertTrue(all(label.findtext("textcolor") == "FFF4FAFF" for label in resting_labels))
 
     def test_startup_is_branded_and_valid(self):
         root = ElementTree.fromstring(skin_builder.startup_xml())
@@ -47,6 +49,21 @@ class SkinBuilderTests(unittest.TestCase):
         self.assertIn("STARLANE MERIDIAN", serialized)
         self.assertIn("ReplaceWindow($INFO[System.StartupWindow])", serialized)
         self.assertIn("00:02", serialized)
+
+    def test_power_dialog_is_branded_complete_and_safely_padded(self):
+        root = ElementTree.fromstring(skin_builder.power_dialog_xml())
+        self.assertEqual(root.attrib.get("type"), "dialog")
+        self.assertEqual(root.findtext("defaultcontrol"), "9000")
+        serialized = ElementTree.tostring(root, encoding="unicode")
+        self.assertIn("POWER &amp; SESSION", serialized)
+        self.assertIn("brand/emblem.png", serialized)
+        for action in ("Quit()", "Powerdown()", "Suspend()", "Hibernate()", "Reset()", "System.LogOff"):
+            self.assertIn(action, serialized)
+        panel = root.find(".//control[@id='9000']")
+        self.assertEqual(panel.findtext("left"), "42")
+        self.assertEqual(panel.findtext("width"), "616")
+        focus_surface = panel.find("./focusedlayout/control[@type='image']")
+        self.assertEqual(focus_surface.findtext("width"), "616")
 
     def test_widget_sources_are_allowlisted_and_performance_bounded(self):
         document = skin_builder.home_xml(self.menu())
@@ -64,11 +81,32 @@ class SkinBuilderTests(unittest.TestCase):
         self.assertIn("System.HasAddon(script.globalsearch)", document)
         self.assertIn("Install TMDb Helper for search", document)
 
-    def test_settings_and_power_are_separate_from_content_order(self):
+    def test_quick_access_is_full_width_padded_and_remote_navigable(self):
         root = ElementTree.fromstring(skin_builder.home_xml(self.menu()))
-        self.assertEqual(root.find(".//control[@id='9050']/label").text, "SETTINGS")
-        self.assertEqual(root.find(".//control[@id='9051']/label").text, "POWER")
-        self.assertEqual(root.find(".//control[@id='9050']/onclick").text, "ActivateWindow(Settings)")
+        self.assertEqual(root.findtext("menucontrol"), "9050")
+        expected = {
+            "9050": ("FAVOURITES", "ActivateWindow(FavouritesBrowser)"),
+            "9051": ("ADD-ONS", "ActivateWindow(AddonBrowser)"),
+            "9052": ("PROFILES", "ActivateWindow(Profiles)"),
+            "9053": ("SETTINGS", "ActivateWindow(Settings)"),
+            "9054": ("POWER", "ActivateWindow(ShutdownMenu)"),
+        }
+        for control_id, (label, action) in expected.items():
+            control = root.find(f".//control[@id='{control_id}']")
+            self.assertEqual(control.findtext("label"), label)
+            self.assertEqual(control.findtext("onclick"), action)
+            self.assertEqual(control.findtext("width"), "306")
+            self.assertGreaterEqual(int(control.findtext("left")), 74)
+            self.assertLessEqual(int(control.findtext("left")) + int(control.findtext("width")), 380)
+            self.assertEqual(control.findtext("textcolor"), "FFF4FAFF")
+            self.assertEqual(control.findtext("aligny"), "center")
+
+    def test_now_playing_ribbon_is_conditional_and_static(self):
+        document = skin_builder.home_xml(self.menu())
+        self.assertIn("Player.HasMedia", document)
+        self.assertIn("Player.Progress", document)
+        self.assertIn("$INFO[Player.Title]", document)
+        self.assertNotIn("script.skin.helper", document)
 
     def test_untrusted_actions_cannot_be_compiled(self):
         with self.assertRaisesRegex(SystemExit, "Unsupported Kodi window"):

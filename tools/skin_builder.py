@@ -16,7 +16,7 @@ from release import safe_zip_tree, validate_manifest
 
 SKIN_ID = "skin.starlanemeridian"
 SKIN_NAME = "Starlane Meridian"
-SKIN_VERSION = "1.1.0"
+SKIN_VERSION = "1.2.0"
 WINDOWS = {
     "home": "Home",
     "videos": "Videos",
@@ -153,6 +153,7 @@ def home_xml(menu: list[dict]) -> str:
     return f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <window>
   <defaultcontrol always=\"true\">9000</defaultcontrol>
+  <menucontrol>9050</menucontrol>
   <backgroundcolor>FF050B14</backgroundcolor>
   <animation effect=\"fade\" start=\"0\" end=\"100\" time=\"220\">WindowOpen</animation>
   <animation effect=\"fade\" start=\"100\" end=\"0\" time=\"150\">WindowClose</animation>
@@ -166,12 +167,12 @@ def home_xml(menu: list[dict]) -> str:
     <control type=\"label\"><left>144</left><top>87</top><width>620</width><height>28</height><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
     <control type=\"label\"><right>62</right><top>50</top><width>390</width><height>40</height><align>right</align><font>Meridian_Clock</font><label>$INFO[System.Time]</label><textcolor>FFF4FAFF</textcolor></control>
     <control type=\"label\"><right>64</right><top>91</top><width>390</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
-    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>596</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
-    <control type=\"list\" id=\"9000\"><left>74</left><top>190</top><width>314</width><height>454</height><orientation>vertical</orientation><scrolltime>150</scrolltime>
+    <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>786</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
+    <control type=\"list\" id=\"9000\"><left>74</left><top>190</top><width>314</width><height>418</height><orientation>vertical</orientation><scrolltime>150</scrolltime>
 {nav_right}
       <ondown>9050</ondown>
       <itemlayout width=\"314\" height=\"68\">
-        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FF91A8C0</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
       </itemlayout>
       <focusedlayout width=\"314\" height=\"68\">
         <control type=\"image\"><left>0</left><top>4</top><width>306</width><height>60</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control>
@@ -183,14 +184,27 @@ def home_xml(menu: list[dict]) -> str:
 {chr(10).join(items)}
       </content>
     </control>
-    <control type=\"button\" id=\"9050\"><left>74</left><top>682</top><width>146</width><height>52</height><font>Meridian_Meta</font><label>SETTINGS</label><align>center</align><textcolor>FF91A8C0</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"22102A42\">colors/white.png</texturenofocus><onup>9000</onup><onright>9051</onright><onclick>ActivateWindow(Settings)</onclick></control>
-    <control type=\"button\" id=\"9051\"><left>230</left><top>682</top><width>150</width><height>52</height><font>Meridian_Meta</font><label>POWER</label><align>center</align><textcolor>FF91A8C0</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"22102A42\">colors/white.png</texturenofocus><onup>9000</onup><onleft>9050</onleft><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
+    <control type=\"image\"><left>90</left><top>620</top><width>274</width><height>1</height><texture colordiffuse=\"5261C8FF\">colors/white.png</texture></control>
+    <control type=\"label\"><left>102</left><top>632</top><width>250</width><height>24</height><font>Meridian_Utility</font><label>QUICK ACCESS</label><textcolor>FF91A8C0</textcolor></control>
+    <control type=\"button\" id=\"9050\"><left>74</left><top>660</top><width>306</width><height>52</height><font>Meridian_Utility</font><label>FAVOURITES</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"10102A42\">colors/white.png</texturenofocus><onup>9000</onup><ondown>9051</ondown><onright>9000</onright><onclick>ActivateWindow(FavouritesBrowser)</onclick></control>
+    <control type=\"button\" id=\"9051\"><left>74</left><top>718</top><width>306</width><height>52</height><font>Meridian_Utility</font><label>ADD-ONS</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"10102A42\">colors/white.png</texturenofocus><onup>9050</onup><ondown>9052</ondown><onright>9000</onright><onclick>ActivateWindow(AddonBrowser)</onclick></control>
+    <control type=\"button\" id=\"9052\"><left>74</left><top>776</top><width>306</width><height>52</height><font>Meridian_Utility</font><label>PROFILES</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"10102A42\">colors/white.png</texturenofocus><onup>9051</onup><ondown>9053</ondown><onright>9000</onright><onclick>ActivateWindow(Profiles)</onclick></control>
+    <control type=\"button\" id=\"9053\"><left>74</left><top>834</top><width>306</width><height>52</height><font>Meridian_Utility</font><label>SETTINGS</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"10102A42\">colors/white.png</texturenofocus><onup>9052</onup><ondown>9054</ondown><onright>9000</onright><onclick>ActivateWindow(Settings)</onclick></control>
+    <control type=\"button\" id=\"9054\"><left>74</left><top>892</top><width>306</width><height>52</height><font>Meridian_Utility</font><label>POWER</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus colordiffuse=\"10102A42\">colors/white.png</texturenofocus><onup>9053</onup><ondown>9000</ondown><onright>9000</onright><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
     <control type=\"group\"><left>432</left><top>220</top><width>1000</width><height>300</height>
 {''.join(hero_details)}
     </control>
 {''.join(widgets)}
-    <control type=\"label\"><left>62</left><bottom>34</bottom><width>830</width><height>26</height><font>Meridian_Meta</font><label>KODI $INFO[System.BuildVersion]  ·  STARLANE MERIDIAN</label><textcolor>FF607991</textcolor></control>
-    <control type=\"label\"><right>62</right><bottom>34</bottom><width>720</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>OK SELECTS  ·  BACK RETURNS  ·  MENU OPENS OPTIONS</label><textcolor>FF607991</textcolor></control>
+    <control type=\"group\"><visible>Player.HasMedia</visible><left>432</left><top>968</top><width>1426</width><height>76</height>
+      <control type=\"image\"><left>0</left><top>0</top><width>1426</width><height>76</height><texture colordiffuse=\"E6081522\">colors/white.png</texture></control>
+      <control type=\"image\"><left>10</left><top>8</top><width>96</width><height>60</height><aspectratio align=\"center\">scale</aspectratio><texture fallback=\"DefaultVideo.png\">$INFO[Player.Art(thumb)]</texture></control>
+      <control type=\"label\"><left>124</left><top>8</top><width>720</width><height>30</height><font>Meridian_CardFocus</font><label>$INFO[Player.Title]</label><textcolor>FFF4FAFF</textcolor><scroll>false</scroll></control>
+      <control type=\"label\"><left>124</left><top>40</top><width>720</width><height>24</height><font>Meridian_Utility</font><label>$INFO[Player.Artist]$INFO[Player.TVShowTitle,  ·  ]</label><textcolor>FF91A8C0</textcolor><scroll>false</scroll></control>
+      <control type=\"progress\"><left>880</left><top>29</top><width>330</width><height>10</height><info>Player.Progress</info></control>
+      <control type=\"label\"><right>20</right><top>18</top><width>176</width><height>34</height><align>right</align><font>Meridian_Utility</font><label>$INFO[Player.Time] / $INFO[Player.Duration]</label><textcolor>FFF4FAFF</textcolor></control>
+    </control>
+    <control type=\"label\"><visible>!Player.HasMedia</visible><left>62</left><bottom>34</bottom><width>830</width><height>26</height><font>Meridian_Meta</font><label>KODI $INFO[System.BuildVersion]  ·  STARLANE MERIDIAN</label><textcolor>FF607991</textcolor></control>
+    <control type=\"label\"><visible>!Player.HasMedia</visible><right>62</right><bottom>34</bottom><width>720</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>OK SELECTS  ·  BACK RETURNS  ·  MENU OPENS QUICK ACCESS</label><textcolor>FF607991</textcolor></control>
   </controls>
 </window>
 """
@@ -213,13 +227,60 @@ def startup_xml() -> str:
 """
 
 
+def power_dialog_xml() -> str:
+    """Render Kodi's platform-aware power actions in an original Meridian dialog."""
+    items = (
+        ("$LOCALIZE[13012]", "Quit()", "System.ShowExitButton"),
+        ("$LOCALIZE[13016]", "Powerdown()", "System.CanPowerDown"),
+        ("$LOCALIZE[20150]", "AlarmClock(shutdowntimer,Shutdown())", "!System.HasAlarm(shutdowntimer) + [System.CanPowerDown | System.CanSuspend | System.CanHibernate]"),
+        ("$LOCALIZE[20151] $INFO[System.AlarmPos,(,)]", "CancelAlarm(shutdowntimer)", "System.HasAlarm(shutdowntimer)"),
+        ("$LOCALIZE[13011]", "Suspend()", "System.CanSuspend"),
+        ("$LOCALIZE[13010]", "Hibernate()", "System.CanHibernate"),
+        ("$LOCALIZE[13013]", "Reset()", "System.CanReboot"),
+        ("$LOCALIZE[20126] $INFO[System.ProfileName]", "System.LogOff", "[System.HasLoginScreen | Integer.IsGreater(System.ProfileCount,1)] + System.Loggedon"),
+        ("$VAR[MasterModeLabel]", "Mastermode", "System.HasLocks"),
+        ("$LOCALIZE[13017]", "InhibitIdleShutdown(true)", "System.HasShutdown + !System.IdleShutdownInhibited"),
+        ("$LOCALIZE[13018]", "InhibitIdleShutdown(false)", "System.HasShutdown + System.IdleShutdownInhibited"),
+    )
+    content = "\n".join(
+        f"        <item><label>{label}</label><onclick>{html.escape(command)}</onclick><visible>{html.escape(visible)}</visible></item>"
+        for label, command, visible in items
+    )
+    return f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<window type=\"dialog\">
+  <defaultcontrol always=\"true\">9000</defaultcontrol>
+  <backgroundcolor>00000000</backgroundcolor>
+  <animation effect=\"fade\" start=\"0\" end=\"100\" time=\"140\">WindowOpen</animation>
+  <animation effect=\"fade\" start=\"100\" end=\"0\" time=\"110\">WindowClose</animation>
+  <controls>
+    <control type=\"image\"><left>0</left><top>0</top><width>1920</width><height>1080</height><texture colordiffuse=\"B8050B14\">colors/white.png</texture></control>
+    <control type=\"group\"><left>610</left><top>250</top><width>700</width><height>580</height>
+      <control type=\"image\"><left>0</left><top>0</top><width>700</width><height>580</height><texture colordiffuse=\"F2081522\" border=\"20\">buttons/button-fo.png</texture></control>
+      <control type=\"image\"><left>0</left><top>0</top><width>700</width><height>4</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
+      <control type=\"image\"><left>42</left><top>34</top><width>64</width><height>64</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture></control>
+      <control type=\"label\"><left>128</left><top>38</top><width>510</width><height>50</height><font>Meridian_Section</font><label>POWER &amp; SESSION</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny></control>
+      <control type=\"label\"><left>42</left><top>108</top><width>616</width><height>30</height><font>Meridian_Utility</font><label>Available actions depend on this device</label><textcolor>FF91A8C0</textcolor></control>
+      <control type=\"panel\" id=\"9000\"><left>42</left><top>154</top><width>616</width><height>356</height><orientation>vertical</orientation><scrolltime>100</scrolltime>
+        <itemlayout width=\"616\" height=\"64\"><control type=\"label\"><left>24</left><top>5</top><width>568</width><height>54</height><font>Meridian_Body</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control></itemlayout>
+        <focusedlayout width=\"616\" height=\"64\"><control type=\"image\"><left>0</left><top>4</top><width>616</width><height>56</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control><control type=\"image\"><left>0</left><top>14</top><width>5</width><height>36</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control><control type=\"label\"><left>24</left><top>5</top><width>568</width><height>54</height><font>Meridian_CardFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control></focusedlayout>
+        <content>
+{content}
+        </content>
+      </control>
+      <control type=\"label\"><left>42</left><bottom>20</bottom><width>616</width><height>24</height><font>Meridian_Utility</font><label>BACK  ·  CLOSE</label><textcolor>FF607991</textcolor><align>right</align></control>
+    </control>
+  </controls>
+</window>
+"""
+
+
 def apply_brand_fonts(path: Path) -> None:
     root = ElementTree.parse(path).getroot()
     specifications = (
         ("Meridian_Meta", 18, False), ("Meridian_Card", 20, False), ("Meridian_CardFocus", 20, True),
         ("Meridian_Body", 24, False), ("Meridian_Nav", 28, False), ("Meridian_NavFocus", 28, True),
         ("Meridian_Section", 26, True), ("Meridian_Wordmark", 30, True), ("Meridian_Clock", 32, False),
-        ("Meridian_Hero", 52, True), ("Meridian_Splash", 46, True),
+        ("Meridian_Hero", 52, True), ("Meridian_Splash", 46, True), ("Meridian_Utility", 17, True),
     )
     for fontset in root.findall("fontset"):
         filename = "arial.ttf" if fontset.attrib.get("id") == "Arial" else "NotoSans-Regular.ttf"
@@ -313,6 +374,7 @@ def build(archive: Path, manifest_path: Path, output: Path, version: str, brandi
         addon_path.write_text('<?xml version="1.0" encoding="UTF-8"?>\n' + ElementTree.tostring(root, encoding="unicode") + "\n", encoding="utf-8")
         (staged / "xml" / "Home.xml").write_text(home_xml(manifest["skin"]["homeMenu"]), encoding="utf-8")
         (staged / "xml" / "Startup.xml").write_text(startup_xml(), encoding="utf-8")
+        (staged / "xml" / "DialogButtonMenu.xml").write_text(power_dialog_xml(), encoding="utf-8")
         apply_brand_fonts(staged / "xml" / "Font.xml")
         apply_family_playlists(staged)
         apply_brand_assets(staged, branding)
