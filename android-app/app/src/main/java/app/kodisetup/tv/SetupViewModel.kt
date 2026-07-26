@@ -166,7 +166,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         }.isSuccess
         if (opened) {
             workflowPrefs.edit().putBoolean("proton_store_opened", true).apply()
-            transition(SetupStep.KODI, "Install Proton VPN from the official store, then return to Starlane Meridian")
+            transition(SetupStep.KODI, "Install Proton VPN from the official store, then return to Starlane Movies")
             update(phase = SetupPhase.WAITING_PROTON_STORE, progress = 55)
         } else {
             update(error = "PROTON_INSTALL_UNAVAILABLE", message = "No compatible official Proton VPN installation route is configured")
@@ -307,7 +307,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         if (state.value.busy) return
         when (state.value.step) {
             SetupStep.WELCOME -> loadConfiguration()
-            SetupStep.CONFIGURATION -> if (installer.canRequestInstalls()) installKodi() else update(message = "Select Allow APK installs, approve Starlane Meridian, then return here")
+            SetupStep.CONFIGURATION -> if (installer.canRequestInstalls()) installKodi() else update(message = "Select Allow APK installs, approve Starlane Movies, then return here")
             SetupStep.KODI -> installProton()
             SetupStep.PROTON -> if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) update(message = "Select Prepare Kodi bootstrap and allow storage access") else prepareBootstrap()
             SetupStep.BOOTSTRAP -> update(message = "Open Kodi and confirm the one-time bootstrap ZIP installation")

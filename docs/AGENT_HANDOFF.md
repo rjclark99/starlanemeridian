@@ -1,12 +1,26 @@
-# Starlane Meridian agent handoff
+# Starlane Movies agent handoff
 
-Last updated: 22 July 2026 after the verified skin 1.2.4 / v0.3.8-test release.
+Last updated: 26 July 2026 after preparing the experimental Starlane Movies skin source.
 
 This is the continuity document for a new Codex task. Read this file first, then
 `README.md`, `SECURITY.md`, `docs/CURRENT_STATUS.md`, and `docs/OPERATIONS.md` before
 changing code or deployed state. `docs/OWNER_SETUP_GUIDE.md` is the detailed owner
 runbook; some example version numbers in it are historical, so prefer the live values
 below and in `config/manifest.json`.
+
+The product's user-facing identity is now **Starlane Movies**. Local unreleased source
+versions are setup app `0.4.0` (version code 4), Estuary-derived skin `1.3.0`, and
+Bootstrap `1.1.4`. The deployed/public release remains `v0.3.8-test` until a separate
+hardware and release pass. Keep the existing Android package, `skin.starlanemeridian`
+add-on ID, GitHub repository, control domain, Worker name, and release URLs for upgrade
+and route compatibility.
+
+The GPL-2.0 experimental poster-led skin source is tracked at
+`kodi/skin.starlane.movies`. Version 2.2.3 contains the tested Starlane Movies
+branding, startup, focus, and idle-navigation fixes while preserving upstream
+attribution and internal compatibility identifiers. It remains outside the signed
+production manifest. Version 2.2.2 is installed and active on the reference Fire TV;
+the production `skin.starlanemeridian` 1.2.4 skin remains installed for rollback.
 
 ## 1. Owner intent and standing instructions
 
@@ -46,7 +60,7 @@ Standing constraints from the owner and product design:
 - Workspace: `C:\Users\Admin\Documents\Codex Projects\Kodi Remote Setup APK`
 - GitHub: `https://github.com/rjclark99/starlanemeridian` (public)
 - Default branch: `main`
-- Current clean HEAD: `79650c2` (`Document Meridian skin 1.2.4 release`)
+- Rebrand base HEAD: `2879cb8` (`Add complete agent project handoff`)
 - Code commit for the current skin: `8b0e4b2`
 - Latest release: `v0.3.8-test`
 - Release URL: `https://github.com/rjclark99/starlanemeridian/releases/tag/v0.3.8-test`
@@ -209,7 +223,7 @@ Locations: `kodi/`, `tools/skin_builder.py`, `tools/release.py`
   settings, preserving unrelated settings and rejecting malformed XML
 - Skin activation records the previous skin and restores it or Estuary if activation
   fails; two launches are normally required to apply then confirm/clear recovery state
-- The Meridian skin is generated from a reviewed Kodi/Estuary source archive, retains
+- The Starlane Movies skin is generated from a reviewed Kodi/Estuary source archive, retains
   GPL attribution, and remains independently updateable
 - Manifest actions/providers are closed/compiled allowlists, not arbitrary Kodi built-in
   strings, Python, shell, or plugin URLs
@@ -370,9 +384,9 @@ manifest using the public key.
 - Bootstrap 1.1.3 installs from the public repository, applies signed config
   idempotently, handles splash configuration safely, activates/restores skins, and
   clears recovery state after confirmation.
-- Original Starlane Meridian branding, logo/emblem, horizon art, tagline, brand guide,
+- Original Starlane Movies branding, logo/emblem, horizon art, tagline, brand guide,
   and generated asset pipeline are established.
-- Meridian skin 1.2.4 has branded startup, cinematic hero, ordered menus, local/PVR
+- Starlane Movies skin 1.2.4 has branded startup, cinematic hero, ordered menus, local/PVR
   widgets, Family playlists, optional search adapters, Quick Access, power dialog,
   now-playing ribbon, consistent typography/focus geometry, overscan margins, no native
   Kodi splash, and exactly one visual focus target.
@@ -393,7 +407,7 @@ library at legitimate sample content and verify:
 - PVR channel logos and Live TV presentation
 - optional TMDb Helper and Global Search result layouts/performance
 - Settings, add-on browser, profiles, media windows, dialogs, OSD, notifications,
-  keyboard, file browser, and other inherited Estuary windows under the Meridian theme
+  keyboard, file browser, and other inherited Estuary windows under the Starlane Movies theme
 - performance and memory on lower-end Fire OS hardware
 
 Maintain one clear focal point, white left-rail text, consistent sizing, safe overscan,

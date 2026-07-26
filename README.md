@@ -1,11 +1,12 @@
-# Starlane Meridian
+# Starlane Movies
 
 A remote-friendly Android TV / Fire TV provisioning platform:
 
 - `android-app/` - the sideloaded setup APK.
 - `admin-portal/` - a Windows-local administration portal and encrypted credential vault.
 - `control-api/` - a Cloudflare Worker + D1 device control plane.
-- `kodi/` - the Kodi bootstrap/repository service and custom-skin source.
+- `kodi/` - the Kodi bootstrap/repository service, production skin builder inputs, and
+  GPL-2.0 experimental `skin.starlane.movies` source.
 - `config/` - the signed, versioned setup-manifest schema.
 - `profiles/` - the safe reference-TV profile workflow.
 - `tools/` - release, profile, repository, skin, signing, and validation utilities.

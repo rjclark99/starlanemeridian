@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BINGIE -->
+<window>
+    <defaultcontrol always="true">10</defaultcontrol>
+    <backgroundcolor>ff050b14</backgroundcolor>
+    <include>DefaultSkinSettings</include>
+    <onload condition="String.IsEqual(Skin.String(HomeLayout),bingie)">SetProperty(Random,$INFO[System.Time(ss)],Home)</onload>
+    <!--
+        Do not leave the legacy modal startup-mask dialog active.  When its
+        visibility timer expires Kodi can keep its hidden no-op button focused,
+        which consumes all subsequent D-pad input on Home.
+    -->
+    <onload>ClearProperty(StartupMask,home)</onload>
+    <!-- Render the splash in this normal window, then leave it deterministically. -->
+    <onload>AlarmClock(StarlaneMoviesSplash,ReplaceWindow($VAR[StartUpWindow]),00:03,silent)</onload>
+    <onunload condition="Player.HasVideo">PlayerControl(Stop)</onunload>
+	
+	<!-- Start TMDbH service -->
+    <onload>Skin.SetBool(TMDbHelper.Service)</onload>
+	<onload>Skin.SetString(TMDbHelper.MonitorContainer,99950)</onload>
+
+    <controls>
+        <control type="image">
+            <include>FullscreenDimensions</include>
+            <aspectratio>scale</aspectratio>
+            <texture background="true">special://skin/extras/starlane-movies/horizon.png</texture>
+            <animation effect="fade" start="0" end="100" time="300">WindowOpen</animation>
+        </control>
+
+        <control type="group">
+            <left>510</left>
+            <top>330</top>
+            <width>900</width>
+            <height>380</height>
+            <animation effect="fade" start="0" end="100" time="400">WindowOpen</animation>
+            <control type="image">
+                <left>350</left>
+                <top>0</top>
+                <width>200</width>
+                <height>200</height>
+                <aspectratio align="center">keep</aspectratio>
+                <texture background="true">special://skin/extras/starlane-movies/emblem.png</texture>
+            </control>
+            <control type="label">
+                <left>0</left>
+                <top>224</top>
+                <width>900</width>
+                <height>62</height>
+                <font>Bold48</font>
+                <align>center</align>
+                <aligny>center</aligny>
+                <label>STARLANE MOVIES</label>
+                <textcolor>fff4faff</textcolor>
+                <shadowcolor>cc050b14</shadowcolor>
+            </control>
+            <control type="image">
+                <left>310</left>
+                <top>300</top>
+                <width>280</width>
+                <height>3</height>
+                <texture colordiffuse="ff67e8c4">colors/color_white.png</texture>
+            </control>
+            <control type="label">
+                <left>0</left>
+                <top>316</top>
+                <width>900</width>
+                <height>34</height>
+                <font>Reg24</font>
+                <align>center</align>
+                <aligny>center</aligny>
+                <label>YOUR MEDIA. ON COURSE.</label>
+                <textcolor>ff91a8c0</textcolor>
+                <shadowcolor>cc050b14</shadowcolor>
+            </control>
+        </control>
+
+        <!-- Absorb input only while the normal Startup window is on-screen. -->
+        <control type="button" id="10">
+            <include>HiddenObject</include>
+            <include content="ButtonMovementAction">
+                <param name="action" value="noop" />
+            </include>
+        </control>
+    </controls>
+</window>

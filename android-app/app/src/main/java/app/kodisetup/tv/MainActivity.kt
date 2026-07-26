@@ -67,7 +67,7 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF050B14), Color(0xFF102A42)))).padding(56.dp)) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
             Column {
-                Text("STARLANE MERIDIAN", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF67E8C4))
+                Text("STARLANE MOVIES", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF67E8C4))
                 Spacer(Modifier.height(12.dp))
                 Text(titleFor(state.step), fontSize = 40.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 Spacer(Modifier.height(12.dp))

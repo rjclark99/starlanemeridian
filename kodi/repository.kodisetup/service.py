@@ -13,7 +13,7 @@ from resources.lib.manifest import fetch_and_verify, sha256
 from resources.lib.kodi_settings import disable_core_splash
 
 ADDON = xbmcaddon.Addon()
-LOG_PREFIX = "[Starlane Meridian] "
+LOG_PREFIX = "[Starlane Movies] "
 INTERNAL_UNSET = "__unset__"
 
 
@@ -22,7 +22,7 @@ def log(message, level=xbmc.LOGINFO):
 
 
 def notify(message):
-    xbmc.executebuiltin("Notification(Starlane Meridian,%s,5000)" % message.replace(",", " "))
+    xbmc.executebuiltin("Notification(Starlane Movies,%s,5000)" % message.replace(",", " "))
 
 
 def skin_setting():
@@ -56,7 +56,7 @@ def configure_kodi_quality_of_life():
         log("advancedsettings.xml was left unchanged: " + str(error), xbmc.LOGWARNING)
         return
     if changed:
-        log("Kodi core splash disabled; Meridian startup will lead on the next launch")
+        log("Kodi core splash disabled; Starlane Movies startup will lead on the next launch")
 
 
 def recover_pending_skin():

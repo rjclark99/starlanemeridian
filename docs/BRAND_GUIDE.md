@@ -1,14 +1,14 @@
-# Starlane Meridian brand guide
+# Starlane Movies brand guide
 
 ## Brand idea
 
-Starlane Meridian is a calm navigation system for home media. The identity combines a meridian arc, a guide star, a horizon, and converging lanes. It should feel precise and quietly futuristic rather than playful, aggressive, or densely “sci-fi.”
+Starlane Movies is a calm navigation system for home media. The identity combines a cinematic horizon, a guide star, an orbital arc, and converging lanes. It should feel precise and quietly futuristic rather than playful, aggressive, or densely “sci-fi.”
 
 Working tagline: **Your media. On course.**
 
 ## Logo
 
-The primary emblem is the transparent `assets/branding/starlane-meridian-emblem-v2.png`. Keep clear space around it equal to at least one quarter of the emblem width. Do not rotate it, add an outer badge, recolour it purple, or place it over visually busy imagery.
+The primary emblem is the transparent `assets/branding/starlane-movies-emblem-v2.png`. Keep clear space around it equal to at least one quarter of the emblem width. Do not rotate it, add an outer badge, recolour it purple, or place it over visually busy imagery.
 
 The generated chroma source and first matte are retained as provenance and iteration history. Production consumers use the `-v2` transparent emblem.
 
@@ -18,7 +18,7 @@ The generated chroma source and first matte are retained as provenance and itera
 | --- | --- | --- |
 | Deep space | `#050B14` | Primary background |
 | Night route | `#081522` | Panels and dialogs |
-| Meridian blue | `#102A42` | Elevated surfaces |
+| Cinema blue | `#102A42` | Elevated surfaces |
 | Starlight | `#F4FAFF` | Primary text and selected surfaces |
 | Ice route | `#61C8FF` | Focus, progress, and links |
 | Guide mint | `#67E8C4` | Success, active markers, and fine accents |
@@ -42,6 +42,6 @@ TV transitions use restrained fades and 8-pixel focus slides between 150 and 280
 
 ## Source artwork
 
-The emblem, home background, and `starlane-meridian-horizon.png` startup/home artwork were generated with the built-in image-generation workflow, then stored in `assets/branding`. Android and web derivatives are reproducibly created by `tools/build_brand_assets.py`. The Kodi skin builder embeds the production assets so every surface presents one coherent identity.
+The emblem, home background, and `starlane-movies-horizon.png` startup/home artwork were generated with the built-in image-generation workflow, then stored in `assets/branding`. Android and web derivatives are reproducibly created by `tools/build_brand_assets.py`. The Kodi skin builder embeds the production assets so every surface presents one coherent identity.
 
 The horizon artwork intentionally keeps the centre and upper-left quiet for TV-safe typography. Route detail is concentrated at the lower-right edge, so it can also sit behind focused library fanart without competing with titles or navigation.

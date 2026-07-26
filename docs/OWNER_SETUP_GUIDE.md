@@ -8,7 +8,7 @@ Do not begin a public release until the final checklist passes. The release tool
 
 Prepare these first:
 
-- The established **Starlane Meridian** identity. Production artwork and its usage rules live in `assets/branding/` and `docs/BRAND_GUIDE.md`.
+- The established **Starlane Movies** identity. Production artwork and its usage rules live in `assets/branding/` and `docs/BRAND_GUIDE.md`.
 - A GitHub account and the final public repository name.
 - A Cloudflare account. A domain managed by Cloudflare is strongly recommended so that only `/v1/admin/*` is protected by Cloudflare Access while device endpoints remain public.
 - One administrator email identity for Cloudflare Access.

@@ -23,7 +23,7 @@ class SkinBuilderTests(unittest.TestCase):
         self.assertEqual(root.findtext("defaultcontrol"), "9000")
         self.assertEqual(root.find(".//control[@id='9000']").attrib["type"], "list")
         self.assertIsNone(root.find(".//control[@id='9000']/focusposition"))
-        self.assertIn("STARLANE MERIDIAN", document)
+        self.assertIn("STARLANE MOVIES", document)
         self.assertIn("ActivateWindow(Videos,movietitles)", document)
         self.assertIn("ActivateWindow(TVChannels)", document)
 
@@ -59,7 +59,7 @@ class SkinBuilderTests(unittest.TestCase):
         self.assertEqual(root.findtext("backgroundcolor"), "FF050B14")
         serialized = ElementTree.tostring(root, encoding="unicode")
         self.assertIn("brand/horizon.png", serialized)
-        self.assertIn("STARLANE MERIDIAN", serialized)
+        self.assertIn("STARLANE MOVIES", serialized)
         self.assertIn("ReplaceWindow($INFO[System.StartupWindow])", serialized)
         self.assertIn("00:02", serialized)
 
@@ -112,7 +112,7 @@ class SkinBuilderTests(unittest.TestCase):
             self.assertEqual(control.findtext("width"), nav_focus_surface.findtext("width"))
             self.assertEqual(control.findtext("height"), nav_focus_surface.findtext("height"))
             self.assertEqual(control.findtext("left"), "74")
-            self.assertEqual(control.findtext("font"), "Meridian_Nav")
+            self.assertEqual(control.findtext("font"), "Movies_Nav")
             self.assertEqual(control.findtext("textoffsetx"), "28")
             self.assertEqual(control.findtext("textcolor"), "FFF4FAFF")
             self.assertEqual(control.findtext("aligny"), "center")

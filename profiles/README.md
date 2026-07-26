@@ -1,6 +1,6 @@
 # Reference-TV profiles
 
-Starlane Meridian treats a configured TV as a design reference, not as an opaque
+Starlane Movies treats a configured TV as a design reference, not as an opaque
 backup to restore. Run `tools/profile_export.py` against a locally pulled Kodi
 home directory to produce a review-only inventory. The exporter copies no files
 and excludes databases, history, caches, sources, favourites, account identifiers,

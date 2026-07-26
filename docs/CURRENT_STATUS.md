@@ -1,6 +1,29 @@
 # Current deployment status
 
-Last verified: 22 July 2026.
+Last verified deployment: 25 July 2026.
+
+## Unreleased Starlane Movies rebrand
+
+On 24 July 2026 the user-facing product identity was changed to **Starlane Movies** in
+source. The local candidates are setup app `0.4.0` (version code 4), Estuary-derived
+skin `1.3.0`, and Bootstrap `1.1.4`. Android unit tests/lint, the Windows portal Release
+build/tests, all Python/Kodi tests, manifest validation/signature verification, and the
+source skin build pass.
+
+The Android package name, Kodi add-on ID `skin.starlanemeridian`, GitHub repository,
+control domain, Worker name, and release URLs intentionally remain unchanged as
+compatibility identifiers. Renaming them would break installed-client upgrades and
+public routes. No production rebrand candidate has been signed, deployed, or published.
+
+The GPL-2.0 experimental poster-led skin is tracked at `kodi/skin.starlane.movies`.
+Source version 2.2.3 uses the Starlane Movies identity, palette, emblem, horizon,
+backgrounds, static startup, and user-facing copy while retaining upstream attribution
+and internal compatibility identifiers. It is not included in the signed production
+manifest. On 25 July 2026 version 2.2.2 was installed on the reference Fire TV and made
+active. Its required Omega dependencies were installed from the upstream and official
+Kodi repositories. A cold restart loaded the skin without missing-module or font
+errors. The temporary authenticated Kodi webserver used for installation was disabled
+again and its temporary password cleared.
 
 ## Working deployment
 
@@ -11,7 +34,9 @@ Last verified: 22 July 2026.
 - Test device: Amazon AFTKAUK001, Fire OS / Android 9.
 - Kodi 21.3 and Proton VPN are installed.
 - Signed setup app 0.3.0 (version code 3) is installed on the reference Fire TV; the in-place upgrade preserved pairing and account status.
-- Kodi Setup Bootstrap 1.1.3, signed configuration `2026.07.11`, and `skin.starlanemeridian` 1.2.4 are installed and active on the reference Fire TV.
+- Kodi Setup Bootstrap 1.1.3 and signed configuration `2026.07.11` remain installed.
+  The experimental `skin.starlane.movies` 2.2.2 skin is currently active; the production
+  `skin.starlanemeridian` 1.2.4 skin remains installed as the rollback option.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 
 ## Verified behavior
@@ -43,7 +68,7 @@ enters the signed manifest.
 - The control plane accepts a strictly allowlisted, signed status payload and stores a bounded 90-day event timeline. It records model/platform facts, app versions, coarse storage and memory, install permission, bootstrap readiness, current setup phase, progress percentage, and a non-secret status message.
 - The password-protected local dashboard shows live presence, installation progress, a step rail, device facts, package versions, readiness checks, Real-Debrid expiry, and the most recent 20 status events. It refreshes every 30 seconds.
 - Setup app 0.3.0 sends a heartbeat every 30 seconds while it is active. It never reports credentials, OAuth tokens, payment details, Kodi activity, filenames, or browsing history.
-- `skin.starlanemeridian` 1.2.4 is a complete Estuary-derived Kodi 21 skin with an original Meridian startup transition, cinematic hero region, six ordered content destinations, two-row local/PVR widgets, Family/Animation smart playlists, white left-rail text, a five-item quick-access rail with guarded edge clearances, a branded platform-aware power dialog, a lightweight now-playing ribbon, and separately updateable artwork. Every selectable left-rail row uses the same 28-pixel label scale, 28-pixel inset, and 306-by-60-pixel focus surface. The main-list selection paints its focus surface only while that list owns focus, preventing simultaneous highlights when Quick Access or content controls are active.
+- `skin.starlanemeridian` 1.2.4 is a complete Estuary-derived Kodi 21 skin with an original Starlane Movies startup transition, cinematic hero region, six ordered content destinations, two-row local/PVR widgets, Family/Animation smart playlists, white left-rail text, a five-item quick-access rail with guarded edge clearances, a branded platform-aware power dialog, a lightweight now-playing ribbon, and separately updateable artwork. Every selectable left-rail row uses the same 28-pixel label scale, 28-pixel inset, and 306-by-60-pixel focus surface. The main-list selection paints its focus surface only while that list owns focus, preventing simultaneous highlights when Quick Access or content controls are active.
 - Home order is Home, Search, TV Shows, Movies, Live TV, then Kids & Family. TMDb Helper and Global Search are optional search adapters; the home screen has no helper-service dependency, automatic trailers, or remote widget requirement.
 - Bootstrap 1.1.3 records the previous skin before activation and restores it (or Estuary) if activation fails. It also merge-writes only Kodi's supported `<splash>false</splash>` advanced setting, preserving every other advanced setting and refusing malformed files. A graceful restart confirmed the new skin persisted and cleared both recovery markers.
 - Add-on and repository entries intentionally remain schema-driven placeholders until an owner-approved legal allowlist is supplied. The reference profile remains review-only and cannot silently copy a Kodi home directory.
@@ -56,7 +81,7 @@ Downloader URL remains:
 `https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk`
 
 Published assets include the unchanged setup app 0.3.0 and Windows administrator
-bundle, Bootstrap 1.1.3, Starlane Meridian skins 1.0.0 through 1.2.3 (rollback) plus 1.2.4,
+bundle, Bootstrap 1.1.3, Starlane Movies skins 1.0.0 through 1.2.3 (rollback) plus 1.2.4,
 signed manifest `2026.07.11`, Kodi repository metadata, per-package
 SHA-256 sidecars, and SHA-256 checksums. The published manifest was downloaded,
 cryptographically verified against `config/manifest.pub`, and matched the local
@@ -121,7 +146,7 @@ revisions; these are maintenance warnings, not product or release failures.
 - Skin 1.1.0 was then hot-deployed as a skin-only physical regression. Kodi loaded the new version without XML/skin errors; Home opens first; all six destinations remain visible through D-pad traversal; Kids & Family, Settings, and Search fallback text fit without clipping; and the branded two-second startup transition was captured after Kodi's native splash. The original installed skin was backed up under the ignored `build/device-backups` area before deployment.
 - After public release, Bootstrap fetched and verified manifest `2026.07.6`, applied it on the reference TV, retained skin 1.1.0, and advanced its idempotent applied-version marker. A second Kodi start confirmed the skin and cleared both pending/previous rollback markers; the final log contains no Bootstrap or skin error.
 - Skin 1.2.0 was built twice byte-for-byte identically and hot-deployed to the reference Fire TV. Home, Settings, Power, and the branded power dialog were captured at 1920×1080; white rail labels and all focus surfaces remained inside their padded bounds. Kodi logged no skin/XML error.
-- Bootstrap 1.1.3 created `<splash>false</splash>` on the device, and timed restart captures showed black Android loading frames followed directly by Meridian's branded startup window with no Kodi core splash. The published Bootstrap then fetched and verified manifest `2026.07.7`, advanced its applied-version marker, confirmed skin 1.2.0 after restart, and cleared both recovery markers without an error.
+- Bootstrap 1.1.3 created `<splash>false</splash>` on the device, and timed restart captures showed black Android loading frames followed directly by Starlane Movies' branded startup window with no Kodi core splash. The published Bootstrap then fetched and verified manifest `2026.07.7`, advanced its applied-version marker, confirmed skin 1.2.0 after restart, and cleared both recovery markers without an error.
 - Skin 1.2.1 corrected the remaining quick-access surface issue found on hardware. Its controls are 274×48 pixels with 32-pixel pane margins and 10-pixel vertical gaps; idle controls use Kodi's native empty texture, so only the focused row paints a background. Favourites, Settings, and Power focus captures passed at 1920×1080. Bootstrap then applied public manifest `2026.07.8` and confirmed 1.2.1 without an error.
 - Skin 1.2.2 corrected the final Power-row collision with the pane's rounded bottom mask. The pane now leaves 38 pixels beneath Power, and a regression assertion enforces at least 32 pixels. A new 1920×1080 Power-focus capture passed on the Fire TV; public manifest `2026.07.9` then applied and cleared both recovery markers without an error.
 - Skin 1.2.3 unified the main navigation and Quick Access rows at 28-pixel text, a 28-pixel left inset, and identical 306-by-60-pixel focus surfaces. A physical Power-focus capture confirmed matching geometry and 32 pixels of protected space below the row with no Kodi skin/XML error. All 20 release assets were byte-verified before publication; the Fire TV then fetched signed manifest `2026.07.10`, retained skin 1.2.3, and cleared both recovery markers.

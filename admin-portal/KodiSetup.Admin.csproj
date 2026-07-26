@@ -5,9 +5,11 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <Product>Starlane Movies Administration</Product>
+    <Title>Starlane Movies Administration</Title>
+    <Description>Local Starlane Movies household and device administration portal.</Description>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
   </ItemGroup>
 </Project>
-

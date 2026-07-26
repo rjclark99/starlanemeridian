@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="repository.kodisetup" name="Starlane Meridian Bootstrap" version="1.1.3" provider-name="Starlane Meridian">
+<addon id="repository.kodisetup" name="Starlane Movies Bootstrap" version="1.1.4" provider-name="Starlane Movies">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
   </requires>
-  <extension point="xbmc.addon.repository" name="Starlane Meridian Repository">
+  <extension point="xbmc.addon.repository" name="Starlane Movies Repository">
     <dir>
       <info>${REPOSITORY_BASE_URL}/addons.xml</info>
       <checksum>${REPOSITORY_BASE_URL}/addons.xml.sha256</checksum>

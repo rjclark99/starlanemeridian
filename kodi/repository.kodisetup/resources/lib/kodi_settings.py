@@ -21,7 +21,7 @@ def disable_core_splash(path):
         return False
     splash.text = "false"
     ElementTree.indent(tree)
-    temporary = path + ".starlane-meridian.tmp"
+    temporary = path + ".starlane-movies.tmp"
     tree.write(temporary, encoding="utf-8", xml_declaration=True)
     os.replace(temporary, path)
     return True

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the Starlane Meridian GPL skin from a reviewed Kodi Estuary source archive."""
+"""Build the Starlane Movies GPL skin from a reviewed Kodi Estuary source archive."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from xml.etree import ElementTree
 from release import safe_zip_tree, validate_manifest
 
 SKIN_ID = "skin.starlanemeridian"
-SKIN_NAME = "Starlane Meridian"
-SKIN_VERSION = "1.2.4"
+SKIN_NAME = "Starlane Movies"
+SKIN_VERSION = "1.3.0"
 WINDOWS = {
     "home": "Home",
     "videos": "Videos",
@@ -72,7 +72,7 @@ def onclick_markup(value: dict) -> str:
     if value["type"] == "kodi-window" and value["target"] == "search":
         return """<onclick condition="System.HasAddon(plugin.video.themoviedb.helper)">ActivateWindow(Videos,plugin://plugin.video.themoviedb.helper/?info=search,return)</onclick>
             <onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + System.HasAddon(script.globalsearch)">RunAddon(script.globalsearch)</onclick>
-            <onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + !System.HasAddon(script.globalsearch)">Notification(Starlane Meridian,Install TMDb Helper for search,5000)</onclick>"""
+            <onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + !System.HasAddon(script.globalsearch)">Notification(Starlane Movies,Install TMDb Helper for search,5000)</onclick>"""
     return f"<onclick>{html.escape(action(value))}</onclick>"
 
 
@@ -87,25 +87,25 @@ def _widget_xml(menu_id: str, widget: dict, control_id: int, top: int, previous_
       <control type="group">
         <visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(menu_id)})</visible>
         <left>432</left><top>{top}</top>
-        <control type="label"><left>0</left><top>0</top><width>1398</width><height>42</height><font>Meridian_Section</font><label>{html.escape(widget['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
+        <control type="label"><left>0</left><top>0</top><width>1398</width><height>42</height><font>Movies_Section</font><label>{html.escape(widget['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
         <control type="fixedlist" id="{control_id}">
           <left>-10</left><top>46</top><width>1450</width><height>170</height><orientation>horizontal</orientation><scrolltime>180</scrolltime><preloaditems>1</preloaditems>
           <onleft>9000</onleft><onup>{up}</onup><ondown>{down}</ondown>
           <itemlayout width="270" height="166">
             <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><aspectratio align="center" aligny="center">scale</aspectratio><texture fallback="DefaultVideo.png">$INFO[ListItem.Art(fanart)]</texture></control>
             <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><texture colordiffuse="26050B14">colors/white.png</texture></control>
-            <control type="textbox"><left>10</left><top>130</top><width>250</width><height>34</height><font>Meridian_Card</font><label>$INFO[ListItem.Label]</label><textcolor>FFB6C7D8</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
+            <control type="textbox"><left>10</left><top>130</top><width>250</width><height>34</height><font>Movies_Card</font><label>$INFO[ListItem.Label]</label><textcolor>FFB6C7D8</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
           </itemlayout>
           <focusedlayout width="270" height="166">
             <control type="image"><left>4</left><top>0</top><width>262</width><height>132</height><texture colordiffuse="FF61C8FF">colors/white.png</texture></control>
             <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><aspectratio align="center" aligny="center">scale</aspectratio><texture fallback="DefaultVideo.png">$INFO[ListItem.Art(fanart)]</texture></control>
             <control type="image"><left>10</left><top>6</top><width>250</width><height>120</height><texture colordiffuse="18050B14">colors/white.png</texture></control>
-            <control type="textbox"><left>10</left><top>130</top><width>250</width><height>34</height><font>Meridian_CardFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
+            <control type="textbox"><left>10</left><top>130</top><width>250</width><height>34</height><font>Movies_CardFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
             <animation effect="zoom" start="96" end="100" center="135,66" time="150">Focus</animation>
           </focusedlayout>
           <content target="{target}" limit="{widget['limit']}" browse="never">{html.escape(provider)}</content>
         </control>
-        <control type="label"><visible>Integer.IsEqual(Container({control_id}).NumItems,0)</visible><left>0</left><top>68</top><width>900</width><height>44</height><font>Meridian_Body</font><label>No items available yet</label><textcolor>FF607991</textcolor></control>
+        <control type="label"><visible>Integer.IsEqual(Container({control_id}).NumItems,0)</visible><left>0</left><top>68</top><width>900</width><height>44</height><font>Movies_Body</font><label>No items available yet</label><textcolor>FF607991</textcolor></control>
       </control>"""
 
 
@@ -132,19 +132,19 @@ def home_xml(menu: list[dict]) -> str:
             description = SECTION_DESCRIPTIONS.get(item["id"], "Browse this section of your Kodi library.")
             hero_details.append(f"""
       <control type="group"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])}) + Integer.IsGreater(Container({first}).NumItems,0)</visible>
-        <control type="textbox"><left>0</left><top>0</top><width>970</width><height>116</height><font>Meridian_Hero</font><label>$INFO[Container({first}).ListItem.Title,{html.escape(item['label'])}: ]</label><textcolor>FFF4FAFF</textcolor><aligny>bottom</aligny><autoscroll>false</autoscroll></control>
-        <control type="label"><left>0</left><top>122</top><width>950</width><height>32</height><font>Meridian_Meta</font><label>$INFO[Container({first}).ListItem.Year]  $INFO[Container({first}).ListItem.Duration]  $INFO[Container({first}).ListItem.Genre]</label><textcolor>FF67E8C4</textcolor></control>
-        <control type="textbox"><left>0</left><top>164</top><width>930</width><height>98</height><font>Meridian_Body</font><label>$INFO[Container({first}).ListItem.Plot]</label><textcolor>FFB6C7D8</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
+        <control type="textbox"><left>0</left><top>0</top><width>970</width><height>116</height><font>Movies_Hero</font><label>$INFO[Container({first}).ListItem.Title,{html.escape(item['label'])}: ]</label><textcolor>FFF4FAFF</textcolor><aligny>bottom</aligny><autoscroll>false</autoscroll></control>
+        <control type="label"><left>0</left><top>122</top><width>950</width><height>32</height><font>Movies_Meta</font><label>$INFO[Container({first}).ListItem.Year]  $INFO[Container({first}).ListItem.Duration]  $INFO[Container({first}).ListItem.Genre]</label><textcolor>FF67E8C4</textcolor></control>
+        <control type="textbox"><left>0</left><top>164</top><width>930</width><height>98</height><font>Movies_Body</font><label>$INFO[Container({first}).ListItem.Plot]</label><textcolor>FFB6C7D8</textcolor><aligny>top</aligny><autoscroll>false</autoscroll></control>
       </control>
       <control type="group"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])}) + Integer.IsEqual(Container({first}).NumItems,0)</visible>
-        <control type="label"><left>0</left><top>34</top><width>970</width><height>72</height><font>Meridian_Hero</font><label>{html.escape(item['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
-        <control type="textbox"><left>0</left><top>128</top><width>900</width><height>98</height><font>Meridian_Body</font><label>{html.escape(description)}</label><textcolor>FFB6C7D8</textcolor><autoscroll>false</autoscroll></control>
+        <control type="label"><left>0</left><top>34</top><width>970</width><height>72</height><font>Movies_Hero</font><label>{html.escape(item['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
+        <control type="textbox"><left>0</left><top>128</top><width>900</width><height>98</height><font>Movies_Body</font><label>{html.escape(description)}</label><textcolor>FFB6C7D8</textcolor><autoscroll>false</autoscroll></control>
       </control>""")
         else:
             hero_details.append(f"""
       <control type="group"><visible>String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(item['id'])})</visible>
-        <control type="label"><left>0</left><top>36</top><width>970</width><height>72</height><font>Meridian_Hero</font><label>{html.escape(item['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
-        <control type="textbox"><left>0</left><top>130</top><width>900</width><height>98</height><font>Meridian_Body</font><label>Search your library and online catalogue. TMDb Helper is used when installed; Global Search is the lightweight fallback.</label><textcolor>FFB6C7D8</textcolor><autoscroll>false</autoscroll></control>
+        <control type="label"><left>0</left><top>36</top><width>970</width><height>72</height><font>Movies_Hero</font><label>{html.escape(item['label'])}</label><textcolor>FFF4FAFF</textcolor></control>
+        <control type="textbox"><left>0</left><top>130</top><width>900</width><height>98</height><font>Movies_Body</font><label>Search your library and online catalogue. TMDb Helper is used when installed; Global Search is the lightweight fallback.</label><textcolor>FFB6C7D8</textcolor><autoscroll>false</autoscroll></control>
       </control>""")
     nav_right = "\n".join(
         f"      <onright condition=\"String.IsEqual(Container(9000).ListItem.Property(MenuId),{html.escape(menu_id)})\">{control_id}</onright>"
@@ -163,22 +163,22 @@ def home_xml(menu: list[dict]) -> str:
     <control type=\"image\"><left>0</left><top>0</top><width>1920</width><height>1080</height><texture colordiffuse=\"9E050B14\">colors/white.png</texture></control>
     <control type=\"image\"><left>0</left><top>520</top><width>1920</width><height>560</height><texture colordiffuse=\"D9050B14\">colors/white.png</texture></control>
     <control type=\"image\"><left>58</left><top>46</top><width>66</width><height>66</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture></control>
-    <control type=\"label\"><left>142</left><top>48</top><width>720</width><height>38</height><font>Meridian_Wordmark</font><label>STARLANE MERIDIAN</label><textcolor>FFF4FAFF</textcolor></control>
-    <control type=\"label\"><left>144</left><top>87</top><width>620</width><height>28</height><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
-    <control type=\"label\"><right>62</right><top>50</top><width>390</width><height>40</height><align>right</align><font>Meridian_Clock</font><label>$INFO[System.Time]</label><textcolor>FFF4FAFF</textcolor></control>
-    <control type=\"label\"><right>64</right><top>91</top><width>390</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
+    <control type=\"label\"><left>142</left><top>48</top><width>720</width><height>38</height><font>Movies_Wordmark</font><label>STARLANE MOVIES</label><textcolor>FFF4FAFF</textcolor></control>
+    <control type=\"label\"><left>144</left><top>87</top><width>620</width><height>28</height><font>Movies_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF67E8C4</textcolor></control>
+    <control type=\"label\"><right>62</right><top>50</top><width>390</width><height>40</height><align>right</align><font>Movies_Clock</font><label>$INFO[System.Time]</label><textcolor>FFF4FAFF</textcolor></control>
+    <control type=\"label\"><right>64</right><top>91</top><width>390</width><height>26</height><align>right</align><font>Movies_Meta</font><label>$INFO[System.Date]</label><textcolor>FF91A8C0</textcolor></control>
     <control type=\"image\"><left>58</left><top>170</top><width>338</width><height>820</height><texture colordiffuse=\"9C081522\" border=\"18\">buttons/button-fo.png</texture></control>
     <control type=\"list\" id=\"9000\"><left>74</left><top>190</top><width>314</width><height>418</height><orientation>vertical</orientation><scrolltime>150</scrolltime>
 {nav_right}
       <ondown>9050</ondown>
       <itemlayout width=\"314\" height=\"68\">
-        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <control type=\"label\"><left>28</left><top>5</top><width>266</width><height>58</height><font>Movies_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
       </itemlayout>
       <focusedlayout width=\"314\" height=\"68\">
         <control type=\"image\"><visible>Control.HasFocus(9000)</visible><left>0</left><top>4</top><width>306</width><height>60</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control>
         <control type=\"image\"><visible>Control.HasFocus(9000)</visible><left>0</left><top>15</top><width>5</width><height>38</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
-        <control type=\"label\"><visible>Control.HasFocus(9000)</visible><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_NavFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control>
-        <control type=\"label\"><visible>!Control.HasFocus(9000)</visible><left>28</left><top>5</top><width>266</width><height>58</height><font>Meridian_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <control type=\"label\"><visible>Control.HasFocus(9000)</visible><left>28</left><top>5</top><width>266</width><height>58</height><font>Movies_NavFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control>
+        <control type=\"label\"><visible>!Control.HasFocus(9000)</visible><left>28</left><top>5</top><width>266</width><height>58</height><font>Movies_Nav</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control>
         <animation effect=\"slide\" start=\"-6,0\" end=\"0,0\" time=\"140\">Focus</animation>
       </focusedlayout>
       <content>
@@ -186,12 +186,12 @@ def home_xml(menu: list[dict]) -> str:
       </content>
     </control>
     <control type=\"image\"><left>90</left><top>608</top><width>274</width><height>1</height><texture colordiffuse=\"5261C8FF\">colors/white.png</texture></control>
-    <control type=\"label\"><left>102</left><top>618</top><width>250</width><height>24</height><font>Meridian_Meta</font><label>QUICK ACCESS</label><textcolor>FF91A8C0</textcolor></control>
-    <control type=\"button\" id=\"9050\"><left>74</left><top>650</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Favourites</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9000</onup><ondown>9051</ondown><onright>9000</onright><onclick>ActivateWindow(FavouritesBrowser)</onclick></control>
-    <control type=\"button\" id=\"9051\"><left>74</left><top>712</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Add-ons</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9050</onup><ondown>9052</ondown><onright>9000</onright><onclick>ActivateWindow(AddonBrowser)</onclick></control>
-    <control type=\"button\" id=\"9052\"><left>74</left><top>774</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Profiles</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9051</onup><ondown>9053</ondown><onright>9000</onright><onclick>ActivateWindow(Profiles)</onclick></control>
-    <control type=\"button\" id=\"9053\"><left>74</left><top>836</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Settings</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9052</onup><ondown>9054</ondown><onright>9000</onright><onclick>ActivateWindow(Settings)</onclick></control>
-    <control type=\"button\" id=\"9054\"><left>74</left><top>898</top><width>306</width><height>60</height><font>Meridian_Nav</font><label>Power</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9053</onup><ondown>9000</ondown><onright>9000</onright><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
+    <control type=\"label\"><left>102</left><top>618</top><width>250</width><height>24</height><font>Movies_Meta</font><label>QUICK ACCESS</label><textcolor>FF91A8C0</textcolor></control>
+    <control type=\"button\" id=\"9050\"><left>74</left><top>650</top><width>306</width><height>60</height><font>Movies_Nav</font><label>Favourites</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9000</onup><ondown>9051</ondown><onright>9000</onright><onclick>ActivateWindow(FavouritesBrowser)</onclick></control>
+    <control type=\"button\" id=\"9051\"><left>74</left><top>712</top><width>306</width><height>60</height><font>Movies_Nav</font><label>Add-ons</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9050</onup><ondown>9052</ondown><onright>9000</onright><onclick>ActivateWindow(AddonBrowser)</onclick></control>
+    <control type=\"button\" id=\"9052\"><left>74</left><top>774</top><width>306</width><height>60</height><font>Movies_Nav</font><label>Profiles</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9051</onup><ondown>9053</ondown><onright>9000</onright><onclick>ActivateWindow(Profiles)</onclick></control>
+    <control type=\"button\" id=\"9053\"><left>74</left><top>836</top><width>306</width><height>60</height><font>Movies_Nav</font><label>Settings</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9052</onup><ondown>9054</ondown><onright>9000</onright><onclick>ActivateWindow(Settings)</onclick></control>
+    <control type=\"button\" id=\"9054\"><left>74</left><top>898</top><width>306</width><height>60</height><font>Movies_Nav</font><label>Power</label><align>left</align><aligny>center</aligny><textoffsetx>28</textoffsetx><textcolor>FFF4FAFF</textcolor><focusedcolor>FF07111F</focusedcolor><texturefocus colordiffuse=\"F2F4FAFF\">colors/white.png</texturefocus><texturenofocus /><onup>9053</onup><ondown>9000</ondown><onright>9000</onright><onclick>ActivateWindow(ShutdownMenu)</onclick></control>
     <control type=\"group\"><left>432</left><top>220</top><width>1000</width><height>300</height>
 {''.join(hero_details)}
     </control>
@@ -199,13 +199,13 @@ def home_xml(menu: list[dict]) -> str:
     <control type=\"group\"><visible>Player.HasMedia</visible><left>432</left><top>968</top><width>1426</width><height>76</height>
       <control type=\"image\"><left>0</left><top>0</top><width>1426</width><height>76</height><texture colordiffuse=\"E6081522\">colors/white.png</texture></control>
       <control type=\"image\"><left>10</left><top>8</top><width>96</width><height>60</height><aspectratio align=\"center\">scale</aspectratio><texture fallback=\"DefaultVideo.png\">$INFO[Player.Art(thumb)]</texture></control>
-      <control type=\"label\"><left>124</left><top>8</top><width>720</width><height>30</height><font>Meridian_CardFocus</font><label>$INFO[Player.Title]</label><textcolor>FFF4FAFF</textcolor><scroll>false</scroll></control>
-      <control type=\"label\"><left>124</left><top>40</top><width>720</width><height>24</height><font>Meridian_Utility</font><label>$INFO[Player.Artist]$INFO[Player.TVShowTitle,  ·  ]</label><textcolor>FF91A8C0</textcolor><scroll>false</scroll></control>
+      <control type=\"label\"><left>124</left><top>8</top><width>720</width><height>30</height><font>Movies_CardFocus</font><label>$INFO[Player.Title]</label><textcolor>FFF4FAFF</textcolor><scroll>false</scroll></control>
+      <control type=\"label\"><left>124</left><top>40</top><width>720</width><height>24</height><font>Movies_Utility</font><label>$INFO[Player.Artist]$INFO[Player.TVShowTitle,  ·  ]</label><textcolor>FF91A8C0</textcolor><scroll>false</scroll></control>
       <control type=\"progress\"><left>880</left><top>29</top><width>330</width><height>10</height><info>Player.Progress</info></control>
-      <control type=\"label\"><right>20</right><top>18</top><width>176</width><height>34</height><align>right</align><font>Meridian_Utility</font><label>$INFO[Player.Time] / $INFO[Player.Duration]</label><textcolor>FFF4FAFF</textcolor></control>
+      <control type=\"label\"><right>20</right><top>18</top><width>176</width><height>34</height><align>right</align><font>Movies_Utility</font><label>$INFO[Player.Time] / $INFO[Player.Duration]</label><textcolor>FFF4FAFF</textcolor></control>
     </control>
-    <control type=\"label\"><visible>!Player.HasMedia</visible><left>62</left><bottom>34</bottom><width>830</width><height>26</height><font>Meridian_Meta</font><label>KODI $INFO[System.BuildVersion]  ·  STARLANE MERIDIAN</label><textcolor>FF607991</textcolor></control>
-    <control type=\"label\"><visible>!Player.HasMedia</visible><right>62</right><bottom>34</bottom><width>720</width><height>26</height><align>right</align><font>Meridian_Meta</font><label>OK SELECTS  ·  BACK RETURNS  ·  MENU OPENS QUICK ACCESS</label><textcolor>FF607991</textcolor></control>
+    <control type=\"label\"><visible>!Player.HasMedia</visible><left>62</left><bottom>34</bottom><width>830</width><height>26</height><font>Movies_Meta</font><label>KODI $INFO[System.BuildVersion]  ·  STARLANE MOVIES</label><textcolor>FF607991</textcolor></control>
+    <control type=\"label\"><visible>!Player.HasMedia</visible><right>62</right><bottom>34</bottom><width>720</width><height>26</height><align>right</align><font>Movies_Meta</font><label>OK SELECTS  ·  BACK RETURNS  ·  MENU OPENS QUICK ACCESS</label><textcolor>FF607991</textcolor></control>
   </controls>
 </window>
 """
@@ -214,22 +214,22 @@ def home_xml(menu: list[dict]) -> str:
 def startup_xml() -> str:
     return """<?xml version="1.0" encoding="UTF-8"?>
 <window>
-  <onload>AlarmClock(StarlaneMeridianStartup,ReplaceWindow($INFO[System.StartupWindow]),00:02,silent)</onload>
+  <onload>AlarmClock(StarlaneMoviesStartup,ReplaceWindow($INFO[System.StartupWindow]),00:02,silent)</onload>
   <backgroundcolor>FF050B14</backgroundcolor>
   <controls>
     <control type="image"><left>0</left><top>0</top><width>1920</width><height>1080</height><aspectratio>scale</aspectratio><texture>brand/horizon.png</texture></control>
     <control type="image"><left>0</left><top>0</top><width>1920</width><height>1080</height><texture colordiffuse="78050B14">colors/white.png</texture></control>
     <control type="image"><left>820</left><top>328</top><width>280</width><height>280</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture><animation effect="fade" start="0" end="100" time="500">WindowOpen</animation></control>
-    <control type="label"><left>460</left><top>634</top><width>1000</width><height>64</height><align>center</align><font>Meridian_Splash</font><label>STARLANE MERIDIAN</label><textcolor>FFF4FAFF</textcolor><animation effect="fade" start="0" end="100" delay="160" time="500">WindowOpen</animation></control>
+    <control type="label"><left>460</left><top>634</top><width>1000</width><height>64</height><align>center</align><font>Movies_Splash</font><label>STARLANE MOVIES</label><textcolor>FFF4FAFF</textcolor><animation effect="fade" start="0" end="100" delay="160" time="500">WindowOpen</animation></control>
     <control type="image"><left>820</left><top>718</top><width>280</width><height>3</height><texture colordiffuse="FF67E8C4">colors/white.png</texture></control>
-    <control type="label"><left>560</left><top>748</top><width>800</width><height>34</height><align>center</align><font>Meridian_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF91A8C0</textcolor></control>
+    <control type="label"><left>560</left><top>748</top><width>800</width><height>34</height><align>center</align><font>Movies_Meta</font><label>YOUR MEDIA. ON COURSE.</label><textcolor>FF91A8C0</textcolor></control>
   </controls>
 </window>
 """
 
 
 def power_dialog_xml() -> str:
-    """Render Kodi's platform-aware power actions in an original Meridian dialog."""
+    """Render Kodi's platform-aware power actions in an original Starlane Movies dialog."""
     items = (
         ("$LOCALIZE[13012]", "Quit()", "System.ShowExitButton"),
         ("$LOCALIZE[13016]", "Powerdown()", "System.CanPowerDown"),
@@ -259,16 +259,16 @@ def power_dialog_xml() -> str:
       <control type=\"image\"><left>0</left><top>0</top><width>700</width><height>580</height><texture colordiffuse=\"F2081522\" border=\"20\">buttons/button-fo.png</texture></control>
       <control type=\"image\"><left>0</left><top>0</top><width>700</width><height>4</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control>
       <control type=\"image\"><left>42</left><top>34</top><width>64</width><height>64</height><aspectratio>keep</aspectratio><texture>brand/emblem.png</texture></control>
-      <control type=\"label\"><left>128</left><top>38</top><width>510</width><height>50</height><font>Meridian_Section</font><label>POWER &amp; SESSION</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny></control>
-      <control type=\"label\"><left>42</left><top>108</top><width>616</width><height>30</height><font>Meridian_Utility</font><label>Available actions depend on this device</label><textcolor>FF91A8C0</textcolor></control>
+      <control type=\"label\"><left>128</left><top>38</top><width>510</width><height>50</height><font>Movies_Section</font><label>POWER &amp; SESSION</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny></control>
+      <control type=\"label\"><left>42</left><top>108</top><width>616</width><height>30</height><font>Movies_Utility</font><label>Available actions depend on this device</label><textcolor>FF91A8C0</textcolor></control>
       <control type=\"panel\" id=\"9000\"><left>42</left><top>154</top><width>616</width><height>356</height><orientation>vertical</orientation><scrolltime>100</scrolltime>
-        <itemlayout width=\"616\" height=\"64\"><control type=\"label\"><left>24</left><top>5</top><width>568</width><height>54</height><font>Meridian_Body</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control></itemlayout>
-        <focusedlayout width=\"616\" height=\"64\"><control type=\"image\"><left>0</left><top>4</top><width>616</width><height>56</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control><control type=\"image\"><left>0</left><top>14</top><width>5</width><height>36</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control><control type=\"label\"><left>24</left><top>5</top><width>568</width><height>54</height><font>Meridian_CardFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control></focusedlayout>
+        <itemlayout width=\"616\" height=\"64\"><control type=\"label\"><left>24</left><top>5</top><width>568</width><height>54</height><font>Movies_Body</font><label>$INFO[ListItem.Label]</label><textcolor>FFF4FAFF</textcolor><aligny>center</aligny><scroll>false</scroll></control></itemlayout>
+        <focusedlayout width=\"616\" height=\"64\"><control type=\"image\"><left>0</left><top>4</top><width>616</width><height>56</height><texture colordiffuse=\"F2F4FAFF\">colors/white.png</texture></control><control type=\"image\"><left>0</left><top>14</top><width>5</width><height>36</height><texture colordiffuse=\"FF67E8C4\">colors/white.png</texture></control><control type=\"label\"><left>24</left><top>5</top><width>568</width><height>54</height><font>Movies_CardFocus</font><label>$INFO[ListItem.Label]</label><textcolor>FF07111F</textcolor><aligny>center</aligny><scroll>false</scroll></control></focusedlayout>
         <content>
 {content}
         </content>
       </control>
-      <control type=\"label\"><left>42</left><bottom>20</bottom><width>616</width><height>24</height><font>Meridian_Utility</font><label>BACK  ·  CLOSE</label><textcolor>FF607991</textcolor><align>right</align></control>
+      <control type=\"label\"><left>42</left><bottom>20</bottom><width>616</width><height>24</height><font>Movies_Utility</font><label>BACK  ·  CLOSE</label><textcolor>FF607991</textcolor><align>right</align></control>
     </control>
   </controls>
 </window>
@@ -278,10 +278,10 @@ def power_dialog_xml() -> str:
 def apply_brand_fonts(path: Path) -> None:
     root = ElementTree.parse(path).getroot()
     specifications = (
-        ("Meridian_Meta", 18, False), ("Meridian_Card", 20, False), ("Meridian_CardFocus", 20, True),
-        ("Meridian_Body", 24, False), ("Meridian_Nav", 28, False), ("Meridian_NavFocus", 28, True),
-        ("Meridian_Section", 26, True), ("Meridian_Wordmark", 30, True), ("Meridian_Clock", 32, False),
-        ("Meridian_Hero", 52, True), ("Meridian_Splash", 46, True), ("Meridian_Utility", 17, True),
+        ("Movies_Meta", 18, False), ("Movies_Card", 20, False), ("Movies_CardFocus", 20, True),
+        ("Movies_Body", 24, False), ("Movies_Nav", 28, False), ("Movies_NavFocus", 28, True),
+        ("Movies_Section", 26, True), ("Movies_Wordmark", 30, True), ("Movies_Clock", 32, False),
+        ("Movies_Hero", 52, True), ("Movies_Splash", 46, True), ("Movies_Utility", 17, True),
     )
     for fontset in root.findall("fontset"):
         filename = "arial.ttf" if fontset.attrib.get("id") == "Arial" else "NotoSans-Regular.ttf"
@@ -326,13 +326,13 @@ def brand_metadata(root: ElementTree.Element) -> None:
     summary = ElementTree.SubElement(metadata, "summary", {"lang": "en_GB"})
     summary.text = "A calm, modern TV interface built around clear navigation and generous focus states."
     description = ElementTree.SubElement(metadata, "description", {"lang": "en_GB"})
-    description.text = "Starlane Meridian is a branded Kodi skin based on Team Kodi's Estuary, retaining complete system-window compatibility while introducing a minimalist celestial-navigation home experience."
+    description.text = "Starlane Movies is a branded Kodi skin based on Team Kodi's Estuary, retaining complete system-window compatibility while introducing a minimalist celestial-navigation home experience."
 
 
 def apply_brand_assets(staged: Path, branding: Path) -> None:
-    emblem = branding / "starlane-meridian-emblem-v2.png"
-    background = branding / "starlane-meridian-home-1920x1080.jpg"
-    horizon = branding / "starlane-meridian-horizon.png"
+    emblem = branding / "starlane-movies-emblem-v2.png"
+    background = branding / "starlane-movies-home-1920x1080.jpg"
+    horizon = branding / "starlane-movies-horizon.png"
     if not emblem.is_file() or not background.is_file() or not horizon.is_file():
         raise SystemExit("Brand emblem, fanart, and horizon artwork must be generated before building the skin")
     brand_media = staged / "media" / "brand"
@@ -369,7 +369,7 @@ def build(archive: Path, manifest_path: Path, output: Path, version: str, brandi
         shutil.copytree(upstream, staged)
         addon_path = staged / "addon.xml"
         root = ElementTree.parse(addon_path).getroot()
-        root.attrib.update({"id": SKIN_ID, "name": SKIN_NAME, "version": version, "provider-name": "Starlane Meridian; based on Team Kodi Estuary"})
+        root.attrib.update({"id": SKIN_ID, "name": SKIN_NAME, "version": version, "provider-name": "Starlane Movies; based on Team Kodi Estuary"})
         brand_metadata(root)
         ElementTree.indent(root)
         addon_path.write_text('<?xml version="1.0" encoding="UTF-8"?>\n' + ElementTree.tostring(root, encoding="unicode") + "\n", encoding="utf-8")
