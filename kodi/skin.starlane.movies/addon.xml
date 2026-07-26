@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Experimental Starlane Movies skin derived from Titan BINGIE MOD under GPL-2.0. -->
-<addon id="skin.starlane.movies" version="2.2.3" name="Starlane Movies" provider-name="Starlane Movies">
+<addon id="skin.starlane.movies" version="2.2.4" name="Starlane Movies" provider-name="Starlane Movies">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui"/>
 		<import addon="script.bingie.helper" version="1.1.2"/>
@@ -33,6 +33,6 @@
 			<icon>extras/starlane-movies/emblem.png</icon>
 			<fanart>extras/starlane-movies/horizon.png</fanart>
 		</assets>
-		<news>[B]STARLANE MOVIES 2.2.3[/B][CR]Publishes the tested Starlane branding, startup, focus, and navigation fixes.</news>
+		<news>[B]STARLANE MOVIES 2.2.4[/B][CR]Adds FenLight AM Movies and TV widgets plus Mad Titan, The Crew, PVR, and guide-backed Live TV and Sports destinations.</news>
 	</extension>
 </addon>

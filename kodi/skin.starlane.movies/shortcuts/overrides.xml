@@ -308,6 +308,144 @@
 	<propertydefault defaultID="10000" property="widgetPath.7">plugin://script.skin.helper.widgets/?action=forgenre&amp;mediatype=media&amp;limit=25&amp;reload=$INFO[Window(Home).Property(widgetreload)]</propertydefault>
 	<propertydefault defaultID="10000" property="widgetName.7">$LOCALIZE[515]</propertydefault>
 
+	<!-- FenLight AM movie widgets. These mirror the first-level Movies directory. -->
+	<propertydefault defaultID="342" property="widget">fen_movies_trending</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType">movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending</propertydefault>
+	<propertydefault defaultID="342" property="widgetName">Trending</propertydefault>
+	<propertydefault defaultID="342" property="widget.1">fen_movies_trending_recent</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType.1">movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.1">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending_recent</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.1">Trending Recent</propertydefault>
+	<propertydefault defaultID="342" property="widget.2">fen_movies_popular</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType.2">movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.2">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_popular</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.2">Popular</propertydefault>
+	<propertydefault defaultID="342" property="widget.3">fen_movies_premieres</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget.3">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType.3">movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.3">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_premieres</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.3">Premieres</propertydefault>
+	<propertydefault defaultID="342" property="widget.4">fen_movies_latest</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget.4">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType.4">movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.4">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_latest_releases</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.4">Latest Releases</propertydefault>
+	<propertydefault defaultID="342" property="widget.5">fen_movies_genres</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget.5">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType.5">video</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.5">plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=movie</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.5">Genres</propertydefault>
+	<propertydefault defaultID="342" property="widget.6">fen_movies_progress</propertydefault>
+	<propertydefault defaultID="342" property="widgetTarget.6">videos</propertydefault>
+	<propertydefault defaultID="342" property="widgetType.6">movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.6">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=in_progress_movies</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.6">In Progress</propertydefault>
+
+	<!-- FenLight AM TV widgets. These mirror the first-level TV Shows directory. -->
+	<propertydefault defaultID="20343" property="widget">fen_tv_trending</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType">tvshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName">Trending</propertydefault>
+	<propertydefault defaultID="20343" property="widget.1">fen_tv_trending_recent</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.1">tvshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.1">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending_recent</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.1">Trending Recent</propertydefault>
+	<propertydefault defaultID="20343" property="widget.2">fen_tv_popular</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.2">tvshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.2">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_popular</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.2">Popular</propertydefault>
+	<propertydefault defaultID="20343" property="widget.3">fen_tv_premieres</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget.3">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.3">tvshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.3">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_premieres</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.3">Premieres</propertydefault>
+	<propertydefault defaultID="20343" property="widget.4">fen_tv_airing</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget.4">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.4">tvshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.4">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_airing_today</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.4">Airing Today</propertydefault>
+	<propertydefault defaultID="20343" property="widget.5">fen_tv_genres</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget.5">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.5">video</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.5">plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=tvshow</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.5">Genres</propertydefault>
+	<propertydefault defaultID="20343" property="widget.6">fen_tv_next</propertydefault>
+	<propertydefault defaultID="20343" property="widgetTarget.6">videos</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.6">episodes</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.6">plugin://plugin.video.fenlight/?mode=build_next_episode</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.6">Next Episodes</propertydefault>
+
+	<!-- Live TV combines Mad Titan, The Crew, Kodi PVR, and the optional Jet Guide. -->
+	<propertydefault defaultID="starlane_livetv" property="widget">madtitan_lntv</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetType">video</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetPath">plugin://plugin.video.madtitansports/lntv/categories</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetName">Mad Titan Live TV</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widget.1">crew_live_channels</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetType.1">video</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetPath.1">plugin://plugin.video.thecrew/?action=sports_channels</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetName.1">The Crew Live Channels</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widget.2">crew_pluto</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetType.2">video</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetPath.2">plugin://plugin.video.thecrew/?action=pluto</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetName.2">The Crew Pluto TV</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widget.3">madtitan_uktv</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetTarget.3">videos</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetType.3">video</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetPath.3">plugin://plugin.video.madtitansports/uktvnow/categories</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetName.3">Mad Titan UK Live TV</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widget.4">jet_guide</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetTarget.4">videos</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetType.4">video</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetPath.4">plugin://plugin.video.jet_guide/</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetName.4">TV Guide</propertydefault>
+
+	<!-- Mad Titan is the primary sports destination; Crew provides league fallbacks. -->
+	<propertydefault defaultID="starlane_sports" property="widget">madtitan_sports</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath">plugin://plugin.video.madtitansports/</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName">Mad Titan Sports</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widget.1">crew_sports</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType.1">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath.1">plugin://plugin.video.thecrew/?action=bluehat</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName.1">The Crew Sports Backup</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widget.2">crew_nfl</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType.2">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath.2">plugin://plugin.video.thecrew/?action=nfl</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName.2">NFL</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widget.3">crew_football</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget.3">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType.3">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath.3">plugin://plugin.video.thecrew/?action=fifa</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName.3">Football</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widget.4">crew_f1</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget.4">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType.4">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath.4">plugin://plugin.video.thecrew/?action=f1</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName.4">Formula 1</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widget.5">crew_ufc</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget.5">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType.5">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath.5">plugin://plugin.video.thecrew/?action=ufc</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName.5">UFC and MMA</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widget.6">crew_replays</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetTarget.6">videos</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetType.6">video</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetPath.6">plugin://plugin.video.thecrew/?action=sreplays</propertydefault>
+	<propertydefault defaultID="starlane_sports" property="widgetName.6">Sports Replays</propertydefault>
+
     <widgetRename>False</widgetRename> 
 
 

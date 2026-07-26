@@ -1,59 +1,59 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <shortcuts>
 	<shortcut>
-		<label>31051</label>
+		<label>Trending</label>
 		<label2>TV shows</label2>
-		<defaultID>369</defaultID>
+		<defaultID>fen_tv_trending</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://tvshows/titles/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>$ADDON[script.skin.helper.widgets 32045]</label>
+		<label>Trending Recent</label>
 		<label2>TV shows</label2>
-		<defaultID>369</defaultID>
+		<defaultID>fen_tv_trending_recent</defaultID>
 		<icon/>
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://script.skin.helper.widgets/?action=recent&amp;mediatype=tvshows&amp;limit=250,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending_recent,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>20387</label>
+		<label>Popular</label>
 		<label2>TV shows</label2>
-		<defaultID>20387</defaultID>
+		<defaultID>fen_tv_popular</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://recentlyaddedepisodes/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_popular,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>626</label>
+		<label>Premieres</label>
 		<label2>TV shows</label2>
-		<defaultID>626</defaultID>
+		<defaultID>fen_tv_premieres</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://inprogresstvshows,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_premieres,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>135</label>
+		<label>Airing Today</label>
 		<label2>TV shows</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_tv_airing</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://tvshows/genres/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_airing_today,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>$ADDON[script.skin.helper.widgets 32043]</label>
+		<label>Genres</label>
 		<label2>TV shows</label2>
-		<defaultID>369</defaultID>
+		<defaultID>fen_tv_genres</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://script.skin.helper.widgets/?action=nextaired&amp;mediatype=episodes&amp;limit=250,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=tvshow,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>137</label>
+		<label>Next Episodes</label>
 		<label2>TV shows</label2>
-		<defaultID>137</defaultID>
+		<defaultID>fen_tv_next</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(1106,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_next_episode,return)</action>
 	</shortcut>
 </shortcuts>

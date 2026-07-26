@@ -1,6 +1,6 @@
 # Current deployment status
 
-Last verified deployment: 25 July 2026.
+Last verified deployment: 26 July 2026.
 
 ## Unreleased Starlane Movies rebrand
 
@@ -16,14 +16,15 @@ compatibility identifiers. Renaming them would break installed-client upgrades a
 public routes. No production rebrand candidate has been signed, deployed, or published.
 
 The GPL-2.0 experimental poster-led skin is tracked at `kodi/skin.starlane.movies`.
-Source version 2.2.3 uses the Starlane Movies identity, palette, emblem, horizon,
+Source version 2.2.4 uses the Starlane Movies identity, palette, emblem, horizon,
 backgrounds, static startup, and user-facing copy while retaining upstream attribution
-and internal compatibility identifiers. It is not included in the signed production
-manifest. On 25 July 2026 version 2.2.2 was installed on the reference Fire TV and made
-active. Its required Omega dependencies were installed from the upstream and official
-Kodi repositories. A cold restart loaded the skin without missing-module or font
-errors. The temporary authenticated Kodi webserver used for installation was disabled
-again and its temporary password cleared.
+and internal compatibility identifiers. Movies and TV widgets now open the matching
+FenLight AM sections; Live TV and Sports use Mad Titan as the primary source, The Crew
+as a fallback, and Jet Guide/Kodi PVR for guide access. It is not included in the signed
+production manifest. Version 2.2.4 is installed and active on the reference Fire TV
+with FenLight AM, Umbrella, CocoScrapers, The Crew, Mad Titan Sports, Jet Guide, and
+their required Omega dependencies enabled. FenLight AM is explicitly configured to use
+CocoScrapers. A restart loaded the skin and add-ons without missing-dependency errors.
 
 ## Working deployment
 
@@ -35,7 +36,7 @@ again and its temporary password cleared.
 - Kodi 21.3 and Proton VPN are installed.
 - Signed setup app 0.3.0 (version code 3) is installed on the reference Fire TV; the in-place upgrade preserved pairing and account status.
 - Kodi Setup Bootstrap 1.1.3 and signed configuration `2026.07.11` remain installed.
-  The experimental `skin.starlane.movies` 2.2.2 skin is currently active; the production
+  The experimental `skin.starlane.movies` 2.2.4 skin is currently active; the production
   `skin.starlanemeridian` 1.2.4 skin remains installed as the rollback option.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 

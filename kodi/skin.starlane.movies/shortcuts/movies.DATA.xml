@@ -1,66 +1,60 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <shortcuts>
-	<!-- all movies -->
+	<!-- FenLight AM movies -->
 	<shortcut>
-		<label>31050</label>
+		<label>Trending</label>
 		<label2>Movies</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_movies_trending</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://movies/titles/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending,return)</action>
 	</shortcut>
-	<!-- recently added movies -->
 	<shortcut>
-		<label>31127</label>
+		<label>Trending Recent</label>
 		<label2>Movies</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_movies_trending_recent</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://recentlyaddedmovies/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending_recent,return)</action>
 	</shortcut>
-	<!-- movies in progress -->
 	<shortcut>
-		<label>31035</label>
+		<label>Popular</label>
 		<label2>Movies</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_movies_popular</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,special://skin/extras/widgetplaylists/inprogressmovies.xsp,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_popular,return)</action>
 	</shortcut>
-	<!-- unwatched movies -->
 	<shortcut>
-		<label>16101</label>
+		<label>Premieres</label>
 		<label2>Movies</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_movies_premieres</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,special://skin/extras/widgetplaylists/unwatchedmovies.xsp,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_premieres,return)</action>
 	</shortcut>
-	<!-- movie genres -->
 	<shortcut>
-		<label>135</label>
+		<label>Latest Releases</label>
 		<label2>Movies</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_movies_latest</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://movies/genres/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_latest_releases,return)</action>
 	</shortcut>
-	<!-- Movie Sets -->
 	<shortcut>
-		<label>20434</label>
+		<label>Genres</label>
 		<label2>Movies</label2>
-		<defaultID>135</defaultID>
+		<defaultID>fen_movies_genres</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,videodb://movies/sets/,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=movie,return)</action>
 	</shortcut>
-	<!-- search movies -->
 	<shortcut>
-		<label>137</label>
+		<label>In Progress</label>
 		<label2>Movies</label2>
-		<defaultID>137</defaultID>
+		<defaultID>fen_movies_progress</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(1108,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=in_progress_movies,return)</action>
 	</shortcut>
 </shortcuts>

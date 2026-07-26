@@ -12,7 +12,7 @@ class ExperimentalSkinTests(unittest.TestCase):
     def test_metadata_and_attribution(self):
         addon = ET.parse(SKIN / "addon.xml").getroot()
         self.assertEqual(addon.attrib["id"], "skin.starlane.movies")
-        self.assertEqual(addon.attrib["version"], "2.2.3")
+        self.assertEqual(addon.attrib["version"], "2.2.4")
         self.assertEqual(addon.attrib["name"], "Starlane Movies")
         metadata = addon.find("extension[@point='xbmc.addon.metadata']")
         self.assertIsNotNone(metadata)
@@ -61,6 +61,50 @@ class ExperimentalSkinTests(unittest.TestCase):
                 and not line.startswith('"Language-Team:')
             ]
             self.assertEqual(remaining, [], language_file)
+
+    def test_streaming_menu_routes_are_wired_to_the_agreed_addons(self):
+        main_menu = ET.parse(SKIN / "shortcuts/mainmenu.DATA.xml").getroot()
+        shortcuts = {
+            item.findtext("defaultID"): item
+            for item in main_menu.findall("shortcut")
+        }
+        self.assertIn("342", shortcuts)
+        self.assertIn("20343", shortcuts)
+        self.assertIn("starlane_livetv", shortcuts)
+        self.assertIn("starlane_sports", shortcuts)
+        self.assertIn(
+            "plugin.video.madtitansports",
+            shortcuts["starlane_livetv"].findtext("action"),
+        )
+        self.assertIn(
+            "plugin.video.madtitansports",
+            shortcuts["starlane_sports"].findtext("action"),
+        )
+
+        overrides = ET.parse(SKIN / "shortcuts/overrides.xml").getroot()
+        properties = overrides.findall("propertydefault")
+
+        def widget_paths(default_id):
+            return {
+                item.text or ""
+                for item in properties
+                if item.attrib.get("defaultID") == default_id
+                and item.attrib.get("property", "").startswith("widgetPath")
+            }
+
+        movie_paths = widget_paths("342")
+        tv_paths = widget_paths("20343")
+        live_paths = widget_paths("starlane_livetv")
+        sports_paths = widget_paths("starlane_sports")
+        self.assertTrue(movie_paths)
+        self.assertTrue(tv_paths)
+        self.assertTrue(all("plugin.video.fenlight" in path for path in movie_paths))
+        self.assertTrue(all("plugin.video.fenlight" in path for path in tv_paths))
+        self.assertTrue(any("plugin.video.madtitansports" in path for path in live_paths))
+        self.assertTrue(any("plugin.video.thecrew" in path for path in live_paths))
+        self.assertTrue(any("plugin.video.jet_guide" in path for path in live_paths))
+        self.assertTrue(any("plugin.video.madtitansports" in path for path in sports_paths))
+        self.assertTrue(any("plugin.video.thecrew" in path for path in sports_paths))
 
 
 if __name__ == "__main__":

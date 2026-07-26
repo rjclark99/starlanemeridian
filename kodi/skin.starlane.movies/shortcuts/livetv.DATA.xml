@@ -1,43 +1,43 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <shortcuts>
 	<shortcut>
-		<defaultID>22020</defaultID>
-		<label>22020</label>
+		<defaultID>madtitan_live</defaultID>
+		<label>Mad Titan Live TV</label>
+		<label2>Live TV</label2>
+		<icon />
+		<thumb />
+		<action>ActivateWindow(Videos,plugin://plugin.video.madtitansports/lntv/categories,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>crew_live</defaultID>
+		<label>The Crew Live Channels</label>
+		<label2>Live TV</label2>
+		<icon />
+		<thumb />
+		<action>ActivateWindow(Videos,plugin://plugin.video.thecrew/?action=sports_channels,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>jet_guide</defaultID>
+		<label>TV Guide</label>
+		<label2>Live TV</label2>
+		<icon />
+		<thumb />
+		<action>ActivateWindow(Videos,plugin://plugin.video.jet_guide/,return)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>kodi_pvr_guide</defaultID>
+		<label>Kodi PVR Guide</label>
 		<label2>Live TV</label2>
 		<icon />
 		<thumb />
 		<action>ActivateWindow(TVGuide)</action>
 	</shortcut>
 	<shortcut>
-		<defaultID>19019</defaultID>
-		<label>19019</label>
+		<defaultID>kodi_pvr_channels</defaultID>
+		<label>Kodi PVR Channels</label>
 		<label2>Live TV</label2>
 		<icon />
 		<thumb />
 		<action>ActivateWindow(TVChannels)</action>
-	</shortcut>
-	<shortcut>
-		<defaultID>19163</defaultID>
-		<label>19163</label>
-		<label2>Live TV</label2>
-		<icon />
-		<thumb />
-		<action>ActivateWindow(TVRecordings)</action>
-	</shortcut>
-	<shortcut>
-		<defaultID>19040</defaultID>
-		<label>19040</label>
-		<label2>Live TV</label2>
-		<icon />
-		<thumb />
-		<action>ActivateWindow(TVTimers)</action>
-	</shortcut>
-	<shortcut>
-		<defaultID>137</defaultID>
-		<label>137</label>
-		<label2>Live TV</label2>
-		<icon />
-		<thumb />
-		<action>ActivateWindow(TVSearch)</action>
 	</shortcut>
 </shortcuts>

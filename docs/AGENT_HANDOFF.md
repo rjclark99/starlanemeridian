@@ -1,6 +1,6 @@
 # Starlane Movies agent handoff
 
-Last updated: 26 July 2026 after preparing the experimental Starlane Movies skin source.
+Last updated: 26 July 2026 after deploying the add-on-backed Starlane Movies menus.
 
 This is the continuity document for a new Codex task. Read this file first, then
 `README.md`, `SECURITY.md`, `docs/CURRENT_STATUS.md`, and `docs/OPERATIONS.md` before
@@ -16,11 +16,13 @@ add-on ID, GitHub repository, control domain, Worker name, and release URLs for 
 and route compatibility.
 
 The GPL-2.0 experimental poster-led skin source is tracked at
-`kodi/skin.starlane.movies`. Version 2.2.3 contains the tested Starlane Movies
-branding, startup, focus, and idle-navigation fixes while preserving upstream
-attribution and internal compatibility identifiers. It remains outside the signed
-production manifest. Version 2.2.2 is installed and active on the reference Fire TV;
-the production `skin.starlanemeridian` 1.2.4 skin remains installed for rollback.
+`kodi/skin.starlane.movies`. Version 2.2.4 contains the tested Starlane Movies
+branding, startup, focus, and idle-navigation fixes plus FenLight AM Movies/TV widgets,
+Mad Titan and The Crew Live TV/Sports routes, and Jet Guide/Kodi PVR guide access. It
+preserves upstream attribution and internal compatibility identifiers and remains
+outside the signed production manifest. Version 2.2.4 is installed and active on the
+reference Fire TV; the production `skin.starlanemeridian` 1.2.4 skin remains installed
+for rollback. FenLight AM is configured to use the enabled CocoScrapers module.
 
 ## 1. Owner intent and standing instructions
 
