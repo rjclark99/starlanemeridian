@@ -8,6 +8,10 @@ changing code or deployed state. `docs/OWNER_SETUP_GUIDE.md` is the detailed own
 runbook; some example version numbers in it are historical, so prefer the live values
 below and in `config/manifest.json`.
 
+For the latest private-skin deployment details, Umbrella route map, CocoScrapers
+configuration, skin-shortcuts cache behavior, and recoverable device backups, read
+`docs/TECHNICAL_HANDOFF_2026-07-26.md`.
+
 The product's user-facing identity is now **Starlane Movies**. Local unreleased source
 versions are setup app `0.4.0` (version code 4), Estuary-derived skin `1.3.0`, and
 Bootstrap `1.1.4`. The deployed/public release remains `v0.3.8-test` until a separate
@@ -16,13 +20,23 @@ add-on ID, GitHub repository, control domain, Worker name, and release URLs for 
 and route compatibility.
 
 The GPL-2.0 experimental poster-led skin source is tracked at
-`kodi/skin.starlane.movies`. Version 2.2.4 contains the tested Starlane Movies
-branding, startup, focus, and idle-navigation fixes plus FenLight AM Movies/TV widgets,
-Mad Titan and The Crew Live TV/Sports routes, and Jet Guide/Kodi PVR guide access. It
-preserves upstream attribution and internal compatibility identifiers and remains
-outside the signed production manifest. Version 2.2.4 is installed and active on the
-reference Fire TV; the production `skin.starlanemeridian` 1.2.4 skin remains installed
-for rollback. FenLight AM is configured to use the enabled CocoScrapers module.
+`kodi/skin.starlane.movies`. Source version 2.2.11 contains the Starlane Movies branding,
+startup, focus, and idle-navigation fixes. Its Home rows use Umbrella for Continue
+Watching, Because You Watched, Watch Again, and separate Movie/TV searches; other
+non-live discovery rows use Umbrella's public TMDb lists. Mad Titan and The Crew are
+reserved for Live TV and Sports. It preserves upstream attribution and internal
+compatibility identifiers and remains outside the signed production manifest. Version
+2.2.11 is installed and active on the reference Fire TV. Home uses a bounded
+native-scrolling grouplist with a fixed 371-pixel poster-row stride. Adjacent rows from
+the selected category stay rendered at low opacity, while other categories cannot
+occupy the viewport. The selected card owns its aligned border. Widget-backed menu
+entries load on focus; Select and Right run the same state-reset and first-populated-row
+focus sequence, avoiding parallel hub windows and click-triggered widget flushes. Its
+regenerated menu contains Umbrella routes, no FenLight routes, and no highlight-style
+override. Private build 2.2.8 is the primary operational rollback. Production
+`skin.starlanemeridian` 1.2.4 remains installed but is not the normal private-skin
+fallback. Umbrella's external provider is enabled with name `cocoscrapers` and module
+`script.module.cocoscrapers`.
 
 ## 1. Owner intent and standing instructions
 
@@ -95,7 +109,9 @@ Reference device:
 - Proton VPN 5.5.68.0 installed as `ch.protonvpn.android`
 - Setup app 0.3.0, version code 3, package `app.kodisetup.tv`
 - Kodi Bootstrap / repository add-on 1.1.3, ID `repository.kodisetup`
-- Active custom skin 1.2.4, ID `skin.starlanemeridian`
+- Active private skin 2.2.11, ID `skin.starlane.movies`
+- Primary private-skin rollback 2.2.8, ID `skin.starlane.movies`
+- Production rollback skin 1.2.4, ID `skin.starlanemeridian`
 - Applied signed configuration `2026.07.11`
 - Bootstrap recovery settings are clear: `pending_skin` and `previous_skin` are unset
 - Real-Debrid device OAuth completed; only premium-expiry status is reported to cloud
@@ -272,7 +288,7 @@ fingerprints are pinned. `repositories` and `addons` are empty by design.
 Run the narrowest relevant tests during iteration, then the complete CI-equivalent
 checks before a release.
 
-Python/Kodi/configuration tests (currently 29):
+Python/Kodi/configuration tests (currently 34):
 
 ```powershell
 python -m unittest discover -s tools -p "test_*.py"

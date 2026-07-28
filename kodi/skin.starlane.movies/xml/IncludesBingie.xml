@@ -2067,7 +2067,13 @@
                 <onfocus condition="System.HasAlarm(focus_delay)">CancelAlarm(focus_delay,true)</onfocus>
                 <onright condition="Integer.IsGreater(Container(4445).NumItems,0)">4444</onright>
                 <onright condition="Integer.IsEqual(Container(4445).NumItems,0)">ClearProperty(ShowViewSubMenu,Home)</onright>
-                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + [!Window.IsActive(1109) | !Window.IsActive(1119)]">77777</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">ClearProperty(CurrentWidgetID,Home)</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">ClearProperty(CurrentWidgetPos,Home)</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">ClearProperty(PrevWidgetPos,Home)</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">ClearProperty(LastFocusWidgetPos,Home)</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">ClearProperty(PendingWidgetID,Home)</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">ClearProperty(PendingWidgetItem,Home)</onright>
+                <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + Window.IsActive(Home)">SetFocus($VAR[StarlaneFirstWidgetFocus],0,absolute)</onright>
                 <onright condition="Integer.IsEqual(Container(4445).NumItems,0) + [Window.IsActive(1109) | Window.IsActive(1119)]">SetFocus(9000)</onright>
                 <onback>ClearProperty(ShowViewSubMenu,Home)</onback>
                 <onback condition="!Window.IsActive(1109)">77777</onback>
@@ -3147,7 +3153,7 @@
 <!-- UK icon to replace MPAA flag on Spotlight-->
     <include name="Spotlight_MPAA_Flag_Object1">
         <param name="right" default="-160" />
-        <!-- <!-- <param name="top" default="690" />                            -->
+        <!-- <param name="top" default="690" /> -->
         <param name="visibility" default="true" />
         <definition>
             <control type="group">

@@ -238,6 +238,20 @@
         <scrolltime tween="cubic" easing="out">600</scrolltime>
     </include>
 
+    <!-- Starlane Home deliberately uses a faster shared timing for both axes.
+         Keep the inherited 600ms include above for non-Home Bingie windows. -->
+    <include name="StarlaneHomeScrollTime">
+        <scrolltime tween="sine" easing="out">150</scrolltime>
+    </include>
+
+    <include name="StarlaneHomeWidgetPreload">
+        <preloaditems>2</preloaditems>
+    </include>
+
+    <include name="BingieWidgetPreload">
+        <preloaditems>5</preloaditems>
+    </include>
+
     <include name="BingieLeftDefs">
         <left>138</left>
     </include>

@@ -1,59 +1,59 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <shortcuts>
 	<shortcut>
-		<label>Trending</label>
+		<label>Popular Today</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_trending</defaultID>
+		<defaultID>umbrella_tv_trending</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tvshows&amp;url=tmdbrecentday,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>Trending Recent</label>
+		<label>On the Air</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_trending_recent</defaultID>
+		<defaultID>umbrella_tv_on_air</defaultID>
 		<icon/>
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending_recent,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_ontheair,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>Popular</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_popular</defaultID>
+		<defaultID>umbrella_tv_popular</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_popular,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_popular,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>Premieres</label>
+		<label>New Shows</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_premieres</defaultID>
+		<defaultID>umbrella_tv_new_shows</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_premieres,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tvshows&amp;url=tmdb_newshows,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>Airing Today</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_airing</defaultID>
+		<defaultID>umbrella_tv_airing</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_airing_today,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_airingtoday,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>Genres</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_genres</defaultID>
+		<defaultID>umbrella_tv_genres</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=tvshow,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tvGenres&amp;url=tmdb_genre,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>Next Episodes</label>
 		<label2>TV shows</label2>
-		<defaultID>fen_tv_next</defaultID>
+		<defaultID>umbrella_tv_next</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_next_episode,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=calendar&amp;url=progress,return)</action>
 	</shortcut>
 </shortcuts>

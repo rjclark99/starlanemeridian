@@ -1,6 +1,6 @@
 # Current deployment status
 
-Last verified deployment: 26 July 2026.
+Last verified deployment: 28 July 2026.
 
 ## Unreleased Starlane Movies rebrand
 
@@ -16,15 +16,37 @@ compatibility identifiers. Renaming them would break installed-client upgrades a
 public routes. No production rebrand candidate has been signed, deployed, or published.
 
 The GPL-2.0 experimental poster-led skin is tracked at `kodi/skin.starlane.movies`.
-Source version 2.2.4 uses the Starlane Movies identity, palette, emblem, horizon,
+Source version 2.2.16 uses the Starlane Movies identity, palette, emblem, horizon,
 backgrounds, static startup, and user-facing copy while retaining upstream attribution
-and internal compatibility identifiers. Movies and TV widgets now open the matching
-FenLight AM sections; Live TV and Sports use Mad Titan as the primary source, The Crew
-as a fallback, and Jet Guide/Kodi PVR for guide access. It is not included in the signed
-production manifest. Version 2.2.4 is installed and active on the reference Fire TV
-with FenLight AM, Umbrella, CocoScrapers, The Crew, Mad Titan Sports, Jet Guide, and
-their required Omega dependencies enabled. FenLight AM is explicitly configured to use
-CocoScrapers. A restart loaded the skin and add-ons without missing-dependency errors.
+and internal compatibility identifiers. Home now provides eight Umbrella rows:
+local Continue Watching Movies, local Continue Watching TV Shows, All-Time Best
+Movies, All-Time Best TV Shows, Movie Genres, TV Genres, Networks, and Providers.
+The first two rows use Umbrella's on-device progress database rather than Trakt.
+A local read-only progress gate checks Umbrella's `progress` table before Skin
+Shortcuts instantiates either row. Empty movie or episode rows therefore never invoke
+Umbrella and cannot disturb the following widget's geometry; each row returns
+automatically when a matching local progress record exists.
+Live TV provides Mad Titan Live TV and The Crew Live Channels; Sports provides Mad
+Titan Sports; Categories provides the four Umbrella discovery rows for movie genres,
+TV genres, networks, and providers. Existing New & Popular, TV Shows, and Movies rows
+remain on Umbrella. It is not included in the signed production manifest. Version
+2.2.16 is installed and
+active on the reference Fire TV. Home uses a bounded native-scrolling grouplist with a
+fixed 371-pixel poster-row stride. Both Home axes now use one 150-millisecond
+`sine/out` scroll, while inherited non-Home views retain their 600-millisecond timing.
+Adjacent rows from the selected category remain instantiated and fade as complete row
+groups between 35% and 100% over the same 150 milliseconds; rows from other categories
+cannot consume Home geometry. Home poster lists preload two items, and dynamic artwork
+loads in the background. The selected card owns its aligned focus border.
+Home, New & Popular, TV Shows, Movies, Live TV, Sports, and Categories load their
+widgets on menu focus; Select and Right run the same state-reset and first-populated-row
+focus sequence without launching hub windows or flushing widget properties. Focus state is recorded immediately, while
+the Home-only details snapshot is deferred for 150 milliseconds and guarded by the
+latest pending widget/item identity. Hero artwork retains the previous image until the
+latest snapshot commits, then uses a 100-millisecond crossfade. The device-generated
+menu contains 101 Umbrella, six Mad Titan, three The Crew, zero FenLight, and zero
+highlight-style references. Umbrella's external provider is enabled with provider name
+`cocoscrapers` and module `script.module.cocoscrapers`.
 
 ## Working deployment
 
@@ -36,8 +58,10 @@ CocoScrapers. A restart loaded the skin and add-ons without missing-dependency e
 - Kodi 21.3 and Proton VPN are installed.
 - Signed setup app 0.3.0 (version code 3) is installed on the reference Fire TV; the in-place upgrade preserved pairing and account status.
 - Kodi Setup Bootstrap 1.1.3 and signed configuration `2026.07.11` remain installed.
-  The experimental `skin.starlane.movies` 2.2.4 skin is currently active; the production
-  `skin.starlanemeridian` 1.2.4 skin remains installed as the rollback option.
+  The experimental `skin.starlane.movies` 2.2.15 skin is currently active. Preserved
+  private build 2.2.14 is the immediate rollback and 2.2.8 is the secondary private
+  fallback; production `skin.starlanemeridian` 1.2.4 remains installed but is not the
+  normal rollback for this private-skin stream.
 - Real-Debrid device OAuth completed. Only premium-expiry status is sent to the control plane.
 
 ## Verified behavior

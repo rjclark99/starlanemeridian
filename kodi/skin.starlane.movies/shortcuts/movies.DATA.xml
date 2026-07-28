@@ -1,60 +1,60 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <shortcuts>
-	<!-- FenLight AM movies -->
+	<!-- Umbrella movies -->
 	<shortcut>
-		<label>Trending</label>
+		<label>Popular Today</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_trending</defaultID>
+		<defaultID>umbrella_movies_trending</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=movies&amp;url=tmdbrecentday,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>Trending Recent</label>
+		<label>In Theaters</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_trending_recent</defaultID>
+		<defaultID>umbrella_movies_now_playing</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending_recent,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_nowplaying,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>Popular</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_popular</defaultID>
+		<defaultID>umbrella_movies_popular</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_popular,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_popular,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>Premieres</label>
+		<label>Recently Released</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_premieres</defaultID>
+		<defaultID>umbrella_movies_recent_releases</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_premieres,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_discovery_released,return)</action>
 	</shortcut>
 	<shortcut>
-		<label>Latest Releases</label>
+		<label>Upcoming</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_latest</defaultID>
+		<defaultID>umbrella_movies_upcoming</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_latest_releases,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_upcoming,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>Genres</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_genres</defaultID>
+		<defaultID>umbrella_movies_genres</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=movie,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=movieGenres&amp;url=tmdb_genre,return)</action>
 	</shortcut>
 	<shortcut>
 		<label>In Progress</label>
 		<label2>Movies</label2>
-		<defaultID>fen_movies_progress</defaultID>
+		<defaultID>umbrella_movies_progress</defaultID>
 		<icon />
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=in_progress_movies,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=moviesUnfinished&amp;url=traktunfinished,return)</action>
 	</shortcut>
 </shortcuts>

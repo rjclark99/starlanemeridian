@@ -27,11 +27,14 @@
                     <param name="widgetid" value="$PARAM[widgetid]" />
                     <param name="widgetstyle" value="$PARAM[widgetstyle]" />
                 </include>
+                <include content="StarlaneHomePendingDetails" condition="Window.IsActive(Home)">
+                    <param name="widgetid" value="$PARAM[widgetid]" />
+                </include>
                 <include content="Bingie_$PARAM[widget]_AutoPreview" condition="String.IsEqual(Skin.String(HomeLayout),bingie) + [Skin.HasSetting(BingieAutoTrailer) | Skin.HasSetting(SpotLightTrailers)]">
                     <param name="widgetid" value="$PARAM[widgetid]" />
                     <param name="groupid" value="$PARAM[groupid]" />
                 </include>
-                <include content="WidgetProperties">
+                <include content="WidgetProperties" condition="!Window.IsActive(Home)">
                     <param name="widgetid" value="$PARAM[widgetid]" />
                 </include>
 				<include content="WidgetsAutoRotate" condition="!String.IsEmpty(Skin.String(widgets_rotate_delay)) + !String.IsEqual(Skin.String(widgets_rotate),disabled) + [Skin.HasSetting(widgets_rotate_pause) | Skin.HasSetting(BingieAutoTrailer)]">
@@ -41,6 +44,84 @@
                     <param name="widgetid" value="$PARAM[widgetid]" />
                 </include>
             </control>
+        </definition>
+    </include>
+
+    <!-- The normal hidden item button records pending focus immediately. This second
+         focused-layout button waits for the same 150ms used by Home movement before
+         committing the lightweight Home details snapshot. Repeated input overwrites
+         the pending identity, so an interrupted focus cannot publish stale artwork. -->
+    <include name="StarlaneHomeDeferredDetailsButton">
+        <definition>
+            <control type="button">
+                <visible>false</visible>
+                <animation effect="fade" start="100" end="100" time="150" tween="sine" easing="out" reversible="true">Focus</animation>
+                <include content="StarlaneHomeWidgetProperties">
+                    <param name="widgetid" value="$PARAM[widgetid]" />
+                    <!-- Resolve the outer widget ID before passing the complete
+                         condition into the nested include. Kodi does not recursively
+                         expand parameters embedded in a nested parameter default. -->
+                    <param name="guard" value="Window.IsActive(Home) + Control.HasFocus($PARAM[widgetid]) + String.IsEqual(Window(Home).Property(PendingWidgetID),$PARAM[widgetid]) + String.IsEqual(Window(Home).Property(PendingWidgetItem),Container($PARAM[widgetid]).CurrentItem)" />
+                </include>
+            </control>
+        </definition>
+    </include>
+
+    <include name="StarlaneHomePendingDetails">
+        <onfocus>SetProperty(PendingWidgetID,$PARAM[widgetid],Home)</onfocus>
+        <onfocus>SetProperty(PendingWidgetItem,$INFO[Container($PARAM[widgetid]).CurrentItem],Home)</onfocus>
+    </include>
+
+    <include name="StarlaneHomeWidgetProperties">
+        <param name="guard" default="false" />
+        <definition>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.ClearLogo,$ESCINFO[Container($PARAM[widgetid]).ListItem.Art(clearlogo)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Art.tvshow.clearlogo,$ESCINFO[Container($PARAM[widgetid]).ListItem.Art(tvshow.clearlogo)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Plot,$ESCINFO[Container($PARAM[widgetid]).ListItem.Plot],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.PlotOutline,$ESCINFO[Container($PARAM[widgetid]).ListItem.PlotOutline],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Title,$ESCINFO[Container($PARAM[widgetid]).ListItem.Title],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Year,$ESCINFO[Container($PARAM[widgetid]).ListItem.Year],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Genre,$ESCINFO[Container($PARAM[widgetid]).ListItem.Genre],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Label,$ESCINFO[Container($PARAM[widgetid]).ListItem.Label],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Duration,$ESCINFO[Container($PARAM[widgetid]).ListItem.Duration],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Duration.Mins,$ESCINFO[Container($PARAM[widgetid]).ListItem.Duration(mins)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Duration.M,$ESCINFO[Container($PARAM[widgetid]).ListItem.Duration(m)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Duration.Hours,$ESCINFO[Container($PARAM[widgetid]).ListItem.Duration(h)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.PercentPlayed,$INFO[Container($PARAM[widgetid]).ListItem.PercentPlayed],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.DBTYPE,$ESCINFO[Container($PARAM[widgetid]).ListItem.DBTYPE],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.TvShowTitle,$ESCINFO[Container($PARAM[widgetid]).ListItem.TvShowTitle],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Premiered,$ESCINFO[Container($PARAM[widgetid]).ListItem.Premiered],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.VideoResolution,$ESCINFO[Container($PARAM[widgetid]).ListItem.VideoResolution],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.AudioChannels,$ESCINFO[Container($PARAM[widgetid]).ListItem.AudioChannels],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Art.fanart,$ESCINFO[Container($PARAM[widgetid]).ListItem.Art(fanart)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.TotalEpisodes,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(TotalEpisodes)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.TotalSeasons,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(TotalSeasons)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.UnWatchedEpisodes,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(UnWatchedEpisodes)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.VideoCodec,$ESCINFO[Container($PARAM[widgetid]).ListItem.VideoCodec],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.VideoAspect,$ESCINFO[Container($PARAM[widgetid]).ListItem.VideoAspect],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.SubtitleLanguage,$ESCINFO[Container($PARAM[widgetid]).ListItem.SubtitleLanguage],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.AudioCodec,$ESCINFO[Container($PARAM[widgetid]).ListItem.AudioCodec],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.AudioLanguage,$ESCINFO[Container($PARAM[widgetid]).ListItem.AudioLanguage],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.MPAA,$ESCINFO[Container($PARAM[widgetid]).ListItem.MPAA],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.IsStereoScopic,$ESCINFO[Container($PARAM[widgetid]).ListItem.IsStereoScopic],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.TagLine,$ESCINFO[Container($PARAM[widgetid]).ListItem.TagLine],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Rating,$ESCINFO[Container($PARAM[widgetid]).ListItem.Rating],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.UserRating,$ESCINFO[Container($PARAM[widgetid]).ListItem.UserRating],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Season,$ESCINFO[Container($PARAM[widgetid]).ListItem.Season],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Episode,$ESCINFO[Container($PARAM[widgetid]).ListItem.Episode],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Art.Poster,$ESCINFO[Container($PARAM[widgetid]).ListItem.Art(poster)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(ListItem.Icon,$ESCINFO[Container($PARAM[widgetid]).ListItem.Icon],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.Plot))">SetProperty(ListItem.Plot,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(Plot)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.DBTYPE))">SetProperty(ListItem.DBTYPE,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(dbtype)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.Art.Poster))">SetProperty(ListItem.Art.Poster,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(Poster)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.ClearLogo))">SetProperty(ListItem.ClearLogo,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(logo)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.Art.fanart))">SetProperty(ListItem.Art.fanart,$ESCINFO[Container($PARAM[widgetid]).ListItem.Property(fanart)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.ClearLogo))">SetProperty(ListItem.ClearLogo,$ESCINFO[Control.GetLabel(90005)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.Art.fanart))">SetProperty(ListItem.Art.fanart,$ESCINFO[Control.GetLabel(99004)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard] + String.IsEmpty(Window(Home).Property(ListItem.Plot))">SetProperty(ListItem.Plot,$ESCINFO[Control.GetLabel(90009)],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(LastFocusWidgetPos,$INFO[Container($PARAM[widgetid]).CurrentItem],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(CommittedWidgetID,$PARAM[widgetid],Home)</onfocus>
+            <onfocus condition="$PARAM[guard]">SetProperty(CommittedWidgetItem,$INFO[Container($PARAM[widgetid]).CurrentItem],Home)</onfocus>
         </definition>
     </include>
 	
@@ -75,7 +156,10 @@
         <onfocus>ClearProperty(submenu,Home)</onfocus>
         <onfocus>ClearProperty(ShowViewSubMenu,Home)</onfocus>
         <onfocus>SetProperty(ShowWidget,1,Home)</onfocus>
-        <onfocus>SetProperty(widgetstyle,$PARAM[widgetstyle],Home)</onfocus>
+        <!-- Home has one canonical poster renderer. Other inherited Bingie windows
+             may continue to honor their own view-style parameter. -->
+        <onfocus condition="Window.IsActive(Home)">SetProperty(widgetstyle,poster,Home)</onfocus>
+        <onfocus condition="!Window.IsActive(Home)">SetProperty(widgetstyle,$PARAM[widgetstyle],Home)</onfocus>
 		<onfocus condition="String.IsEqual(window(home).Property(widgetstyle),poster)">SetProperty(lastwidgetstyle,poster,Home)</onfocus>
 		<onfocus condition="String.IsEqual(window(home).Property(widgetstyle),landscape)">SetProperty(lastwidgetstyle,landscape,Home)</onfocus>
         <onfocus>SetProperty(SkinHelper.WidgetContainer,Home)</onfocus>

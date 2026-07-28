@@ -10,6 +10,17 @@
 
     <include name="startupskinsettingsvalues">
 		<setting id="HomeLayout.label" type="string">[UPPERCASE]Starlane Movies[/UPPERCASE]</setting>
+        <!-- The inherited spotlight depends on optional local/helper sources and can
+             keep the home window in a permanent busy state. Starlane's section
+             widgets provide discovery content directly through Umbrella. -->
+        <onload>Skin.SetBool(DisableSpotlightContent)</onload>
+        <!-- The inherited fixed frame is positioned independently from each generated
+             widget header. With multi-widget menus it sits over the header instead of
+             the selected card. Use the focused card layout, which follows the card. -->
+        <onload>Skin.Reset(EnableFixedFrameWidgets)</onload>
+        <!-- Starlane's Home renderer deliberately has one geometry. Saved skin or
+             Skin Shortcuts state must not restore a second highlight/landscape view. -->
+        <onload>Skin.SetString(widgetstyle,poster)</onload>
         <onload>SetProperty(startupDone,loaded,Home)</onload>
     </include>
   
@@ -55,7 +66,6 @@
 	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetBool(WidgetsPreferPlotOutline)</onload>
 	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetBool(DisablePlotAutoScroll)</onload>
 	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetString(AutoYoutubeTrailer,true)</onload>
-	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetBool(EnableFixedFrameWidgets)</onload>
 	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetBool(ShowInformationBypass)</onload>
 	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetBool(MovieDetailsHome)</onload>
 	<onload condition="!Skin.HasSetting(HomeMenuDefaults46)">Skin.SetBool(LockHubWidgets)</onload>

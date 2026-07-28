@@ -8,7 +8,7 @@
 		<defaultID>137</defaultID>
 		<icon>shortcuts/search.png</icon>
 		<thumb />
-		<action>ActivateWindow(1109,return)</action>
+		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tools_searchNavigator,return)</action>
 	</shortcut>
 
 	<!-- Home -->
@@ -18,7 +18,10 @@
 		<defaultID>10000</defaultID>
 		<icon>shortcuts/home.png</icon>
 		<thumb />
-		<action>ActivateWindow(home,return)</action>
+		<!-- The Home menu swaps this section's widgets on focus. The no-op path is
+		     intercepted by the Skin Shortcuts override so Select and Right enter
+		     the same Home widget renderer without a window activation or flush. -->
+		<action>noop</action>
 	</shortcut>
 
 	<!-- New/Popular Hub -->
@@ -28,7 +31,7 @@
 		<defaultID>320032</defaultID>
 		<icon>shortcuts/new.png</icon>
 		<thumb />
-		<action>ActivateWindow(1112,return)</action>
+		<action>noop</action>
 	</shortcut>
 	
 	<!-- TV hub -->
@@ -38,7 +41,7 @@
 		<defaultID>20343</defaultID>
 		<icon>shortcuts/tv.png</icon>
         <thumb />
-		<action>ActivateWindow(1110,return)</action>
+		<action>noop</action>
 	</shortcut>
 
 	<!-- Movies hub -->
@@ -48,47 +51,47 @@
 		<defaultID>342</defaultID>
 		<icon>shortcuts/clapperboard.png</icon>
 		<thumb />
-		<action>ActivateWindow(1111,return)</action>
+		<action>noop</action>
 	</shortcut>
 
-	<!-- Live TV: Mad Titan primary, The Crew and Kodi PVR fallbacks in widgets. -->
+	<!-- Live TV: Mad Titan and The Crew rows use the shared Home renderer. -->
 	<shortcut>
 		<label>Live TV</label>
 		<label2>Live TV</label2>
 		<defaultID>starlane_livetv</defaultID>
 		<icon>shortcuts/tv.png</icon>
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.madtitansports/lntv/categories,return)</action>
+		<action>noop</action>
 	</shortcut>
 
-	<!-- Sports: Mad Titan primary with Crew-backed league fallbacks. -->
+	<!-- Sports: Mad Titan content uses the shared Home renderer. -->
 	<shortcut>
 		<label>Sports</label>
 		<label2>Sports</label2>
 		<defaultID>starlane_sports</defaultID>
 		<icon>shortcuts/custom.png</icon>
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.madtitansports/,return)</action>
+		<action>noop</action>
 	</shortcut>
 	
-	<!-- Category hub -->
+	<!-- Umbrella category/discovery rows use the shared Home renderer. -->
 	<shortcut>
 		<label>31025</label>
 		<label2>31025</label2>
 		<defaultID>31025</defaultID>
 		<icon>shortcuts/categories.png</icon>
         <thumb />
-		<action>ActivateWindow(1119,return)</action>
+		<action>noop</action>
 	</shortcut>
 
-	<!-- My List Hub -->
+	<!-- Umbrella personal lists -->
     <shortcut>
         <label>31534</label>
         <label2>31534</label2>
         <defaultID>31534</defaultID>
         <icon>shortcuts/mylist.png</icon>
         <thumb />
-        <action>ActivateWindow(1114,return)</action>
+        <action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=mymovieNavigator,return)</action>
     </shortcut>
 
 </shortcuts>

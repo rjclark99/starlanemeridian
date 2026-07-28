@@ -272,6 +272,9 @@
                     <param name="widgetstyle" value="poster"/>
                     <param name="widgetid" value="$PARAM[widgetid]"/>
                 </include>
+                <include content="StarlaneHomeDeferredDetailsButton" condition="Window.IsActive(Home)">
+                    <param name="widgetid" value="$PARAM[widgetid]"/>
+                </include>
             </control>
         </focusedlayout>
 		        <focusedlayout height="330" width="238" condition="!Control.HasFocus($PARAM[widgetid])">
@@ -304,6 +307,9 @@
                 <include>Poster_New_Episodes_Tag_Overlay</include>
 				<include content="HiddenWidgetButton">
                     <param name="widgetstyle" value="poster"/>
+                    <param name="widgetid" value="$PARAM[widgetid]"/>
+                </include>
+                <include content="StarlaneHomeDeferredDetailsButton" condition="Window.IsActive(Home)">
                     <param name="widgetid" value="$PARAM[widgetid]"/>
                 </include>
             </control>
@@ -770,14 +776,12 @@
             <include condition="Skin.HasSetting(EnableRatingsOnHome)">FooterON</include>
 			<include condition="!Skin.HasSetting(EnableRatingsOnHome)">FooterOFF</include>
             <height>40</height>
-            <!-- fixed focus navigation -->
+            <!-- Track the active row for opacity only. The bounded outer grouplist
+                 owns vertical positioning and scrolling. -->
             <include content="SetFixedVerticalNavigationProps" condition="String.IsEqual(Skin.String(HomeLayout),bingie)">
                 <param name="widgetid" value="$PARAM[widgetid]"/>
             </include>
-            <include content="Fixed_Focus_Navigation_Factory" condition="String.IsEqual(Skin.String(HomeLayout),bingie)">
-                <param name="widgetid" value="$PARAM[widgetid]"/>
-            </include>
-            <visible>String.IsEqual(Container(900).ListItem.Property(submenuVisibility),$PARAM[submenuid]) | Skin.HasSetting(ShowAllWidgets)</visible>
+            <visible>String.IsEqual(Container(900).ListItem.Property(submenuVisibility),$PARAM[submenuid]) | [!Window.IsActive(Home) + Skin.HasSetting(ShowAllWidgets)]</visible>
             <control type="label">
                 <height>100%</height>
                 <width>100%</width>
@@ -866,9 +870,6 @@
         <include content="SetFixedVerticalNavigationProps" condition="String.IsEqual(Skin.String(HomeLayout),bingie)">
             <param name="widgetid" value="$PARAM[widgetid]"/>
         </include>
-        <include content="Fixed_Focus_Navigation_Factory">
-            <param name="widgetid" value="$PARAM[widgetid]"/>
-        </include>
         <include content="BingieUnfocusedWidgetFade">
             <param name="widgetid" value="$PARAM[widgetid]" />
         </include>
@@ -877,13 +878,18 @@
     <include name="widget_base_normal">
         <control type="$PARAM[containerType]" id="$PARAM[widgetid]">
             <visible>$PARAM[visibility]</visible>
-            <visible>String.IsEqual(Container(900).ListItem.Property(submenuVisibility),$PARAM[submenuid]) | Skin.HasSetting(ShowAllWidgets)</visible>
-            <visible>Container($PARAM[widgetid]).IsUpdating + Control.IsVisible($PARAM[widgetid]) | Integer.IsGreater(Container($PARAM[widgetid]).NumItems,0)</visible>
+            <visible>String.IsEqual(Container(900).ListItem.Property(submenuVisibility),$PARAM[submenuid]) | [!Window.IsActive(Home) + Skin.HasSetting(ShowAllWidgets)]</visible>
+            <!-- Do not make visibility depend on this same control already being
+                 visible. Kodi does not start plug-in directory loading for a hidden
+                 widget, so that self-reference leaves a fresh widget permanently
+                 empty. The section and generated widget guards above are sufficient. -->
             <include condition="$PARAM[multiRows]">widget_base_vertical</include>
             <orientation>horizontal</orientation>
             <width>100%</width>
-            <include>ScrollTime</include>
-            <preloaditems>5</preloaditems>
+            <include condition="Window.IsActive(Home)">StarlaneHomeScrollTime</include>
+            <include condition="!Window.IsActive(Home)">ScrollTime</include>
+            <include condition="Window.IsActive(Home)">StarlaneHomeWidgetPreload</include>
+            <include condition="!Window.IsActive(Home)">BingieWidgetPreload</include>
             <include content="WidgetBaseBingieIncludes" condition="String.IsEqual(Skin.String(HomeLayout),bingie)">
                 <param name="widgetid" value="$PARAM[widgetid]" />
             </include>

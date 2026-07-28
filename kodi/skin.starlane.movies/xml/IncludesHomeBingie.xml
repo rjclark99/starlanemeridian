@@ -24,7 +24,7 @@
                 </control>
                 <control type="image">
                     <visible>!Player.HasVideo</visible>
-                    <fadetime>350</fadetime>
+                    <fadetime>100</fadetime>
                     <texture background="true">$VAR[BingieSpotlightBackground]</texture>
                     <aspectratio aligny="top">scale</aspectratio>
                     <include condition="Skin.HasSetting(BackgroundAnimation)">BackgroundAnimation</include>
@@ -115,7 +115,7 @@
 						<height>230</height>                         
                         <width>594</width>                          
                         <align>left</align>
-                        <fadetime>350</fadetime>
+                        <fadetime>100</fadetime>
                         <aspectratio align="center" aligny="center">keep</aspectratio>
                         <texture background="true" fallback="colors/color_transparent.png">$VAR[BingieSpotlightLogo]</texture>
                     </control>
@@ -593,27 +593,19 @@
 				</control>
             </control>
 			
-			<control type="group">
-				<top>-481</top>
-				<visible>!Window.IsActive(DialogVideoInfo.xml)</visible>
-				<include>Animation_Right_Home_2</include>
-				<include condition="Skin.HasSetting(EnableFixedFrameWidgets) + $EXP[IsSupportedFixedFrameLayout] + Window.IsActive(Home) + Skin.HasSetting(LockHubWidgets)">Bingie_Screens_Fixed_Focus_Frame_Highlight_2</include>
-			</control>
-
             <!-- Widgets -->
             <control type="grouplist" id="77777">
 				<visible>!Window.IsActive(DialogVideoInfo.xml)</visible>
 				<include>Animation_Right_Home</include>
                 <animation time="300" effect="fade" start="100" end="70" reversible="true" easing="inout" condition="$EXP[IsMainMenuOpened] + !$EXP[IsPlayingRecognizedContent]">Conditional</animation>
-				<animation effect="slide" end="0,33" time="300" condition="$EXP[IsCurrentWidgetSpotlight]">Conditional</animation>
-				<animation effect="slide" end="0,58" time="300" condition="$EXP[IsCurrentWidgetSpotlight]">Conditional</animation>
-				<animation effect="slide" end="0,40" time="300" condition="!$EXP[IsCurrentWidgetSpotlight] + [String.IsEqual(Skin.String(widgetstyle),landscape)] + !String.IsEqual(window(home).Property(widgetstyle),highlight)">Conditional</animation>
                 <usecontrolcoords>true</usecontrolcoords>
 				<top>571</top>
-                <include condition="[Window.IsActive(Home) | [$EXP[IsBingieHubsActive] + Skin.HasSetting(LockHubWidgets)]]">Fixed_Focus_Bottom</include>
                 <bottom>0</bottom>
-                <include condition="[Window.IsActive(Home) | [$EXP[IsBingieHubsActive] + Skin.HasSetting(LockHubWidgets)]]">Fixed_Focus_Itemgap</include>
-                <itemgap>2</itemgap>
+                <!-- This bounded grouplist is the sole owner of Home's vertical
+                     movement. Header 40 + poster row 331 = a fixed 371px stride. -->
+                <orientation>vertical</orientation>
+                <include>StarlaneHomeScrollTime</include>
+                <itemgap>0</itemgap>
                 <pagecontrol>317</pagecontrol>
                 <width>2070</width>
                 <onback condition="$EXP[IsPlayingRecognizedContent]">SetFocus(509)</onback>
@@ -635,19 +627,6 @@
 			<include condition="String.IsEqual(Skin.String(widgetstyle),poster) + !Skin.HasSetting(DisableDummySpotlight)">SpotlightDummyPosterWidget</include>
             <include condition="String.IsEqual(Skin.String(widgetstyle),landscape) + !Skin.HasSetting(DisableDummySpotlight)">SpotlightDummyLandscapeWidget</include>
          			
-			<!-- Fixed Focus Frame -->
-			<control type="group">
-				<visible>!Window.IsActive(DialogVideoInfo.xml)</visible>
-				<include>Animation_Right_Home</include>
-				<include condition="Skin.HasSetting(EnableFixedFrameWidgets) + $EXP[IsSupportedFixedFrameLayout] + [Window.IsActive(Home) | [$EXP[IsBingieHubsActive2] | [Window.IsActive(1114) + Skin.HasSetting(AddToWatchlist)]] + Skin.HasSetting(LockHubWidgets)]">Bingie_Screens_Fixed_Focus_Frame</include>
-				<animation effect="slide" end="0,40" time="0" condition="!$EXP[IsCurrentWidgetSpotlight] + [String.IsEqual(Skin.String(widgetstyle),landscape)]">Conditional</animation>
-			</control>
-			<control type="group">
-				<top>-481</top>
-				<visible>!Window.IsActive(DialogVideoInfo.xml)</visible>
-				<include>Animation_Right_Home</include>
-				<include condition="Skin.HasSetting(EnableFixedFrameWidgets) + $EXP[IsSupportedFixedFrameLayout] + Window.IsActive(Home) + Skin.HasSetting(LockHubWidgets)">Bingie_Screens_Fixed_Focus_Frame_Highlight</include>
-			</control>
 			<control type="group">
 				<visible>!Window.IsActive(DialogVideoInfo.xml)</visible>
 				<include>Animation_Right_Home</include>

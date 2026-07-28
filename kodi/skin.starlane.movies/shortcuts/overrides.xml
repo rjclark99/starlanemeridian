@@ -256,134 +256,159 @@
 	<widgetdefaultnode defaultID="musicvideos" group="mainmenu" label="$LOCALIZE[20390]" type="musicvideos" path="videodb://recentlyaddedmusicvideos/" target="videos">recentmusicvideos</widgetdefaultnode>
 	<widgetdefaultnode defaultID="weather" group="mainmenu" label="$LOCALIZE[8]" type="static" path="$INCLUDE[WeatherWidget]" target="static">weather</widgetdefaultnode>
 
-    <!-- home widgets --> <!-- Updated Continue Watching to Show Movies & TV Inprogress -->
-	<propertydefault defaultID="10000" property="widget">continuewatching</propertydefault>
+    <!-- Umbrella Home widgets: local-only resume queues plus stable TMDb discovery
+         directories. Folder rows intentionally remain in the same poster renderer. -->
+	<propertydefault defaultID="10000" property="widget">umbrella_home_continue_movies</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget">videos</propertydefault>
-	<propertydefault defaultID="10000" property="widgetType">video</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath">plugin://script.skin.helper.widgets/?action=inprogressshowsandmovies&amp;mediatype=media&amp;limit=25&amp;reload=$INFO[Window(Home).Property(widgetreload)]</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName">$LOCALIZE[31535] $VAR[ForCurrentProfileNameLabel]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetType">movies</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath">plugin://plugin.video.umbrella/?action=local_finish_watching_movies</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName">Continue Watching Movies</propertydefault>
 
-	<propertydefault defaultID="10000" property="widget.1">recentshowsandmovies</propertydefault>
+	<propertydefault defaultID="10000" property="widget.1">umbrella_home_continue_tv</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.1">videos</propertydefault>
-	<propertydefault defaultID="10000" property="widgetType.1">video</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.1">plugin://script.skin.helper.widgets/?action=recentshowsandmovies&amp;mediatype=media&amp;limit=25&amp;reload=$INFO[Window(Home).Property(widgetreload)]</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.1">$LOCALIZE[31127]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetType.1">tvshows</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.1">plugin://plugin.video.umbrella/?action=local_finish_watching_episodes</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.1">Continue Watching TV Shows</propertydefault>
 
-	<propertydefault defaultID="10000" property="widget.2">bingeworthyshows</propertydefault>
+	<propertydefault defaultID="10000" property="widget.2">umbrella_home_best_movies</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.2">videos</propertydefault>
-	<propertydefault defaultID="10000" property="widgetType.2">tvshows</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.2">special://skin/playlists/bingeworthyshows.xsp</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.2">$LOCALIZE[31079]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetType.2">movies</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.2">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_toprated</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.2">All-Time Best Movies</propertydefault>
 
-	<propertydefault defaultID="10000" property="widget.3">watchagainshowsandmovies</propertydefault>
+	<propertydefault defaultID="10000" property="widget.3">umbrella_home_best_tv</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.3">videos</propertydefault>
-	<propertydefault defaultID="10000" property="widgetType.3">video</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.3">plugin://script.skin.helper.widgets/?action=watchagainshowsandmovies&amp;mediatype=media&amp;limit=25&amp;reload=$INFO[Window(Home).Property(widgetreload)]</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.3">$LOCALIZE[31080]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetType.3">tvshows</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.3">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_toprated</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.3">All-Time Best TV Shows</propertydefault>
 
-	<propertydefault defaultID="10000" property="widget.4">criticallyacclaimedmovies</propertydefault>
+	<propertydefault defaultID="10000" property="widget.4">umbrella_home_movie_genres</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.4">videos</propertydefault>
-	<propertydefault defaultID="10000" property="widgetType.4">movies</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.4">special://skin/playlists/criticallyacclaimedmovies.xsp</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.4">$LOCALIZE[31532]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetType.4">video</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.4">plugin://plugin.video.umbrella/?action=movieGenres&amp;url=tmdb_genre</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.4">Movie Genres</propertydefault>
 
-	<!-- The helper's similarshowsandmovies action crashes on an empty library and
-	     leaves Kodi's modal busy dialog consuming D-pad input. Use a native smart
-	     playlist here so an empty library completes cleanly. -->
-	<propertydefault defaultID="10000" property="widget.5">randommovies</propertydefault>
+	<propertydefault defaultID="10000" property="widget.5">umbrella_home_tv_genres</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.5">videos</propertydefault>
-	<propertydefault defaultID="10000" property="widgetType.5">movies</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.5">special://skin/playlists/randommovies.xsp</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.5">Random Movies</propertydefault>
+	<propertydefault defaultID="10000" property="widgetType.5">video</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.5">plugin://plugin.video.umbrella/?action=tvGenres&amp;url=tmdb_genre</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.5">TV Genres</propertydefault>
 
-	<propertydefault defaultID="10000" property="widget.6">mylist</propertydefault>
+	<propertydefault defaultID="10000" property="widget.6">umbrella_home_networks</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.6">videos</propertydefault>
 	<propertydefault defaultID="10000" property="widgetType.6">video</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.6">$INCLUDE[MyListWidget]</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.6">$LOCALIZE[31534]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.6">plugin://plugin.video.umbrella/?action=tvNetworks</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.6">Networks</propertydefault>
 
-	<propertydefault defaultID="10000" property="widget.7">forgenre</propertydefault>
+	<propertydefault defaultID="10000" property="widget.7">umbrella_home_providers</propertydefault>
 	<propertydefault defaultID="10000" property="widgetTarget.7">videos</propertydefault>
 	<propertydefault defaultID="10000" property="widgetType.7">video</propertydefault>
-	<propertydefault defaultID="10000" property="widgetPath.7">plugin://script.skin.helper.widgets/?action=forgenre&amp;mediatype=media&amp;limit=25&amp;reload=$INFO[Window(Home).Property(widgetreload)]</propertydefault>
-	<propertydefault defaultID="10000" property="widgetName.7">$LOCALIZE[515]</propertydefault>
+	<propertydefault defaultID="10000" property="widgetPath.7">plugin://plugin.video.umbrella/?action=tvOriginals</propertydefault>
+	<propertydefault defaultID="10000" property="widgetName.7">Providers</propertydefault>
 
-	<!-- FenLight AM movie widgets. These mirror the first-level Movies directory. -->
-	<propertydefault defaultID="342" property="widget">fen_movies_trending</propertydefault>
+	<!-- Umbrella New & Popular widgets. -->
+	<propertydefault defaultID="320032" property="widget">umbrella_new_movies_recent</propertydefault>
+	<propertydefault defaultID="320032" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="320032" property="widgetType">movies</propertydefault>
+	<propertydefault defaultID="320032" property="widgetPath">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_discovery_released</propertydefault>
+	<propertydefault defaultID="320032" property="widgetName">Recently Released Movies</propertydefault>
+	<propertydefault defaultID="320032" property="widget.1">umbrella_new_tv_recent</propertydefault>
+	<propertydefault defaultID="320032" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="320032" property="widgetType.1">tvshows</propertydefault>
+	<propertydefault defaultID="320032" property="widgetPath.1">plugin://plugin.video.umbrella/?action=tvshows&amp;url=tmdb_newshows</propertydefault>
+	<propertydefault defaultID="320032" property="widgetName.1">New TV Shows</propertydefault>
+	<propertydefault defaultID="320032" property="widget.2">umbrella_new_movies_upcoming</propertydefault>
+	<propertydefault defaultID="320032" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="320032" property="widgetType.2">movies</propertydefault>
+	<propertydefault defaultID="320032" property="widgetPath.2">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_upcoming</propertydefault>
+	<propertydefault defaultID="320032" property="widgetName.2">Upcoming Movies</propertydefault>
+	<propertydefault defaultID="320032" property="widget.3">umbrella_new_tv_on_air</propertydefault>
+	<propertydefault defaultID="320032" property="widgetTarget.3">videos</propertydefault>
+	<propertydefault defaultID="320032" property="widgetType.3">tvshows</propertydefault>
+	<propertydefault defaultID="320032" property="widgetPath.3">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_ontheair</propertydefault>
+	<propertydefault defaultID="320032" property="widgetName.3">On the Air</propertydefault>
+	<propertydefault defaultID="320032" property="widget.4">umbrella_new_tv_airing</propertydefault>
+	<propertydefault defaultID="320032" property="widgetTarget.4">videos</propertydefault>
+	<propertydefault defaultID="320032" property="widgetType.4">tvshows</propertydefault>
+	<propertydefault defaultID="320032" property="widgetPath.4">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_airingtoday</propertydefault>
+	<propertydefault defaultID="320032" property="widgetName.4">Airing Today</propertydefault>
+
+	<!-- Umbrella movie widgets. These mirror the first-level Movies directory. -->
+	<propertydefault defaultID="342" property="widget">umbrella_movies_popular</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType">movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending</propertydefault>
-	<propertydefault defaultID="342" property="widgetName">Trending</propertydefault>
-	<propertydefault defaultID="342" property="widget.1">fen_movies_trending_recent</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_popular</propertydefault>
+	<propertydefault defaultID="342" property="widgetName">Popular</propertydefault>
+	<propertydefault defaultID="342" property="widget.1">umbrella_movies_trending_today</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget.1">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType.1">movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath.1">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending_recent</propertydefault>
-	<propertydefault defaultID="342" property="widgetName.1">Trending Recent</propertydefault>
-	<propertydefault defaultID="342" property="widget.2">fen_movies_popular</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.1">plugin://plugin.video.umbrella/?action=movies&amp;url=tmdbrecentday</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.1">Trending Today</propertydefault>
+	<propertydefault defaultID="342" property="widget.2">umbrella_movies_now_playing</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget.2">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType.2">movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath.2">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_popular</propertydefault>
-	<propertydefault defaultID="342" property="widgetName.2">Popular</propertydefault>
-	<propertydefault defaultID="342" property="widget.3">fen_movies_premieres</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.2">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_nowplaying</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.2">In Theaters</propertydefault>
+	<propertydefault defaultID="342" property="widget.3">umbrella_movies_recent_releases</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget.3">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType.3">movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath.3">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_premieres</propertydefault>
-	<propertydefault defaultID="342" property="widgetName.3">Premieres</propertydefault>
-	<propertydefault defaultID="342" property="widget.4">fen_movies_latest</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.3">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_discovery_released</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.3">Recently Released</propertydefault>
+	<propertydefault defaultID="342" property="widget.4">umbrella_movies_top_rated</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget.4">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType.4">movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath.4">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_latest_releases</propertydefault>
-	<propertydefault defaultID="342" property="widgetName.4">Latest Releases</propertydefault>
-	<propertydefault defaultID="342" property="widget.5">fen_movies_genres</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.4">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_toprated</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.4">Top Rated</propertydefault>
+	<propertydefault defaultID="342" property="widget.5">umbrella_movies_genres</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget.5">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType.5">video</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath.5">plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=movie</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.5">plugin://plugin.video.umbrella/?action=movieGenres&amp;url=tmdb_genre</propertydefault>
 	<propertydefault defaultID="342" property="widgetName.5">Genres</propertydefault>
-	<propertydefault defaultID="342" property="widget.6">fen_movies_progress</propertydefault>
+	<propertydefault defaultID="342" property="widget.6">umbrella_movies_upcoming</propertydefault>
 	<propertydefault defaultID="342" property="widgetTarget.6">videos</propertydefault>
 	<propertydefault defaultID="342" property="widgetType.6">movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetPath.6">plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=in_progress_movies</propertydefault>
-	<propertydefault defaultID="342" property="widgetName.6">In Progress</propertydefault>
+	<propertydefault defaultID="342" property="widgetPath.6">plugin://plugin.video.umbrella/?action=tmdbmovies&amp;url=tmdb_upcoming</propertydefault>
+	<propertydefault defaultID="342" property="widgetName.6">Upcoming</propertydefault>
 
-	<!-- FenLight AM TV widgets. These mirror the first-level TV Shows directory. -->
-	<propertydefault defaultID="20343" property="widget">fen_tv_trending</propertydefault>
+	<!-- Umbrella TV widgets. These mirror the first-level TV Shows directory. -->
+	<propertydefault defaultID="20343" property="widget">umbrella_tv_popular</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget">videos</propertydefault>
 	<propertydefault defaultID="20343" property="widgetType">tvshows</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending</propertydefault>
-	<propertydefault defaultID="20343" property="widgetName">Trending</propertydefault>
-	<propertydefault defaultID="20343" property="widget.1">fen_tv_trending_recent</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_popular</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName">Popular</propertydefault>
+	<propertydefault defaultID="20343" property="widget.1">umbrella_tv_trending_today</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget.1">videos</propertydefault>
 	<propertydefault defaultID="20343" property="widgetType.1">tvshows</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath.1">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending_recent</propertydefault>
-	<propertydefault defaultID="20343" property="widgetName.1">Trending Recent</propertydefault>
-	<propertydefault defaultID="20343" property="widget.2">fen_tv_popular</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.1">plugin://plugin.video.umbrella/?action=tvshows&amp;url=tmdbrecentday</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.1">Trending Today</propertydefault>
+	<propertydefault defaultID="20343" property="widget.2">umbrella_tv_on_air</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget.2">videos</propertydefault>
 	<propertydefault defaultID="20343" property="widgetType.2">tvshows</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath.2">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_popular</propertydefault>
-	<propertydefault defaultID="20343" property="widgetName.2">Popular</propertydefault>
-	<propertydefault defaultID="20343" property="widget.3">fen_tv_premieres</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.2">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_ontheair</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.2">On the Air</propertydefault>
+	<propertydefault defaultID="20343" property="widget.3">umbrella_tv_new_shows</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget.3">videos</propertydefault>
 	<propertydefault defaultID="20343" property="widgetType.3">tvshows</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath.3">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_premieres</propertydefault>
-	<propertydefault defaultID="20343" property="widgetName.3">Premieres</propertydefault>
-	<propertydefault defaultID="20343" property="widget.4">fen_tv_airing</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.3">plugin://plugin.video.umbrella/?action=tvshows&amp;url=tmdb_newshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.3">New Shows</propertydefault>
+	<propertydefault defaultID="20343" property="widget.4">umbrella_tv_airing</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget.4">videos</propertydefault>
 	<propertydefault defaultID="20343" property="widgetType.4">tvshows</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath.4">plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_airing_today</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.4">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_airingtoday</propertydefault>
 	<propertydefault defaultID="20343" property="widgetName.4">Airing Today</propertydefault>
-	<propertydefault defaultID="20343" property="widget.5">fen_tv_genres</propertydefault>
+	<propertydefault defaultID="20343" property="widget.5">umbrella_tv_genres</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget.5">videos</propertydefault>
 	<propertydefault defaultID="20343" property="widgetType.5">video</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath.5">plugin://plugin.video.fenlight/?mode=navigator.genres&amp;menu_type=tvshow</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.5">plugin://plugin.video.umbrella/?action=tvGenres&amp;url=tmdb_genre</propertydefault>
 	<propertydefault defaultID="20343" property="widgetName.5">Genres</propertydefault>
-	<propertydefault defaultID="20343" property="widget.6">fen_tv_next</propertydefault>
+	<propertydefault defaultID="20343" property="widget.6">umbrella_tv_top_rated</propertydefault>
 	<propertydefault defaultID="20343" property="widgetTarget.6">videos</propertydefault>
-	<propertydefault defaultID="20343" property="widgetType.6">episodes</propertydefault>
-	<propertydefault defaultID="20343" property="widgetPath.6">plugin://plugin.video.fenlight/?mode=build_next_episode</propertydefault>
-	<propertydefault defaultID="20343" property="widgetName.6">Next Episodes</propertydefault>
+	<propertydefault defaultID="20343" property="widgetType.6">tvshows</propertydefault>
+	<propertydefault defaultID="20343" property="widgetPath.6">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_toprated</propertydefault>
+	<propertydefault defaultID="20343" property="widgetName.6">Top Rated</propertydefault>
 
-	<!-- Live TV combines Mad Titan, The Crew, Kodi PVR, and the optional Jet Guide. -->
-	<propertydefault defaultID="starlane_livetv" property="widget">madtitan_lntv</propertydefault>
+	<!-- Live TV uses only the installed providers' verified directory routes. -->
+	<propertydefault defaultID="starlane_livetv" property="widget">madtitan_live_categories</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetTarget">videos</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetType">video</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetPath">plugin://plugin.video.madtitansports/lntv/categories</propertydefault>
@@ -393,58 +418,37 @@
 	<propertydefault defaultID="starlane_livetv" property="widgetType.1">video</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetPath.1">plugin://plugin.video.thecrew/?action=sports_channels</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetName.1">The Crew Live Channels</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widget.2">crew_pluto</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetTarget.2">videos</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetType.2">video</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetPath.2">plugin://plugin.video.thecrew/?action=pluto</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetName.2">The Crew Pluto TV</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widget.3">madtitan_uktv</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetTarget.3">videos</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetType.3">video</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetPath.3">plugin://plugin.video.madtitansports/uktvnow/categories</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetName.3">Mad Titan UK Live TV</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widget.4">jet_guide</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetTarget.4">videos</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetType.4">video</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetPath.4">plugin://plugin.video.jet_guide/</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetName.4">TV Guide</propertydefault>
 
-	<!-- Mad Titan is the primary sports destination; Crew provides league fallbacks. -->
+	<!-- Mad Titan remains the sole Sports provider. Its root is the installed
+	     add-on's supported sports directory and owns any remote league changes. -->
 	<propertydefault defaultID="starlane_sports" property="widget">madtitan_sports</propertydefault>
 	<propertydefault defaultID="starlane_sports" property="widgetTarget">videos</propertydefault>
 	<propertydefault defaultID="starlane_sports" property="widgetType">video</propertydefault>
 	<propertydefault defaultID="starlane_sports" property="widgetPath">plugin://plugin.video.madtitansports/</propertydefault>
 	<propertydefault defaultID="starlane_sports" property="widgetName">Mad Titan Sports</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widget.1">crew_sports</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget.1">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType.1">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath.1">plugin://plugin.video.thecrew/?action=bluehat</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName.1">The Crew Sports Backup</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widget.2">crew_nfl</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget.2">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType.2">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath.2">plugin://plugin.video.thecrew/?action=nfl</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName.2">NFL</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widget.3">crew_football</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget.3">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType.3">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath.3">plugin://plugin.video.thecrew/?action=fifa</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName.3">Football</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widget.4">crew_f1</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget.4">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType.4">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath.4">plugin://plugin.video.thecrew/?action=f1</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName.4">Formula 1</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widget.5">crew_ufc</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget.5">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType.5">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath.5">plugin://plugin.video.thecrew/?action=ufc</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName.5">UFC and MMA</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widget.6">crew_replays</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget.6">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType.6">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath.6">plugin://plugin.video.thecrew/?action=sreplays</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName.6">Sports Replays</propertydefault>
+
+	<!-- Umbrella category folders. Providers maps to Umbrella's curated
+	     tvOriginals directory (Amazon, Hulu, and Netflix in 6.7.81). -->
+	<propertydefault defaultID="31025" property="widget">umbrella_categories_movie_genres</propertydefault>
+	<propertydefault defaultID="31025" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="31025" property="widgetType">video</propertydefault>
+	<propertydefault defaultID="31025" property="widgetPath">plugin://plugin.video.umbrella/?action=movieGenres&amp;url=tmdb_genre</propertydefault>
+	<propertydefault defaultID="31025" property="widgetName">Movie Genres</propertydefault>
+	<propertydefault defaultID="31025" property="widget.1">umbrella_categories_tv_genres</propertydefault>
+	<propertydefault defaultID="31025" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="31025" property="widgetType.1">video</propertydefault>
+	<propertydefault defaultID="31025" property="widgetPath.1">plugin://plugin.video.umbrella/?action=tvGenres&amp;url=tmdb_genre</propertydefault>
+	<propertydefault defaultID="31025" property="widgetName.1">TV Genres</propertydefault>
+	<propertydefault defaultID="31025" property="widget.2">umbrella_categories_networks</propertydefault>
+	<propertydefault defaultID="31025" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="31025" property="widgetType.2">video</propertydefault>
+	<propertydefault defaultID="31025" property="widgetPath.2">plugin://plugin.video.umbrella/?action=tvNetworks</propertydefault>
+	<propertydefault defaultID="31025" property="widgetName.2">Networks</propertydefault>
+	<propertydefault defaultID="31025" property="widget.3">umbrella_categories_providers</propertydefault>
+	<propertydefault defaultID="31025" property="widgetTarget.3">videos</propertydefault>
+	<propertydefault defaultID="31025" property="widgetType.3">video</propertydefault>
+	<propertydefault defaultID="31025" property="widgetPath.3">plugin://plugin.video.umbrella/?action=tvOriginals</propertydefault>
+	<propertydefault defaultID="31025" property="widgetName.3">Providers</propertydefault>
 
     <widgetRename>False</widgetRename> 
 
@@ -457,11 +461,25 @@
 	</override>
 
 	<!-- MainMenu -->
-	<!-- On Window Transition -> Do action and flush widget props -->
+	<!-- Window-changing entries keep the inherited action/flush behavior. -->
 	<override action="globaloverride" group="mainmenu">
-		<condition>[String.IsEmpty(Container(4445).NumItems) | Integer.IsEqual(Container(4445).NumItems,0)] | String.IsEqual(Skin.String(HomeLayout),bingie)</condition>
+		<condition>!String.IsEqual(ListItem.Property(path),noop)</condition>
 		<action>::ACTION::</action>
 		<action>SetProperty(flushWidgetProps,1,Home)</action>
+	</override>
+	<override action="globaloverride" group="mainmenu">
+		<!-- Widget-backed Home sections use the same deterministic entry sequence
+		     for Select as the Home menu's Right navigation. -->
+		<condition>String.IsEqual(ListItem.Property(path),noop)</condition>
+		<action>::ACTION::</action>
+		<action>ClearProperty(ShowViewSubMenu,Home)</action>
+		<action>ClearProperty(CurrentWidgetID,Home)</action>
+		<action>ClearProperty(CurrentWidgetPos,Home)</action>
+		<action>ClearProperty(PrevWidgetPos,Home)</action>
+		<action>ClearProperty(LastFocusWidgetPos,Home)</action>
+		<action>ClearProperty(PendingWidgetID,Home)</action>
+		<action>ClearProperty(PendingWidgetItem,Home)</action>
+		<action>SetFocus($VAR[StarlaneFirstWidgetFocus],0,absolute)</action>
 	</override>
 	<!-- If Clicked Currently Loaded Shortcut -> Close Menu and Refocus Widgets -->
 	<override action="globaloverride" group="mainmenu">
@@ -475,15 +493,7 @@
 	<!-- Power Menu -->
 	<groupoverride group="powermenu" condition="Window.IsActive(DialogButtonMenu.xml)">Close</groupoverride>
 
-	<!-- TV Shows / Movies Default Action -->
-	<override action="ActivateWindow(1110,return)" group="mainmenu">
-		<condition>!String.IsEqual(Skin.String(HomeLayout),bingie)</condition>
-		<action>ReplaceWindow(Videos,videodb://tvshows/titles/)</action>
-	</override>
-	<override action="ActivateWindow(1111,return)" group="mainmenu">
-		<condition>!String.IsEqual(Skin.String(HomeLayout),bingie)</condition>
-		<action>ReplaceWindow(Videos,videodb://movies/titles/)</action>
-	</override>
+	<!-- Live TV may still use Kodi's channel window in non-poster layouts. -->
 	<override action="ActivateWindow(1116,return)" group="mainmenu">
 		<condition>!String.IsEqual(Skin.String(HomeLayout),bingie)</condition>
 		<action>ReplaceWindow(TVChannels)</action>
