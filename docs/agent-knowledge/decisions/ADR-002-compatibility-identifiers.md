@@ -14,6 +14,11 @@ The Starlane Movies user-facing rebrand does not rename the Android package,
 production skin ID, bootstrap ID, repository, or established public/control routes.
 Those names anchor upgrades and installed clients.
 
+The same rule applies to provider add-on IDs, plugin routes, settings keys, and Python
+identifiers. Rebrand display metadata, translations, notifications, and declared
+artwork through a reproducible overlay while retaining upstream licences and
+attribution.
+
 Rejected: cosmetic global renaming, because it creates parallel packages and broken
 routes. Revisit only as an explicit migration with upgrade, signing, redirect,
 rollback, and device tests.

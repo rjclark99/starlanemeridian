@@ -21,7 +21,7 @@ have been tested and deployed but have not been committed or pushed.
 
 - Private skin ID: `skin.starlane.movies`
 - User-facing name: **Starlane Movies**
-- Source and installed version: `2.2.17`
+- Source and installed version: `2.2.20`
 - Active Kodi skin: `skin.starlane.movies`
 - Reference device: Amazon Fire TV `AFTKAUK001`
 - Kodi package/version: `org.xbmc.kodi`, Kodi 21.3
@@ -29,9 +29,94 @@ have been tested and deployed but have not been committed or pushed.
 - Production rollback skin: `skin.starlanemeridian` 1.2.4 remains installed
 - Private operational rollback artifact: `skin.starlane.movies` 2.2.8
 - Installable private-skin artifact:
-  `build/skin.starlane.movies-2.2.17.zip`
+  `build/skin.starlane.movies-2.2.20.zip`
 - Artifact SHA-256:
-  `9C2D7F04F844AEA245618DC3242CB7C16F5CE6DD72F59C656EB34B3D705F3960`
+  `9F97E03FD971B269A506D7E67230B030E72FC96B839147080D2B7084362B8D35`
+
+Version 2.2.20 converts the private product to VOD-only. Live TV and Sports were
+removed from packaged defaults, Home widget mappings, focus/control variables, and
+the regenerated Skin Shortcuts include. The branding overlay builder and exact
+texture-cache matcher now target Umbrella only. Mad Titan and The Crew add-on trees,
+profile data, and cached plugin ZIPs were removed from the reference device after an
+exact backup.
+
+The regenerated include contains 106 Umbrella references and zero FenLight, Mad Titan,
+The Crew, `starlane_livetv`, or `starlane_sports` references. A cold-start screenshot
+confirmed the menu order Search, Home, New & Popular, TV Shows, Movies, Categories,
+and My List. Kodi reports `skin.starlane.movies` 2.2.20 and Starlane Movies: On Demand
+6.7.81.1 enabled, while neither retired video add-on is registered. Production skin
+1.2.4 remains installed and untouched.
+
+The exact pre-change device skin, both retired add-ons and their profile data, Skin
+Shortcuts profile, private-skin settings, generated include, and log are preserved at
+`build/vod-only-pre-2.2.20/`. Restore that backup to return to private build 2.2.19.
+The VOD-only ZIP is 28,318,938 bytes.
+
+## Historical 2.2.19 provider branding state
+
+Version 2.2.19 completes the user-facing provider and private-skin branding pass.
+The installed display names and overlay versions are:
+
+- `plugin.video.umbrella` 6.7.81.1: **Starlane Movies: On Demand**
+- `plugin.video.madtitansports` 2.0.32.1: **Starlane Movies: Sports**
+- `plugin.video.thecrew` 3.2.0.1: **Starlane Movies: Live TV**
+
+This is a presentation overlay only. Add-on IDs, plugin routes, settings keys, Python
+identifiers, behaviour, licences, and upstream attribution are deliberately preserved.
+The deterministic overlay builder is `tools/build_kodi_branding_overlays.py`; exact
+installed originals and pre-deployment device state are preserved under
+`build/branding-audit-2.2.19/`.
+
+Kodi may continue to show cached provider artwork after the files change. Use
+`tools/kodi_texture_cache.py` against a stopped-Kodi copy of `Textures13.db` to list
+and remove only the exact top-level provider icon/fanart and Umbrella brand-art rows.
+Back up the selected DB and cached thumbnail files before pushing the edited copy.
+Never clear the global thumbnail or texture cache for this operation.
+
+The device-generated include contains 106 Umbrella route references, zero FenLight
+references, and no visible Umbrella, Mad Titan, or The Crew labels. Direct directory
+smoke tests returned four On Demand search entries, 15 Sports entries, and 15 Live TV
+entries. Cold-start logs detected all three branded versions and no new skin,
+missing-control, animation, or provider execution error. Umbrella still logs its
+pre-existing optional-repository lookup for internal ID `repository.umbrellakodi`.
+
+Provider artifacts:
+
+- `plugin.video.umbrella.zip`: 9,180,718 bytes,
+  SHA-256 `33E4FDF17A5F4909A4BA40AA15D1CFAF78EAB6F77FF1244942D61FC486074B2E`
+- `plugin.video.madtitansports.zip`: 4,955,990 bytes,
+  SHA-256 `F9866ACEC5D04822B03BF3BD5F5AB8ED7AD199EFBE0BBA22D195201D2F0EC9C2`
+- `plugin.video.thecrew.zip`: 439,855 bytes,
+  SHA-256 `B79649163DEDB7E5F504CE26835423ED3EF2DC822346B66289AC97EF096C4287`
+
+The official Mad Titan package also contains a pre-existing malformed
+`resources/settings.xml` attribute. It was not introduced or rewritten by the
+branding overlay. The focused add-on metadata XML, private-skin regression suite,
+all 41 repository Python tests, Python compilation, package structure, routes, and
+device presentation were verified.
+
+Mad Titan's root directory obtains artwork from remote JSON after installation. A
+central presentation sanitizer in its branded `default_process_item.py` replaces only
+art URLs containing Titan, Thanos, wolfgirl, or metal-style branding markers with the
+local Starlane Sports icon/fanart and rewrites provider-name fragments in displayed
+labels. Its display boundary also removes the two inert no-review/social-media notices
+and the final blank Google-proxy row that formed the remote root's last three entries.
+Link, stream, and plugin route values are untouched. The remote directory
+timed out during the immediate post-deployment visual retry; local compilation and the
+focused overlay regression passed, and Kodi logged no Mad Titan Python error.
+
+Version 2.2.18 converts Search from a direct Umbrella window activation to the same
+focus-driven Home renderer used by the other widget-backed destinations. Its rows are
+Search (`?action=tools_searchNavigator`), Discover Movies
+(`?action=movieNavigator`), and Discover TV Shows (`?action=tvNavigator`). Direct
+`movieSearch` or `tvSearch` widget paths are intentionally avoided because they can
+open an input dialog while Kodi enumerates Home content. Search Select and Right now
+enter the already rendered first row instead of creating a second window path. Search
+and provider icon assets remain unchanged for a later branding pass.
+
+The exact 2.2.17 device skin, Skin Shortcuts profile, settings, generated include, and
+log are preserved under
+`build/device-backups/search-hover-2.2.17-pre-2.2.18/`.
 
 Version 2.2.17 removes Mad Titan's broken Live NetTV widget while retaining The Crew
 for Live TV and Mad Titan's root for Sports. The official Mad Titan 2.0.32 ZIP omits
@@ -127,7 +212,7 @@ All paths above use the prefix `plugin://plugin.video.umbrella/`.
 
 ### Other main-menu routes
 
-- Search: Umbrella `tools_searchNavigator`
+- Search: Umbrella `tools_searchNavigator`, `movieNavigator`, and `tvNavigator` rows
 - Categories: Umbrella root
 - My List: Umbrella `mymovieNavigator`
 - Live TV: The Crew `sports_channels`

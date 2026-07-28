@@ -6,7 +6,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: Checked-in baseline and preserved 2.2.17 working-tree candidate.
+    summary: Checked-in baseline and preserved 2.2.19 working-tree candidate.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
@@ -20,7 +20,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/deployed-state.md
-    summary: Latest bounded reference Fire TV verification and rollback state.
+    summary: Reference Fire TV runs private skin 2.2.19 and branded provider overlays.
     tags: [device, kodi, fire-tv]
     path_globs: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
     read_when: [changing reference device, comparing source and installed state]
@@ -490,6 +490,20 @@ records:
     verified_at: 2026-07-28
     supersedes: []
     related: [incident.provider-skin-confusion, research.provider-routes]
+    size_hint: small
+  - id: incident.stale-provider-artwork-cache
+    title: Stale provider artwork cache
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-014-stale-provider-artwork-cache.md
+    summary: Provider files changed while Kodi retained old icons and fanart by URL.
+    tags: [kodi, branding, artwork, cache]
+    path_globs: [tools/build_kodi_branding_overlays.py, tools/kodi_texture_cache.py]
+    read_when: [provider name updates but old artwork remains]
+    authority: [tools/kodi_texture_cache.py, device visual verification]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.compatibility-identifiers, research.dynamic-content-artwork]
     size_hint: small
   - id: research.kodi-animations
     title: Kodi animation behavior

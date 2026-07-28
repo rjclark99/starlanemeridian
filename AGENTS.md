@@ -264,9 +264,9 @@ The handoff’s private-skin baseline—**requiring source/device verification**
 - Prefer public TMDb discovery where personalization is unnecessary.
 
 The latest verified provider policy—**requiring fresh verification and owner authority
-before change**—assigns non-live discovery/playback to Umbrella, external scraping to
-CocoScrapers, Sports to Mad Titan, and Live TV to The Crew. Mad Titan 2.0.32's broken
-Live NetTV route is excluded; FenLight remains absent unless the owner changes policy.
+before change**—is VOD-only: discovery/playback belongs to Umbrella and external
+scraping to CocoScrapers. Live TV and Sports sections are absent, and Mad Titan, The
+Crew, and FenLight remain excluded unless the owner changes policy.
 
 ### Skin Shortcuts
 

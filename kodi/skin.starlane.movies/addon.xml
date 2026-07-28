@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Experimental Starlane Movies skin derived from Titan BINGIE MOD under GPL-2.0. -->
-<addon id="skin.starlane.movies" version="2.2.17" name="Starlane Movies" provider-name="Starlane Movies">
+<addon id="skin.starlane.movies" version="2.2.20" name="Starlane Movies" provider-name="Starlane Movies">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui"/>
 		<import addon="script.bingie.helper" version="1.1.2"/>
@@ -26,14 +26,14 @@
 		<description>Experimental Starlane Movies skin with a poster-led home experience.</description>
 		<platform>all</platform>
 		<license>GPL v2.0</license>
-		<forum>https://forum.kodi.tv/showthread.php?tid=355993</forum>
-		<website>https://forum.kodi.tv/showthread.php?tid=355993</website>
+		<forum></forum>
+		<website>https://github.com/rjclark99/starlanemeridian</website>
 		<email></email>
-		<source>https://github.com/AchillesPunks/skin.titan.bingie.mod/</source>
+		<source>https://github.com/rjclark99/starlanemeridian</source>
 		<assets>
 			<icon>extras/starlane-movies/emblem.png</icon>
 			<fanart>extras/starlane-movies/horizon.png</fanart>
 		</assets>
-		<news>[B]STARLANE MOVIES 2.2.17[/B][CR]Removes the broken Mad Titan Live NetTV widget while retaining The Crew Live TV and Mad Titan Sports.</news>
+		<news>[B]STARLANE MOVIES 2.2.20[/B][CR]Converts the private build to a focused video-on-demand experience by removing Live TV and Sports menu integrations.</news>
 	</extension>
 </addon>

@@ -20,3 +20,9 @@ first frames, state resets, and mixed layouts.
 Home-backed categories stay in one renderer. Hover updates category; Select and Right
 use one idempotent first-populated-row sequence. Assert no hub activation and no
 post-focus global property flush.
+
+Search is subject to the same rule. A direct `ActivateWindow` action made its choices
+appear only after Select; private skin 2.2.18 changed Search to `noop` and supplied
+safe Umbrella navigator widget defaults. Do not use prompt-producing actions such as
+`movieSearch` or `tvSearch` as widget paths because Home enumeration can open their
+input dialogs without an explicit user selection.

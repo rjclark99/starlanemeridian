@@ -152,7 +152,7 @@
                 <width>320</width>
                 <height>320</height>
                 <aspectratio align="left">keep</aspectratio>
-                <texture background="true">bingie_mod_settings_logo.png</texture>
+                <texture background="true">special://skin/extras/starlane-movies/emblem.png</texture>
             </control>
         </control>
     </include>

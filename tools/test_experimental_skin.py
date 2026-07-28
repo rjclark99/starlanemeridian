@@ -12,7 +12,7 @@ class ExperimentalSkinTests(unittest.TestCase):
     def test_metadata_and_attribution(self):
         addon = ET.parse(SKIN / "addon.xml").getroot()
         self.assertEqual(addon.attrib["id"], "skin.starlane.movies")
-        self.assertEqual(addon.attrib["version"], "2.2.17")
+        self.assertEqual(addon.attrib["version"], "2.2.20")
         service = addon.find("extension[@point='xbmc.service']")
         self.assertIsNotNone(service)
         self.assertEqual(service.attrib["library"], "service.py")
@@ -22,9 +22,14 @@ class ExperimentalSkinTests(unittest.TestCase):
         self.assertEqual(metadata.findtext("license"), "GPL v2.0")
         self.assertEqual(
             metadata.findtext("source"),
-            "https://github.com/AchillesPunks/skin.titan.bingie.mod/",
+            "https://github.com/rjclark99/starlanemeridian",
         )
         self.assertTrue((SKIN / "LICENSE").is_file())
+        upstream_readme = (SKIN / "README.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "https://github.com/AchillesPunks/skin.titan.bingie.mod/",
+            upstream_readme,
+        )
         progress_gate = (SKIN / "service.py").read_text(encoding="utf-8")
         self.assertIn("SELECT 1 FROM progress WHERE media_type = ? LIMIT 1", progress_gate)
         self.assertIn('"movie", "episode"', progress_gate)
@@ -291,8 +296,6 @@ class ExperimentalSkinTests(unittest.TestCase):
             "320032",
             "20343",
             "342",
-            "starlane_livetv",
-            "starlane_sports",
             "31025",
         }
         actions = {
@@ -373,8 +376,6 @@ class ExperimentalSkinTests(unittest.TestCase):
                     variables,
                 )
         for default_id, widget_ids in (
-            ("starlane_livetv", (6510, 6520)),
-            ("starlane_sports", (7510,)),
             ("31025", (8510, 8520, 8530, 8540)),
         ):
             for widget_id in widget_ids:
@@ -416,7 +417,7 @@ class ExperimentalSkinTests(unittest.TestCase):
             ]
             self.assertEqual(remaining, [], language_file)
 
-    def test_streaming_menu_routes_are_wired_to_the_agreed_addons(self):
+    def test_vod_menu_routes_use_umbrella_only(self):
         main_menu = ET.parse(SKIN / "shortcuts/mainmenu.DATA.xml").getroot()
         shortcuts = {
             item.findtext("defaultID"): item
@@ -426,19 +427,14 @@ class ExperimentalSkinTests(unittest.TestCase):
         self.assertIn("20343", shortcuts)
         self.assertIn("10000", shortcuts)
         self.assertIn("320032", shortcuts)
-        self.assertIn("starlane_livetv", shortcuts)
-        self.assertIn("starlane_sports", shortcuts)
-        self.assertIn(
-            "plugin.video.umbrella/?action=tools_searchNavigator",
-            shortcuts["137"].findtext("action"),
-        )
+        self.assertNotIn("starlane_livetv", shortcuts)
+        self.assertNotIn("starlane_sports", shortcuts)
+        self.assertEqual(shortcuts["137"].findtext("action"), "noop")
         self.assertEqual(shortcuts["31025"].findtext("action"), "noop")
         self.assertIn(
             "plugin.video.umbrella/?action=mymovieNavigator",
             shortcuts["31534"].findtext("action"),
         )
-        self.assertEqual(shortcuts["starlane_livetv"].findtext("action"), "noop")
-        self.assertEqual(shortcuts["starlane_sports"].findtext("action"), "noop")
 
         overrides = ET.parse(SKIN / "shortcuts/overrides.xml").getroot()
         properties = overrides.findall("propertydefault")
@@ -455,13 +451,20 @@ class ExperimentalSkinTests(unittest.TestCase):
         tv_paths = widget_paths("20343")
         home_paths = widget_paths("10000")
         new_paths = widget_paths("320032")
-        live_paths = widget_paths("starlane_livetv")
-        sports_paths = widget_paths("starlane_sports")
         category_paths = widget_paths("31025")
+        search_paths = widget_paths("137")
         self.assertTrue(home_paths)
         self.assertTrue(new_paths)
         self.assertTrue(movie_paths)
         self.assertTrue(tv_paths)
+        self.assertEqual(
+            search_paths,
+            {
+                "plugin://plugin.video.umbrella/?action=tools_searchNavigator",
+                "plugin://plugin.video.umbrella/?action=movieNavigator",
+                "plugin://plugin.video.umbrella/?action=tvNavigator",
+            },
+        )
         self.assertTrue(all("plugin.video.umbrella" in path for path in home_paths))
         self.assertTrue(all("plugin.video.umbrella" in path for path in new_paths))
         self.assertTrue(all("plugin.video.umbrella" in path for path in movie_paths))
@@ -501,13 +504,16 @@ class ExperimentalSkinTests(unittest.TestCase):
             "Continue Watching TV Shows",
         )
         self.assertFalse(any("trakthistory" in path for path in home_paths))
-        self.assertEqual(
-            live_paths,
-            {"plugin://plugin.video.thecrew/?action=sports_channels"},
-        )
-        self.assertEqual(
-            sports_paths,
-            {"plugin://plugin.video.madtitansports/"},
+        visible_provider_labels = {
+            item.text or ""
+            for item in properties
+            if item.attrib.get("property", "").startswith("widgetName")
+        }
+        self.assertFalse(
+            any(
+                re.search(r"\bUmbrella\b", label, re.IGNORECASE)
+                for label in visible_provider_labels
+            )
         )
         self.assertEqual(
             category_paths,
@@ -518,7 +524,6 @@ class ExperimentalSkinTests(unittest.TestCase):
                 "plugin://plugin.video.umbrella/?action=tvOriginals",
             },
         )
-        self.assertFalse(widget_paths("137"))
         self.assertFalse(any("trakt_" in path for path in home_paths | new_paths))
 
         for submenu_file in ("movies.DATA.xml", "tvshows.DATA.xml"):
@@ -534,10 +539,10 @@ class ExperimentalSkinTests(unittest.TestCase):
             for path in (SKIN / "shortcuts").glob("*.xml")
         )
         self.assertNotIn("plugin.video.fenlight", shortcut_sources)
-        self.assertNotIn(
-            "plugin.video.madtitansports/lntv/categories",
-            shortcut_sources,
-        )
+        self.assertNotIn("plugin.video.madtitansports", shortcut_sources)
+        self.assertNotIn("plugin.video.thecrew", shortcut_sources)
+        self.assertNotIn("starlane_livetv", shortcut_sources)
+        self.assertNotIn("starlane_sports", shortcut_sources)
 
         template = (SKIN / "shortcuts/template.xml").read_text(encoding="utf-8")
         self.assertEqual(

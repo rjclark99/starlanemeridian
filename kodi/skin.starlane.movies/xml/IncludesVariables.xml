@@ -55,9 +55,6 @@
         <value condition="String.IsEqual(Container(900).ListItem.Property(submenuVisibility),movies) + Integer.IsGreater(Container(5550).NumItems,0)">5550</value>
         <value condition="String.IsEqual(Container(900).ListItem.Property(submenuVisibility),movies) + Integer.IsGreater(Container(5560).NumItems,0)">5560</value>
         <value condition="String.IsEqual(Container(900).ListItem.Property(submenuVisibility),movies) + Integer.IsGreater(Container(5570).NumItems,0)">5570</value>
-        <value condition="String.IsEqual(Container(900).ListItem.Property(defaultID),starlane_livetv) + Integer.IsGreater(Container(6510).NumItems,0)">6510</value>
-        <value condition="String.IsEqual(Container(900).ListItem.Property(defaultID),starlane_livetv) + Integer.IsGreater(Container(6520).NumItems,0)">6520</value>
-        <value condition="String.IsEqual(Container(900).ListItem.Property(defaultID),starlane_sports) + Integer.IsGreater(Container(7510).NumItems,0)">7510</value>
         <value condition="String.IsEqual(Container(900).ListItem.Property(defaultID),31025) + Integer.IsGreater(Container(8510).NumItems,0)">8510</value>
         <value condition="String.IsEqual(Container(900).ListItem.Property(defaultID),31025) + Integer.IsGreater(Container(8520).NumItems,0)">8520</value>
         <value condition="String.IsEqual(Container(900).ListItem.Property(defaultID),31025) + Integer.IsGreater(Container(8530).NumItems,0)">8530</value>

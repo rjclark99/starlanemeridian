@@ -256,6 +256,27 @@
 	<widgetdefaultnode defaultID="musicvideos" group="mainmenu" label="$LOCALIZE[20390]" type="musicvideos" path="videodb://recentlyaddedmusicvideos/" target="videos">recentmusicvideos</widgetdefaultnode>
 	<widgetdefaultnode defaultID="weather" group="mainmenu" label="$LOCALIZE[8]" type="static" path="$INCLUDE[WeatherWidget]" target="static">weather</widgetdefaultnode>
 
+	<!-- Search stays inside the shared Home renderer. The navigator route exposes
+	     Umbrella's existing search choices without triggering an input dialog while
+	     Home enumerates widgets; Movies and TV provide safe discovery directories. -->
+	<propertydefault defaultID="137" property="widget">umbrella_search_options</propertydefault>
+	<propertydefault defaultID="137" property="widgetTarget">videos</propertydefault>
+	<propertydefault defaultID="137" property="widgetType">video</propertydefault>
+	<propertydefault defaultID="137" property="widgetPath">plugin://plugin.video.umbrella/?action=tools_searchNavigator</propertydefault>
+	<propertydefault defaultID="137" property="widgetName">Search</propertydefault>
+
+	<propertydefault defaultID="137" property="widget.1">umbrella_discover_movies</propertydefault>
+	<propertydefault defaultID="137" property="widgetTarget.1">videos</propertydefault>
+	<propertydefault defaultID="137" property="widgetType.1">video</propertydefault>
+	<propertydefault defaultID="137" property="widgetPath.1">plugin://plugin.video.umbrella/?action=movieNavigator</propertydefault>
+	<propertydefault defaultID="137" property="widgetName.1">Discover Movies</propertydefault>
+
+	<propertydefault defaultID="137" property="widget.2">umbrella_discover_tv</propertydefault>
+	<propertydefault defaultID="137" property="widgetTarget.2">videos</propertydefault>
+	<propertydefault defaultID="137" property="widgetType.2">video</propertydefault>
+	<propertydefault defaultID="137" property="widgetPath.2">plugin://plugin.video.umbrella/?action=tvNavigator</propertydefault>
+	<propertydefault defaultID="137" property="widgetName.2">Discover TV Shows</propertydefault>
+
     <!-- Umbrella Home widgets: local-only resume queues plus stable TMDb discovery
          directories. Folder rows intentionally remain in the same poster renderer. -->
 	<propertydefault defaultID="10000" property="widget">umbrella_home_continue_movies</propertydefault>
@@ -406,22 +427,6 @@
 	<propertydefault defaultID="20343" property="widgetType.6">tvshows</propertydefault>
 	<propertydefault defaultID="20343" property="widgetPath.6">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_toprated</propertydefault>
 	<propertydefault defaultID="20343" property="widgetName.6">Top Rated</propertydefault>
-
-	<!-- Mad Titan 2.0.32's Live NetTV route requires an omitted client-certificate
-	     pair, so Live TV uses The Crew while Mad Titan remains available for Sports. -->
-	<propertydefault defaultID="starlane_livetv" property="widget">crew_live_channels</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetTarget">videos</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetType">video</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetPath">plugin://plugin.video.thecrew/?action=sports_channels</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetName">The Crew Live Channels</propertydefault>
-
-	<!-- Mad Titan remains the sole Sports provider. Its root is the installed
-	     add-on's supported sports directory and owns any remote league changes. -->
-	<propertydefault defaultID="starlane_sports" property="widget">madtitan_sports</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetTarget">videos</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetType">video</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetPath">plugin://plugin.video.madtitansports/</propertydefault>
-	<propertydefault defaultID="starlane_sports" property="widgetName">Mad Titan Sports</propertydefault>
 
 	<!-- Umbrella category folders. Providers maps to Umbrella's curated
 	     tvOriginals directory (Amazon, Hulu, and Netflix in 6.7.81). -->

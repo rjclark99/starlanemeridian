@@ -8,7 +8,7 @@
 		<defaultID>137</defaultID>
 		<icon>shortcuts/search.png</icon>
 		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.umbrella/?action=tools_searchNavigator,return)</action>
+		<action>noop</action>
 	</shortcut>
 
 	<!-- Home -->
@@ -54,26 +54,6 @@
 		<action>noop</action>
 	</shortcut>
 
-	<!-- Live TV: The Crew row uses the shared Home renderer. -->
-	<shortcut>
-		<label>Live TV</label>
-		<label2>Live TV</label2>
-		<defaultID>starlane_livetv</defaultID>
-		<icon>shortcuts/tv.png</icon>
-		<thumb />
-		<action>noop</action>
-	</shortcut>
-
-	<!-- Sports: Mad Titan content uses the shared Home renderer. -->
-	<shortcut>
-		<label>Sports</label>
-		<label2>Sports</label2>
-		<defaultID>starlane_sports</defaultID>
-		<icon>shortcuts/custom.png</icon>
-		<thumb />
-		<action>noop</action>
-	</shortcut>
-	
 	<!-- Umbrella category/discovery rows use the shared Home renderer. -->
 	<shortcut>
 		<label>31025</label>
