@@ -54,7 +54,7 @@
 		<action>noop</action>
 	</shortcut>
 
-	<!-- Live TV: Mad Titan and The Crew rows use the shared Home renderer. -->
+	<!-- Live TV: The Crew row uses the shared Home renderer. -->
 	<shortcut>
 		<label>Live TV</label>
 		<label2>Live TV</label2>

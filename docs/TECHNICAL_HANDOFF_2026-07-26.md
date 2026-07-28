@@ -21,7 +21,7 @@ have been tested and deployed but have not been committed or pushed.
 
 - Private skin ID: `skin.starlane.movies`
 - User-facing name: **Starlane Movies**
-- Source and installed version: `2.2.16`
+- Source and installed version: `2.2.17`
 - Active Kodi skin: `skin.starlane.movies`
 - Reference device: Amazon Fire TV `AFTKAUK001`
 - Kodi package/version: `org.xbmc.kodi`, Kodi 21.3
@@ -29,11 +29,18 @@ have been tested and deployed but have not been committed or pushed.
 - Production rollback skin: `skin.starlanemeridian` 1.2.4 remains installed
 - Private operational rollback artifact: `skin.starlane.movies` 2.2.8
 - Installable private-skin artifact:
-  `build/skin.starlane.movies-2.2.16.zip`
+  `build/skin.starlane.movies-2.2.17.zip`
 - Artifact SHA-256:
-  `9FC59B0ED2486E33872EDA689EAF2A0C1351B742DDA08F9C2A4E7AA99D91A62A`
+  `9C2D7F04F844AEA245618DC3242CB7C16F5CE6DD72F59C656EB34B3D705F3960`
 
-Version 2.2.16 adds `service.py`, a read-only local gate for Umbrella's
+Version 2.2.17 removes Mad Titan's broken Live NetTV widget while retaining The Crew
+for Live TV and Mad Titan's root for Sports. The official Mad Titan 2.0.32 ZIP omits
+the `com.playnet.androidtv.ads.crt` and `.key` files that its `lntv.py` unconditionally
+configures as a client-certificate pair. The original device module was restored after
+a reversible guard proved that the pair is required: without it the upstream response
+contains no configuration and the add-on fails with a later `NoneType` error.
+
+Version 2.2.16 added `service.py`, a read-only local gate for Umbrella's
 `watched.db`. Generated controls 2510 and 2520 are omitted before their plugin
 directories load when no matching `movie` or `episode` progress record exists.
 Device tests confirmed that the empty state renders All-Time Best Movies correctly,
@@ -45,8 +52,9 @@ The deployed, generated skin-shortcuts include was physically checked:
 
 - 101 references to `plugin.video.umbrella`
 - 0 references to `plugin.video.fenlight`
-- 6 references to `plugin.video.madtitansports`
+- 3 references to `plugin.video.madtitansports`
 - 3 references to `plugin.video.thecrew`
+- 0 references to `plugin.video.madtitansports/lntv/categories`
 
 The generated file is:
 
@@ -122,14 +130,13 @@ All paths above use the prefix `plugin://plugin.video.umbrella/`.
 - Search: Umbrella `tools_searchNavigator`
 - Categories: Umbrella root
 - My List: Umbrella `mymovieNavigator`
-- Live TV: Mad Titan `/lntv/categories`
+- Live TV: The Crew `sports_channels`
 - Sports: Mad Titan root
 
-The Crew is installed but the currently generated menu contains no direct The Crew
-route. The live/sports source presently points to Mad Titan and deliberately avoids
-background live widgets because those add-ons can block home enumeration. If the owner
-expects explicit Crew fallback entries, treat that as separate follow-up work and
-validate the exact Crew routes on-device before adding them.
+The Crew route was verified on-device and returned 15 entries. Mad Titan remains the
+Sports provider, but its `/lntv/categories` route must not be restored unless an
+upstream package supplies and successfully uses its required certificate/key pair.
+Avoid background live widgets that block Home enumeration.
 
 ## Source files changed
 
@@ -137,6 +144,7 @@ Primary implementation:
 
 - `kodi/skin.starlane.movies/addon.xml`
 - `kodi/skin.starlane.movies/shortcuts/mainmenu.DATA.xml`
+- `kodi/skin.starlane.movies/shortcuts/livetv.DATA.xml`
 - `kodi/skin.starlane.movies/shortcuts/movies.DATA.xml`
 - `kodi/skin.starlane.movies/shortcuts/tvshows.DATA.xml`
 - `kodi/skin.starlane.movies/shortcuts/overrides.xml`
@@ -383,6 +391,54 @@ Rollback order:
 
 No commit, push, public release, production deployment, VPN change, provider upgrade,
 or production-manifest change was performed.
+
+## Private skin 2.2.17 Mad Titan Live TV removal
+
+Private build 2.2.17 removes only Mad Titan's failing Live NetTV row. The Crew
+`?action=sports_channels` is now the sole Live TV widget, and Mad Titan's root remains
+the sole Sports widget.
+
+The diagnosis was reproduced from Kodi's live log and the cached official Mad Titan
+2.0.32 ZIP:
+
+- `/lntv/categories` configures
+  `resources/com.playnet.androidtv.ads.crt` and `.key`;
+- neither file exists in the installed add-on or official cached ZIP;
+- `requests` raises an `OSError` before the directory loads;
+- a reversible existence guard removed that exception but the upstream response then
+  contained no configuration and failed with `TypeError: 'NoneType' object is not
+  subscriptable`;
+- the original Mad Titan module was restored byte-for-byte with SHA-256
+  `76262AC91A37B5FDAA478158177DB081D51856F911B3FBECE1AE563C2A34F5D4`.
+
+The exact pre-change skin, Skin Shortcuts profile, settings, and Kodi log are under:
+
+`build/device-backups/madtitan-livetv-2.2.16-pre-2.2.17/`
+
+After deploying and rebuilding Skin Shortcuts, the generated include contains 101
+Umbrella, three Mad Titan, three The Crew, zero FenLight, and zero broken Live NetTV
+references. A direct Kodi directory request to The Crew returned 15 entries. A clean
+Kodi restart retained `skin.starlane.movies` 2.2.17 and the fresh log contains no
+Mad Titan, Live NetTV, Python callback, invalid-include, or generated-control error.
+
+Artifact:
+
+- ZIP: `build/skin.starlane.movies-2.2.17.zip`
+- size: 28,254,460 bytes
+- SHA-256:
+  `9C2D7F04F844AEA245618DC3242CB7C16F5CE6DD72F59C656EB34B3D705F3960`
+
+Rollback:
+
+1. Stop Kodi.
+2. Restore the saved `skin.starlane.movies` tree and Skin Shortcuts profile from
+   `madtitan-livetv-2.2.16-pre-2.2.17`.
+3. Start Kodi and verify 2.2.16 plus the restored generated include/hash pair.
+4. The Mad Titan Live TV error will return after rollback; use it only for comparison
+   or while testing a verified upstream repair.
+
+No provider was upgraded or modified, and no production skin, signed manifest, public
+release, VPN setting, or service was changed.
 
 ## Private skin 2.2.15 first-row rendering correction
 

@@ -1,0 +1,563 @@
+schema_version: 1
+updated_at: 2026-07-28
+records:
+  - id: current.source-state
+    title: Repository source state
+    kind: current
+    status: active
+    path: docs/agent-knowledge/current/source-state.md
+    summary: Checked-in baseline and preserved 2.2.17 working-tree candidate.
+    tags: [git, source, versions]
+    path_globs: ["**"]
+    read_when: [starting implementation, resolving version conflicts]
+    authority: [git, config/manifest.json, kodi/skin.starlane.movies/addon.xml]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [current.deployed-state, current.public-release-state]
+    size_hint: small
+  - id: current.deployed-state
+    title: Reference device state
+    kind: current
+    status: active
+    path: docs/agent-knowledge/current/deployed-state.md
+    summary: Latest bounded reference Fire TV verification and rollback state.
+    tags: [device, kodi, fire-tv]
+    path_globs: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    read_when: [changing reference device, comparing source and installed state]
+    authority: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [current.source-state, runbook.safe-adb-diagnostics]
+    size_hint: small
+  - id: current.public-release-state
+    title: Public release state
+    kind: current
+    status: needs-verification
+    path: docs/agent-knowledge/current/public-release-state.md
+    summary: Documented public test release; recheck remote bytes before relying on it.
+    tags: [release, manifest, github]
+    path_globs: [.github/workflows/**, config/**, tools/release.py]
+    read_when: [publishing, release comparison, public route checks]
+    authority: [config/manifest.json, docs/CURRENT_STATUS.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.signed-config-release, runbook.release-rollback]
+    size_hint: small
+  - id: subsystem.android-app
+    title: Android setup application
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/android-app.md
+    summary: Kotlin/Compose setup application architecture and safety boundaries.
+    tags: [android, kotlin, compose, security]
+    path_globs: [android-app/**]
+    read_when: [editing setup APK, device pairing, installation workflow]
+    authority: [android-app/app/build.gradle.kts, android-app/app/src/**]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.trust-boundaries, subsystem.signed-config-release]
+    size_hint: medium
+  - id: subsystem.admin-portal
+    title: Windows administration portal
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/admin-portal.md
+    summary: Loopback .NET portal, encrypted vault, and safe ADB support.
+    tags: [dotnet, windows, vault, adb]
+    path_globs: [admin-portal/**, admin-portal.tests/**]
+    read_when: [editing portal, vault, household, or ADB features]
+    authority: [admin-portal/KodiSetup.Admin.csproj, admin-portal/Program.cs]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.trust-boundaries, runbook.safe-adb-diagnostics]
+    size_hint: medium
+  - id: subsystem.control-api
+    title: Cloudflare control API
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/control-api.md
+    summary: Worker/D1 authentication, telemetry, commands, and public redirects.
+    tags: [cloudflare, typescript, d1, security]
+    path_globs: [control-api/**]
+    read_when: [editing API, migrations, commands, pairing, telemetry]
+    authority: [control-api/src/**, control-api/migrations/**, control-api/package.json]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.trust-boundaries, decision.schema-allowlists]
+    size_hint: medium
+  - id: subsystem.signed-config-release
+    title: Signed configuration and release
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/signed-config-release.md
+    summary: Schema, Ed25519 manifest, artifacts, CI, and release boundaries.
+    tags: [release, manifest, signing, ci]
+    path_globs: [config/**, tools/release.py, .github/workflows/**]
+    read_when: [changing manifest, artifacts, signing, publishing]
+    authority: [config/manifest.schema.json, config/manifest.json, tools/release.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.offline-signing, runbook.release-rollback]
+    size_hint: medium
+  - id: subsystem.kodi-bootstrap
+    title: Kodi bootstrap and repository
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/kodi-bootstrap.md
+    summary: Kodi Python bootstrap, idempotent application, activation, and recovery.
+    tags: [kodi, python, bootstrap, repository]
+    path_globs: [kodi/repository.kodisetup/**]
+    read_when: [editing Kodi bootstrap, repository, activation, recovery]
+    authority: [kodi/repository.kodisetup/addon.xml, kodi/repository.kodisetup/service.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.skin-stream-separation, runbook.release-rollback]
+    size_hint: medium
+  - id: subsystem.production-skin
+    title: Production Estuary-derived skin
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/production-skin.md
+    summary: Reproducible production skin builder and compatibility constraints.
+    tags: [kodi, skin, estuary, production]
+    path_globs: [tools/skin_builder.py, assets/branding/**]
+    read_when: [editing production skin or builder]
+    authority: [tools/skin_builder.py, tools/test_skin_builder.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.skin-stream-separation, subsystem.private-skin]
+    size_hint: medium
+  - id: subsystem.private-skin
+    title: Private poster-led skin
+    kind: subsystem
+    status: active
+    path: docs/agent-knowledge/subsystems/private-skin.md
+    summary: One-renderer Home, widget lifecycle, providers, and resource bounds.
+    tags: [kodi, skin, widgets, umbrella, performance]
+    path_globs: [kodi/skin.starlane.movies/**, tools/test_experimental_skin.py]
+    read_when: [editing private skin, diagnosing widgets, focus, clipping, lag]
+    authority: [kodi/skin.starlane.movies, tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.single-home-renderer, incident.empty-continue-watching]
+    size_hint: medium
+  - id: runbook.focused-validation
+    title: Focused validation ladder
+    kind: runbook
+    status: active
+    path: docs/agent-knowledge/runbooks/focused-validation.md
+    summary: Narrow-to-full validation sequence across project subsystems.
+    tags: [testing, validation, tokens]
+    path_globs: [tools/**, .github/workflows/**]
+    read_when: [validating any implementation]
+    authority: [.github/workflows/ci.yml, docs/AGENT_HANDOFF.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [current.source-state]
+    size_hint: small
+  - id: runbook.private-skin-device-test
+    title: Private skin device test
+    kind: runbook
+    status: active
+    path: docs/agent-knowledge/runbooks/private-skin-device-test.md
+    summary: Rollback-safe Fire TV deployment and bounded visual/log verification.
+    tags: [kodi, skin, adb, testing]
+    path_globs: [kodi/skin.starlane.movies/**]
+    read_when: [deploying private skin candidate to reference device]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [runbook.safe-adb-diagnostics, subsystem.private-skin]
+    size_hint: medium
+  - id: runbook.skin-shortcuts-regeneration
+    title: Skin Shortcuts regeneration
+    kind: runbook
+    status: active
+    path: docs/agent-knowledge/runbooks/skin-shortcuts-regeneration.md
+    summary: Preserve profile state and deterministically rebuild generated includes.
+    tags: [kodi, skinshortcuts, widgets]
+    path_globs: [kodi/skin.starlane.movies/shortcuts/**]
+    read_when: [changing menus, widgets, providers, generated includes]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.stale-skinshortcuts, subsystem.private-skin]
+    size_hint: medium
+  - id: runbook.release-rollback
+    title: Release and rollback
+    kind: runbook
+    status: active
+    path: docs/agent-knowledge/runbooks/release-rollback.md
+    summary: Authorized draft, byte verification, publication, and recovery sequence.
+    tags: [release, rollback, signing]
+    path_globs: [.github/workflows/release.yml, tools/release.py, config/**]
+    read_when: [preparing release, rollback, or promotion]
+    authority: [docs/OPERATIONS.md, docs/AGENT_HANDOFF.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.offline-signing, current.public-release-state]
+    size_hint: medium
+  - id: runbook.safe-adb-diagnostics
+    title: Safe ADB diagnostics
+    kind: runbook
+    status: active
+    path: docs/agent-knowledge/runbooks/safe-adb-diagnostics.md
+    summary: Bounded, reversible reference-device inspection and mutation rules.
+    tags: [adb, device, diagnostics, security]
+    path_globs: [admin-portal/Services/AdbService.cs, build/android-sdk/**]
+    read_when: [connecting to or modifying a reference device]
+    authority: [docs/OPERATIONS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.adb-vpn, current.deployed-state]
+    size_hint: medium
+  - id: decision.trust-boundaries
+    title: Preserve trust boundaries
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-001-trust-boundaries.md
+    summary: Secrets remain local and remote commands stay closed and signed.
+    tags: [security, privacy, architecture]
+    path_globs: [SECURITY.md, control-api/**, admin-portal/**, android-app/**]
+    read_when: [changing authentication, telemetry, commands, secrets]
+    authority: [SECURITY.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.control-api, subsystem.admin-portal]
+    size_hint: small
+  - id: decision.compatibility-identifiers
+    title: Retain compatibility identifiers
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-002-compatibility-identifiers.md
+    summary: User-facing rebrand does not rename upgrade-critical IDs and URLs.
+    tags: [compatibility, branding, migration]
+    path_globs: [android-app/**, kodi/**, config/**]
+    read_when: [renaming packages, add-ons, repositories, URLs]
+    authority: [README.md, docs/AGENT_HANDOFF.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.skin-stream-separation]
+    size_hint: small
+  - id: decision.skin-stream-separation
+    title: Separate production and private skins
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-003-skin-stream-separation.md
+    summary: Experimental poster-led work remains outside the signed production stream.
+    tags: [kodi, skin, release]
+    path_globs: [kodi/skin.starlane.movies/**, tools/skin_builder.py]
+    read_when: [moving skin changes between private and production]
+    authority: [docs/CURRENT_STATUS.md, config/manifest.json]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.production-skin, subsystem.private-skin]
+    size_hint: small
+  - id: decision.single-home-renderer
+    title: One Home renderer and motion owner
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-004-single-home-renderer.md
+    summary: Home categories share one renderer and one owner per visual property.
+    tags: [kodi, skin, performance, ux]
+    path_globs: [kodi/skin.starlane.movies/xml/**]
+    read_when: [changing Home layout, focus, animations, hubs]
+    authority: [tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.competing-animations, incident.parallel-hubs]
+    size_hint: small
+  - id: decision.schema-allowlists
+    title: Schema-driven allowlists
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-005-schema-allowlists.md
+    summary: Artifacts, providers, commands, and settings remain enumerated and validated.
+    tags: [schema, security, providers]
+    path_globs: [config/**, control-api/**, kodi/repository.kodisetup/**]
+    read_when: [adding provider, artifact, command, repository, setting]
+    authority: [config/manifest.schema.json, SECURITY.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.trust-boundaries]
+    size_hint: small
+  - id: decision.local-progress
+    title: Reuse Umbrella local progress
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-006-local-progress.md
+    summary: Continue Watching reuses Umbrella watched.db with a read-only existence gate.
+    tags: [kodi, umbrella, sqlite, performance]
+    path_globs: [kodi/skin.starlane.movies/service.py, kodi/skin.starlane.movies/shortcuts/**]
+    read_when: [changing Continue Watching or progress behavior]
+    authority: [kodi/skin.starlane.movies/service.py, tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.empty-continue-watching]
+    size_hint: small
+  - id: decision.offline-signing
+    title: Keep manifest signing offline
+    kind: decision
+    status: active
+    path: docs/agent-knowledge/decisions/ADR-007-offline-signing.md
+    summary: CI verifies an offline-signed manifest and never receives its private key.
+    tags: [release, signing, security]
+    path_globs: [config/**, .github/workflows/release.yml]
+    read_when: [changing release signing or automation]
+    authority: [.github/workflows/release.yml, docs/OPERATIONS.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.empty-release-secrets]
+    size_hint: small
+  - id: incident.competing-animations
+    title: Competing Home animations
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-001-competing-animations.md
+    summary: Additive slide systems caused clipping and cumulative row offsets.
+    tags: [kodi, animation, clipping]
+    path_globs: [kodi/skin.starlane.movies/xml/**]
+    read_when: [rows drift, clip, or accumulate offsets]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.single-home-renderer]
+    size_hint: small
+  - id: incident.hidden-row-churn
+    title: Hidden row control churn
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-002-hidden-row-churn.md
+    summary: Unrendering adjacent rows caused lag and geometry instability.
+    tags: [kodi, widgets, performance]
+    path_globs: [kodi/skin.starlane.movies/xml/IncludesHomeWidgets.xml]
+    read_when: [vertical widget motion freezes or lags]
+    authority: [tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.single-home-renderer]
+    size_hint: small
+  - id: incident.parallel-hubs
+    title: Parallel Home and hub renderers
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-003-parallel-hubs.md
+    summary: Click and hover paths activated inconsistent renderers and state.
+    tags: [kodi, navigation, renderer]
+    path_globs: [kodi/skin.starlane.movies/shortcuts/**]
+    read_when: [Select and Right render differently]
+    authority: [tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.single-home-renderer]
+    size_hint: small
+  - id: incident.stale-skinshortcuts
+    title: Saved Skin Shortcuts override source
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-004-stale-skinshortcuts.md
+    summary: Profile data regenerated obsolete routes and widget styles.
+    tags: [kodi, skinshortcuts, cache]
+    path_globs: [kodi/skin.starlane.movies/shortcuts/**]
+    read_when: [removed routes or styles return on device]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [runbook.skin-shortcuts-regeneration]
+    size_hint: small
+  - id: incident.nested-params
+    title: Unresolved nested include parameters
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-005-nested-params.md
+    summary: Nested widget IDs produced Kodi boolean-expression parse errors.
+    tags: [kodi, xml, includes]
+    path_globs: [kodi/skin.starlane.movies/xml/**]
+    read_when: [Kodi logs Misplaced bracket or parameter expressions]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.private-skin]
+    size_hint: small
+  - id: incident.empty-continue-watching
+    title: Empty Continue Watching displaced first row
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-006-empty-continue-watching.md
+    summary: Asynchronous empty controls made the next row's cards invisible.
+    tags: [kodi, umbrella, empty-state, focus]
+    path_globs: [kodi/skin.starlane.movies/service.py, kodi/skin.starlane.movies/shortcuts/template.xml]
+    read_when: [first populated Home row has invisible cards]
+    authority: [kodi/skin.starlane.movies/service.py, tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.local-progress]
+    size_hint: small
+  - id: incident.provider-skin-confusion
+    title: Provider errors mistaken for skin errors
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-007-provider-skin-confusion.md
+    summary: Trakt and provider faults were incorrectly investigated as geometry defects.
+    tags: [kodi, providers, diagnostics]
+    path_globs: [kodi/skin.starlane.movies/**]
+    read_when: [widgets are empty, slow, or error while geometry appears stable]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [research.provider-routes]
+    size_hint: small
+  - id: incident.adb-vpn
+    title: VPN blocked LAN ADB
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-008-adb-vpn.md
+    summary: Proton LAN blocking produced Windows socket error 10013.
+    tags: [adb, vpn, network]
+    path_globs: [docs/OPERATIONS.md]
+    read_when: [ADB fails despite correct device and authorization]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [runbook.safe-adb-diagnostics]
+    size_hint: small
+  - id: incident.checksum-crlf
+    title: CRLF checksum sidecars
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-009-checksum-crlf.md
+    summary: Kodi rejected correct hashes written with Windows CRLF bytes.
+    tags: [kodi, release, checksums, windows]
+    path_globs: [tools/release.py, tools/test_release.py]
+    read_when: [Kodi rejects a matching package checksum]
+    authority: [tools/test_release.py, docs/CURRENT_STATUS.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.signed-config-release]
+    size_hint: small
+  - id: incident.kodi-repository-layout
+    title: Flat assets versus Kodi repository paths
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-010-kodi-repository-layout.md
+    summary: Kodi required nested datadir paths unavailable from flat release assets.
+    tags: [kodi, repository, cloudflare]
+    path_globs: [control-api/**, tools/release.py]
+    read_when: [repository package URL returns wrong layout or 404]
+    authority: [control-api/src/index.ts, docs/CURRENT_STATUS.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.control-api, subsystem.kodi-bootstrap]
+    size_hint: small
+  - id: incident.empty-release-secrets
+    title: Empty release environment values
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-011-empty-release-secrets.md
+    summary: CI reached Gradle with an empty keystore and misleading parse error.
+    tags: [release, github-actions, signing]
+    path_globs: [.github/workflows/release.yml]
+    read_when: [release signing or keystore loading fails]
+    authority: [docs/CURRENT_STATUS.md, .github/workflows/release.yml]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.offline-signing]
+    size_hint: small
+  - id: incident.semantic-version-parsing
+    title: Two-part vendor versions
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-012-semantic-version-parsing.md
+    summary: Monitor ignored Kodi 21.3 and proposed an obsolete three-part version.
+    tags: [vendor, versions, monitoring]
+    path_globs: [tools/check_vendor_releases.py, tools/test_vendor_releases.py]
+    read_when: [vendor monitor proposes an implausible version]
+    authority: [tools/test_vendor_releases.py, docs/CURRENT_STATUS.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [subsystem.signed-config-release]
+    size_hint: small
+  - id: incident.madtitan-missing-cert
+    title: Mad Titan Live NetTV missing certificate
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-013-madtitan-missing-cert.md
+    summary: Official 2.0.32 package omitted a required client certificate/key pair.
+    tags: [kodi, madtitan, livetv, provider]
+    path_globs: [kodi/skin.starlane.movies/shortcuts/**]
+    read_when: [Mad Titan Live TV raises certificate or NoneType errors]
+    authority: [docs/TECHNICAL_HANDOFF_2026-07-26.md, tools/test_experimental_skin.py]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.provider-skin-confusion, research.provider-routes]
+    size_hint: small
+  - id: research.kodi-animations
+    title: Kodi animation behavior
+    kind: research
+    status: active
+    path: docs/agent-knowledge/research/kodi-animations.md
+    summary: Kodi animations are additive; assign one owner per transformed property.
+    tags: [kodi, animation, performance]
+    path_globs: [kodi/skin.starlane.movies/xml/**]
+    read_when: [changing animation or movement]
+    authority: [https://kodi.wiki/view/Animating_your_skin]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.competing-animations]
+    size_hint: small
+  - id: research.group-lists
+    title: Kodi group list behavior
+    kind: research
+    status: active
+    path: docs/agent-knowledge/research/kodi-group-lists.md
+    summary: Bounded grouplists provide native scrolling and focus ownership.
+    tags: [kodi, grouplist, navigation]
+    path_globs: [kodi/skin.starlane.movies/xml/IncludesHomeWidgets.xml]
+    read_when: [changing Home vertical navigation]
+    authority: [https://kodi.wiki/view/Group_List_Control]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.single-home-renderer]
+    size_hint: small
+  - id: research.dynamic-content-artwork
+    title: Dynamic content and artwork
+    kind: research
+    status: active
+    path: docs/agent-knowledge/research/kodi-dynamic-content-artwork.md
+    summary: Plugin content geometry is skin-owned; texture loading can delay motion.
+    tags: [kodi, artwork, widgets, performance]
+    path_globs: [kodi/skin.starlane.movies/xml/**]
+    read_when: [diagnosing provider loading or texture stalls]
+    authority: [https://kodi.wiki/view/Dynamic_List_Content, https://kodi.wiki/view/Skinning_Engine]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.provider-skin-confusion]
+    size_hint: small
+  - id: research.bingie-fixed-focus
+    title: BINGIE fixed-focus behavior
+    kind: research
+    status: active
+    path: docs/agent-knowledge/research/bingie-fixed-focus.md
+    summary: Fixed-focus vertical layouts are sensitive to row geometry and offsets.
+    tags: [kodi, bingie, focus]
+    path_globs: [kodi/skin.starlane.movies/**]
+    read_when: [considering fixed-focus or upstream BINGIE behavior]
+    authority: [https://github.com/AchillesPunks/skin.titan.bingie.mod]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [incident.competing-animations]
+    size_hint: small
+  - id: research.provider-routes
+    title: Provider route contracts
+    kind: research
+    status: active
+    path: docs/agent-knowledge/research/provider-routes.md
+    summary: Verified provider ownership and route-validation rules for private skin.
+    tags: [kodi, umbrella, madtitan, crew]
+    path_globs: [kodi/skin.starlane.movies/shortcuts/**]
+    read_when: [adding or changing provider routes]
+    authority: [tools/test_experimental_skin.py, docs/TECHNICAL_HANDOFF_2026-07-26.md]
+    verified_at: 2026-07-28
+    supersedes: []
+    related: [decision.schema-allowlists, incident.madtitan-missing-cert]
+    size_hint: small

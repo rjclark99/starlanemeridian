@@ -1,14 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <shortcuts>
 	<shortcut>
-		<defaultID>madtitan_live</defaultID>
-		<label>Mad Titan Live TV</label>
-		<label2>Live TV</label2>
-		<icon />
-		<thumb />
-		<action>ActivateWindow(Videos,plugin://plugin.video.madtitansports/lntv/categories,return)</action>
-	</shortcut>
-	<shortcut>
 		<defaultID>crew_live</defaultID>
 		<label>The Crew Live Channels</label>
 		<label2>Live TV</label2>

@@ -12,7 +12,7 @@ class ExperimentalSkinTests(unittest.TestCase):
     def test_metadata_and_attribution(self):
         addon = ET.parse(SKIN / "addon.xml").getroot()
         self.assertEqual(addon.attrib["id"], "skin.starlane.movies")
-        self.assertEqual(addon.attrib["version"], "2.2.16")
+        self.assertEqual(addon.attrib["version"], "2.2.17")
         service = addon.find("extension[@point='xbmc.service']")
         self.assertIsNotNone(service)
         self.assertEqual(service.attrib["library"], "service.py")
@@ -503,10 +503,7 @@ class ExperimentalSkinTests(unittest.TestCase):
         self.assertFalse(any("trakthistory" in path for path in home_paths))
         self.assertEqual(
             live_paths,
-            {
-                "plugin://plugin.video.madtitansports/lntv/categories",
-                "plugin://plugin.video.thecrew/?action=sports_channels",
-            },
+            {"plugin://plugin.video.thecrew/?action=sports_channels"},
         )
         self.assertEqual(
             sports_paths,
@@ -537,6 +534,10 @@ class ExperimentalSkinTests(unittest.TestCase):
             for path in (SKIN / "shortcuts").glob("*.xml")
         )
         self.assertNotIn("plugin.video.fenlight", shortcut_sources)
+        self.assertNotIn(
+            "plugin.video.madtitansports/lntv/categories",
+            shortcut_sources,
+        )
 
         template = (SKIN / "shortcuts/template.xml").read_text(encoding="utf-8")
         self.assertEqual(

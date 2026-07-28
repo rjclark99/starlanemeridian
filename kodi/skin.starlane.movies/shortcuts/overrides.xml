@@ -407,17 +407,13 @@
 	<propertydefault defaultID="20343" property="widgetPath.6">plugin://plugin.video.umbrella/?action=tmdbTvshows&amp;url=tmdb_toprated</propertydefault>
 	<propertydefault defaultID="20343" property="widgetName.6">Top Rated</propertydefault>
 
-	<!-- Live TV uses only the installed providers' verified directory routes. -->
-	<propertydefault defaultID="starlane_livetv" property="widget">madtitan_live_categories</propertydefault>
+	<!-- Mad Titan 2.0.32's Live NetTV route requires an omitted client-certificate
+	     pair, so Live TV uses The Crew while Mad Titan remains available for Sports. -->
+	<propertydefault defaultID="starlane_livetv" property="widget">crew_live_channels</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetTarget">videos</propertydefault>
 	<propertydefault defaultID="starlane_livetv" property="widgetType">video</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetPath">plugin://plugin.video.madtitansports/lntv/categories</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetName">Mad Titan Live TV</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widget.1">crew_live_channels</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetTarget.1">videos</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetType.1">video</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetPath.1">plugin://plugin.video.thecrew/?action=sports_channels</propertydefault>
-	<propertydefault defaultID="starlane_livetv" property="widgetName.1">The Crew Live Channels</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetPath">plugin://plugin.video.thecrew/?action=sports_channels</propertydefault>
+	<propertydefault defaultID="starlane_livetv" property="widgetName">The Crew Live Channels</propertydefault>
 
 	<!-- Mad Titan remains the sole Sports provider. Its root is the installed
 	     add-on's supported sports directory and owns any remote league changes. -->
