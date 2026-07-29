@@ -10,20 +10,27 @@ supersedes: []
 
 # Public release state
 
-Owner-approved `v0.5.4-test` is the latest public release and targets source commit
-`10439cb`. Its 31 published assets were downloaded and matched the release candidate
-byte-for-byte. The signed manifest is `2026.07.32` (SHA-256
-`fc0769dd272430b1225528d91a79d672565681f876be31bf619ff57adc919c64`);
-Bootstrap 1.1.11 is
-`97629ea3ca9fcca446faa3b7a7ed62c2c1795e8a0c5db0b7a8add5aea98fbfb1`;
-and branded provider 6.7.81.1 is
-`dc4e9f8c295797cb14740be85a1de380e0912861fc455d76ceddc6af4707c176`.
-The corresponding metadata and exact-version routes were deployed and returned the
-expected bytes. The local 1.1.12/6.7.81.2 correction is not public.
+Owner-approved `v0.5.5-test` is the latest public release and targets combined source
+commit `d4c96cb`. All 31 draft assets matched the release candidate before publication,
+and all 31 public assets matched after publication. The signed manifest is
+`2026.07.33` (SHA-256
+`2b1029372d3d3943eab352784d57db4365c97b859e75724ded0d422427e7caba`);
+Bootstrap 1.1.12 is
+`fc33f0d66e5467666f55e9153a77a3a033956a73e9863c4465efbc8567152f5f`;
+and branded provider 6.7.81.2 is
+`3ff6402f0d4427b7ec0fa6d28bb235d5f10a4b5bc9515021aa1c3cf3ccc65810`.
+The setup APK is 0.5.2/code 7, SHA-256
+`2d384f691b086737baf65b8b7ab3a5a04aee1135a2dfd8d0c943ff4f6f4ea3af`,
+with production signer SHA-256
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
+The LF-only checksum inventory, manifest signature, APK identity/signature, ZIP
+structure, GitHub `latest` routes, public health endpoint, and exact Worker provider
+route passed. `v0.5.4-test` remains public as rollback evidence but is superseded
+because its Bootstrap/provider sequence failed on the reference Fire TV.
 
-Owner-approved release `v0.5.2-test` targets `main` at `30735ab` and is GitHub's
-non-prerelease `latest` release. Permanent `/releases/latest/download/...` routes now
-serve setup app 0.5.0/code 5, Bootstrap 1.1.5, signed manifest `2026.07.30`, and
+Former owner-approved release `v0.5.2-test` targets `main` at `30735ab` and was
+previously GitHub's non-prerelease `latest` release. Its permanent routes served
+setup app 0.5.0/code 5, Bootstrap 1.1.5, signed manifest `2026.07.30`, and
 `skin.starlane.movies` 2.2.20. The APK SHA-256 is
 `85e10e2583c591df40babaa52458b3bc0e5cb9ef6f235ce9128132f785d3857a`
 and its signer SHA-256 remains

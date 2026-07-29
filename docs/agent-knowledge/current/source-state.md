@@ -10,14 +10,13 @@ supersedes: []
 
 # Repository source state
 
-Local `main`, `origin/main`, and `origin/codex/kodi-first-run-authorisation` are at
-`dfa1ea7`, which layers Android Unknown Sources automation above provider-readiness
-commit `10439cb`. The baseline contains private skin 2.2.20, the VOD-only provider
+Local `main` and `origin/main` are at `d4c96cb`; the retained
+`origin/codex/kodi-first-run-authorisation` branch is at its intermediate Android
+commit `dfa1ea7`. The combined baseline contains private skin 2.2.20, the VOD-only provider
 policy, and command-correlated remote Real-Debrid device authorization across the
-Android app, control API, and local administration portal. The branch advances the
-checked-in source through signed test manifest `2026.07.32`. The coordinated
-integration candidate is Bootstrap 1.1.12, branded provider 6.7.81.2, and signed test
-manifest `2026.07.33`; it is not yet public.
+Android app, control API, and local administration portal. It contains Bootstrap
+1.1.12, branded provider 6.7.81.2, and signed test manifest `2026.07.33`; those bytes
+are public in owner-approved `v0.5.5-test`.
 Production deployment evidence is recorded separately in `current.deployed-state`;
 public release and signed-manifest state remain separate.
 

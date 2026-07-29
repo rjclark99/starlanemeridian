@@ -2,12 +2,15 @@
 
 Last verified deployment: 29 July 2026.
 
-## Coordinated Bootstrap 1.1.12 correction
+## Coordinated Bootstrap 1.1.12 release
 
-The coordinated integration candidate advances only the Kodi
-Bootstrap/provider/control-route remediation to Bootstrap 1.1.12, branded provider
-6.7.81.2, and signed test manifest `2026.07.33`; it is not yet public or deployed.
-Public `v0.5.4-test` remains the signed 1.1.11/6.7.81.1 release from `10439cb`.
+Owner-approved `v0.5.5-test` is the latest public release and targets combined source
+commit `d4c96cb`. It publishes setup app 0.5.2/code 7, Bootstrap 1.1.12, branded
+provider 6.7.81.2, and signed test manifest `2026.07.33`. The 31 draft assets and all
+31 public assets matched the release candidate byte-for-byte. The production Worker
+is version `0d4c80cc-0fc5-455b-b594-ceb7c918265d`; its exact 6.7.81.2 route and the
+GitHub `latest` routes returned the expected bytes. `v0.5.4-test` is superseded
+because its 1.1.11/6.7.81.1 sequence failed on the reference Fire TV.
 
 Hardware testing found that Kodi registers a disabled replacement in its add-on
 database while `xbmcaddon.Addon()` rejects it. Bootstrap now polls exact versions
@@ -22,23 +25,25 @@ evidence are in `incident.provider-overlay-bootstrap-order`.
 
 ## Latest public release transition
 
-Owner-approved `v0.5.2-test` is now GitHub's non-prerelease `latest` release at source
-commit `30735ab`. Its permanent routes serve setup app 0.5.0/code 5, signed manifest
-`2026.07.30`, Bootstrap 1.1.5, and `skin.starlane.movies` 2.2.20. All 27 public assets
-were downloaded after publication and matched the verified candidate byte-for-byte;
-the manifest signature, LF-only checksum inventory, GitHub `latest` routes, public
-health endpoint, and allowlisted Kodi routes passed. This manifest-only hotfix uses
-GitHub's Android-accepted commit-pinned dependency URL form while retaining the
-previously verified dependency bytes and SHA-256. The older deployment narrative
-below remains historical evidence and is superseded for public-release state by this
-section and `docs/agent-knowledge/current/public-release-state.md`.
+The public setup APK SHA-256 is
+`2d384f691b086737baf65b8b7ab3a5a04aee1135a2dfd8d0c943ff4f6f4ea3af`;
+its production signer SHA-256 remains
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
+The manifest SHA-256 is
+`2b1029372d3d3943eab352784d57db4365c97b859e75724ded0d422427e7caba`;
+Bootstrap is
+`fc33f0d66e5467666f55e9153a77a3a033956a73e9863c4465efbc8567152f5f`;
+and the provider is
+`3ff6402f0d4427b7ec0fa6d28bb235d5f10a4b5bc9515021aa1c3cf3ccc65810`.
+The manifest signature, LF-only checksum inventory, public health endpoint, APK
+identity/signature, ZIP structure, and public routes passed.
 
-## Unreleased first-run Kodi authorization candidate
+## First-run Kodi authorization release
 
-Bootstrap 1.1.10 and manifest `2026.07.31` are source candidates, not public-release
-claims. Public setup app 0.5.0 still requires Kodi's native Unknown Sources step;
-the unreleased Android 9/Fire OS app candidate below enables that one preference
-locally. Install from ZIP remains explicit. The Bootstrap then presents one first-run approval
+Setup app 0.5.2 enables only Kodi's required Unknown Sources preference locally on
+the owner-approved Android 9/Fire OS path. Newer scoped-storage Android versions
+retain the manual step, and Install from ZIP remains explicit. Bootstrap then presents
+one first-run approval
 before changing Kodi; refusal changes nothing and re-prompts next launch. Acceptance
 installs a transitively signed 38-package lock containing the exact allowlisted
 Umbrella/CocoScrapers stack, private-skin dependencies, and Starlane Movies skin.
@@ -57,8 +62,8 @@ active and Umbrella/CocoScrapers registered. The device applied the still-public
 signed manifest `2026.07.30`; the `2026.07.31` manifest remains a source candidate
 until a separately authorized public release.
 
-Android setup 0.5.2/code 7 is an unreleased local candidate. With explicit owner
-approval, its Android 9/Fire OS Bootstrap preparation now enables only Kodi's required
+Android setup 0.5.2/code 7 is public in `v0.5.5-test`. With explicit owner approval,
+its Android 9/Fire OS Bootstrap preparation enables only Kodi's required
 `addons.unknownsources` preference after the visible storage-permission dialog. A
 physical false-to-true test passed on the reference Fire TV, and Kodi retained the
 value after launch. The updater targets only `org.xbmc.kodi`, preserves unrelated

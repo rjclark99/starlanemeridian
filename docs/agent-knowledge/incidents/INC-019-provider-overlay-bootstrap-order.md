@@ -53,8 +53,9 @@ ordering, Skin Shortcuts generation ordering, and Control API route allowlisting
 
 The owner-authorized 1.1.11/6.7.81.1 candidate was published as `v0.5.4-test` and its
 allowlisted routes deployed. The first device pass then exposed the hardware findings
-below; 1.1.12/6.7.81.2 is the corrected signed successor and remains unpublished and
-undeployed pending coordination.
+below. Corrected 1.1.12/6.7.81.2 was subsequently published as `v0.5.5-test` from
+combined commit `d4c96cb`; all 31 draft and public assets matched the candidate, and
+the exact production Worker route returned the published provider bytes.
 
 Local candidate hashes:
 

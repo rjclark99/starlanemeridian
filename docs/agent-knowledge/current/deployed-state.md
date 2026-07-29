@@ -16,8 +16,9 @@ provider candidate for diagnostic validation. Kodi registered
 sync, Bootstrap reported configuration `2026.07.32` already applied, and the pending
 skin marker was clear after skin confirmation. The new Kodi log had no
 `repository.umbrellakodi`, unknown-add-on, exception, or error match. This proves the
-provider startup correction on the reference device; it is not evidence that
-Bootstrap 1.1.12, manifest `2026.07.33`, or a successor public release is deployed.
+provider startup correction on the reference device; it is not evidence that the
+now-public Bootstrap 1.1.12 and manifest `2026.07.33` have been applied through the
+complete release flow on that device.
 The pre-test provider and profile rollback remain under
 `build/device-backups/2026-07-29-pre-bootstrap-1.1.11/`.
 
@@ -109,11 +110,13 @@ pairing and reported app version 5 through the production control plane. Kodi
 remained running as 21.3 during the setup-app upgrade.
 
 Production service state at Worker version
-`9a4f3899-825b-4aae-9dcb-4ddf58b3fd0f` includes applied D1 migration
+`0d4c80cc-0fc5-455b-b594-ceb7c918265d` includes applied D1 migration
 `0004_real_debrid_authorization.sql`. Public health returned 200, unauthenticated
 `/v1/admin/*` traffic was redirected to Cloudflare Access, and the portal's existing
 service-token configuration reached the admin devices endpoint without exposing its
-credentials. The updated loopback portal returned 200 at `127.0.0.1:54731`, exposed
+credentials. The exact public provider 6.7.81.2 route returned the public release
+bytes while the superseded 6.7.81.1 route returned 404. The updated loopback portal
+returned 200 at `127.0.0.1:54731`, exposed
 the Real-Debrid control, and retained its configured `appsettings.json` byte-for-byte.
 Its vault is locked after restart and requires the owner to unlock it before use.
 
