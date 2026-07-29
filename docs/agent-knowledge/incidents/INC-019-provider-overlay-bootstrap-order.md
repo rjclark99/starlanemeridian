@@ -93,3 +93,27 @@ Corrected local candidate hashes:
   `fc33f0d66e5467666f55e9153a77a3a033956a73e9863c4465efbc8567152f5f`
 - `plugin.video.umbrella-6.7.81.2.zip`:
   `3ff6402f0d4427b7ec0fa6d28bb235d5f10a4b5bc9515021aa1c3cf3ccc65810`
+
+## Fresh-install black-screen follow-on
+
+The complete clean installation registered every locked package, but first activation
+showed only the unconditional top-right Starlane logo on a black window. The log first
+reported a missing `skinshortcuts-submenu`; Skin Shortcuts later generated a complete
+257,076-byte include, but the Home renderer still remained absent.
+
+Three independent fresh-install assumptions caused the failure:
+
+- The private skin labeled its default layout but did not set an unset
+  `HomeLayout=bingie`, while `Home.xml` renders the Starlane Home only for that value.
+- Bootstrap called Skin Shortcuts and immediately reloaded without checking that its
+  main, submenu, and power-menu includes had been written.
+- Before Kodi's first launch, the Android setup app created a minimal
+  `guisettings.xml`; Kodi rejected it because a valid profile also requires its
+  initialized settings structure, including resolutions.
+
+Correction `60a562b` sets the missing skin default, gates reload on all three generated
+include markers, and requires Kodi to initialize its profile before the app performs
+the narrowly allowlisted Unknown Sources merge. Focused regressions cover each rule.
+Full Kodi/Python and Android unit/lint suites passed. A preserved device overlay then
+rendered the complete Starlane navigation, persisted `homelayout=bingie`, and produced
+no fresh error, fatal, invalid-include, or directory-failure log match.

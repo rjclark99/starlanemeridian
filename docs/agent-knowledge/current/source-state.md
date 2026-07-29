@@ -10,7 +10,11 @@ supersedes: []
 
 # Repository source state
 
-Local `main` and `origin/main` are at `d4c96cb`; the retained
+The public `v0.5.5-test` implementation baseline is `d4c96cb`, followed by its
+documentation update `12162e3`. Fresh-install correction `60a562b` makes the private
+skin default an unset `HomeLayout` to `bingie`, makes Bootstrap wait for generated
+main, submenu, and power-menu Skin Shortcuts includes before reloading, and prevents
+the Android app from manufacturing an incomplete fresh `guisettings.xml`. The retained
 `origin/codex/kodi-first-run-authorisation` branch is at its intermediate Android
 commit `dfa1ea7`. The combined baseline contains private skin 2.2.20, the VOD-only provider
 policy, and command-correlated remote Real-Debrid device authorization across the
@@ -18,7 +22,8 @@ Android app, control API, and local administration portal. It contains Bootstrap
 1.1.12, branded provider 6.7.81.2, and signed test manifest `2026.07.33`; those bytes
 are public in owner-approved `v0.5.5-test`.
 Production deployment evidence is recorded separately in `current.deployed-state`;
-public release and signed-manifest state remain separate.
+public release and signed-manifest state remain separate. The `60a562b` corrections
+are source/device-tested changes, not new public release bytes.
 
 The same integration candidate contains Android setup 0.5.2/code 7. On Android 9/Fire
 OS it locally enables Kodi's single required

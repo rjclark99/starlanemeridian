@@ -10,6 +10,23 @@ supersedes: []
 
 # Reference device state
 
+The newest bounded Fire TV acceptance on 29 July preserved the active skin,
+Bootstrap, generated menus, skin settings, `guisettings.xml`, and Kodi log under
+`build/device-backups/black-screen-fix-preapply-20260729/`. Directly overlaying the
+two corrected Kodi source files and restarting Kodi changed the failed
+black-screen-with-logo state into the complete Starlane navigation. The skin persisted
+`homelayout=bingie`; the new log contained no error, fatal, invalid-include, or
+directory-failure match. This proves the two Kodi-side corrections on the reference
+device, but is not a complete public ZIP installation or release claim.
+
+The signed Android 0.5.2/code 7 candidate containing the fresh-profile safeguard was
+also installed in place and launched successfully with no fatal application
+exception. Its SHA-256 is
+`0FC665DBBFC3AB0AED09DD19F3DCA6E21DFEDA33577D6AA4929A359DAE2CF122`.
+Because the device now has a valid Kodi profile, refusal to create a missing profile
+is covered by the focused Android regression rather than another destructive profile
+reset.
+
 The newest bounded Fire TV check on 29 July directly overlaid only the local branded
 provider candidate for diagnostic validation. Kodi registered
 `plugin.video.umbrella` 6.7.81.2, its service started and completed scraper account
