@@ -64,6 +64,7 @@ async function cleanup(env: Env): Promise<void> {
     env.DB.prepare("DELETE FROM pairing_codes WHERE expires_at < ? OR used_at IS NOT NULL").bind(now),
     env.DB.prepare("DELETE FROM audit WHERE created_at < ?").bind(now - Number(env.STATUS_RETENTION_DAYS) * 86400),
     env.DB.prepare("DELETE FROM device_status_events WHERE created_at < ?").bind(now - Number(env.STATUS_RETENTION_DAYS) * 86400),
+    env.DB.prepare("UPDATE devices SET debrid_auth_url=NULL,debrid_auth_code=NULL,debrid_auth_expires_at=NULL,debrid_auth_command_id=NULL WHERE datetime(debrid_auth_expires_at) <= datetime('now')"),
   ]);
 }
 
@@ -109,6 +110,16 @@ async function deviceStatus(request: Request, env: Env, id: string): Promise<Res
   const kodiVersion = optionalText(body.kodiVersion, 64); const protonVersion = optionalText(body.protonVersion, 64);
   const installPermission = optionalBooleanInteger(body.installPermission); const bootstrapReady = optionalBooleanInteger(body.bootstrapReady);
   const automaticSetup = optionalBooleanInteger(body.automaticSetup); const busy = optionalBooleanInteger(body.busy);
+  const debridAuthUrl = optionalRealDebridUrl(body.debridAuthUrl); const debridAuthCode = optionalRealDebridCode(body.debridAuthCode);
+  const debridAuthExpiresAt = optionalIsoDate(body.debridAuthExpiresAt); const debridAuthCommandId = optionalUuid(body.debridAuthCommandId);
+  const authorizationValues = [debridAuthUrl, debridAuthCode, debridAuthExpiresAt];
+  if (authorizationValues.some(value => value !== null) && authorizationValues.some(value => value === null)) throw new HttpError(400, "incomplete_debrid_authorization");
+  if (debridAuthCommandId && debridAuthUrl === null) throw new HttpError(400, "incomplete_debrid_authorization");
+  if (debridAuthUrl && new URL(debridAuthUrl).searchParams.get("user_code") !== debridAuthCode) throw new HttpError(400, "mismatched_debrid_authorization_code");
+  if (debridAuthCommandId) {
+    const command = await env.DB.prepare("SELECT id FROM commands WHERE id=? AND device_id=? AND kind='BEGIN_REAL_DEBRID_AUTH'").bind(debridAuthCommandId, id).first();
+    if (!command) throw new HttpError(400, "invalid_debrid_authorization_command");
+  }
   const eventPhase = phase ?? setupStep;
   const eventProgress = progress ?? ({ WELCOME: 0, CONFIGURATION: 15, KODI: 45, PROTON: 65, BOOTSTRAP: 80, ACCOUNT_LINK: 94, COMPLETE: 100 } as Record<string, number>)[setupStep] ?? 0;
   const now = Math.floor(Date.now() / 1000);
@@ -117,11 +128,13 @@ async function deviceStatus(request: Request, env: Env, id: string): Promise<Res
     manufacturer=COALESCE(?,manufacturer),product=COALESCE(?,product),api_level=COALESCE(?,api_level),architecture=COALESCE(?,architecture),security_patch=COALESCE(?,security_patch),
     free_storage_mb=COALESCE(?,free_storage_mb),total_storage_mb=COALESCE(?,total_storage_mb),total_memory_mb=COALESCE(?,total_memory_mb),
     kodi_version=COALESCE(?,kodi_version),proton_version=COALESCE(?,proton_version),install_permission=COALESCE(?,install_permission),bootstrap_ready=COALESCE(?,bootstrap_ready),
-    automatic_setup=COALESCE(?,automatic_setup),setup_phase=COALESCE(?,setup_phase),progress_percent=COALESCE(?,progress_percent),status_message=COALESCE(?,status_message),busy=COALESCE(?,busy)
+    automatic_setup=COALESCE(?,automatic_setup),setup_phase=COALESCE(?,setup_phase),progress_percent=COALESCE(?,progress_percent),status_message=COALESCE(?,status_message),busy=COALESCE(?,busy),
+    debrid_auth_url=?,debrid_auth_code=?,debrid_auth_expires_at=?,debrid_auth_command_id=?
     WHERE id=?`).bind(
       setupStep, appVersion, configVersion, errorCode, expiry, now,
       manufacturer, product, apiLevel, architecture, securityPatch, freeStorageMb, totalStorageMb, totalMemoryMb,
-      kodiVersion, protonVersion, installPermission, bootstrapReady, automaticSetup, eventPhase, eventProgress, statusMessage, busy, id,
+      kodiVersion, protonVersion, installPermission, bootstrapReady, automaticSetup, eventPhase, eventProgress, statusMessage, busy,
+      debridAuthUrl, debridAuthCode, debridAuthExpiresAt, debridAuthCommandId, id,
     ).run();
   if (rowChanged(row, eventPhase, statusMessage, errorCode)) {
     await env.DB.prepare("INSERT INTO device_status_events(id,device_id,setup_step,setup_phase,progress_percent,status_message,error_code,created_at) VALUES(?,?,?,?,?,?,?,?)")
@@ -155,7 +168,12 @@ async function listDevices(env: Env): Promise<Response> {
     d.progress_percent AS progressPercent,d.status_message AS statusMessage,d.busy,d.error_code AS errorCode,d.debrid_expiry AS debridExpiry,
     d.free_storage_mb AS freeStorageMb,d.total_storage_mb AS totalStorageMb,d.total_memory_mb AS totalMemoryMb,
     d.kodi_version AS kodiVersion,d.proton_version AS protonVersion,d.install_permission AS installPermission,
-    d.bootstrap_ready AS bootstrapReady,d.automatic_setup AS automaticSetup,d.created_at AS createdAt,d.last_seen_at AS lastSeenAt
+    d.bootstrap_ready AS bootstrapReady,d.automatic_setup AS automaticSetup,
+    CASE WHEN datetime(d.debrid_auth_expires_at) > datetime('now') THEN d.debrid_auth_url END AS debridAuthUrl,
+    CASE WHEN datetime(d.debrid_auth_expires_at) > datetime('now') THEN d.debrid_auth_code END AS debridAuthCode,
+    CASE WHEN datetime(d.debrid_auth_expires_at) > datetime('now') THEN d.debrid_auth_expires_at END AS debridAuthExpiresAt,
+    CASE WHEN datetime(d.debrid_auth_expires_at) > datetime('now') THEN d.debrid_auth_command_id END AS debridAuthCommandId,
+    d.created_at AS createdAt,d.last_seen_at AS lastSeenAt
     FROM devices d JOIN households h ON h.id=d.household_id WHERE d.deleted_at IS NULL ORDER BY d.last_seen_at DESC`).all();
   const devices = await Promise.all(rows.results.map(async device => {
     const events = await env.DB.prepare(`SELECT setup_step AS setupStep,setup_phase AS setupPhase,progress_percent AS progressPercent,
@@ -219,4 +237,28 @@ function rowChanged(row: DeviceRow, phase: string, message: string | null, error
   return row.setup_phase !== phase || row.status_message !== message || row.error_code !== errorCode;
 }
 function optionalIsoDate(value: unknown): string | null { if (value === null || value === undefined) return null; const textValue = text(value, 10, 40); if (!Number.isFinite(Date.parse(textValue))) throw new HttpError(400, "invalid_date"); return textValue; }
+function optionalUuid(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const result = text(value, 36, 36);
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(result)) throw new HttpError(400, "invalid_uuid");
+  return result;
+}
+function optionalRealDebridCode(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const result = text(value, 4, 32);
+  if (!/^[A-Z0-9-]+$/i.test(result)) throw new HttpError(400, "invalid_debrid_authorization_code");
+  return result;
+}
+function optionalRealDebridUrl(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const result = text(value, 1, 128);
+  let url: URL;
+  try { url = new URL(result); } catch { throw new HttpError(400, "invalid_debrid_authorization_url"); }
+  const queryKeys = Array.from(url.searchParams.keys());
+  if (url.protocol !== "https:" || url.hostname !== "real-debrid.com" || url.pathname !== "/device" || url.username || url.password || url.hash ||
+      queryKeys.length !== 1 || queryKeys[0] !== "user_code" || !/^[A-Z0-9-]{4,32}$/i.test(url.searchParams.get("user_code") ?? "")) {
+    throw new HttpError(400, "invalid_debrid_authorization_url");
+  }
+  return url.href;
+}
 function constantTime(left: string, right: string): boolean { if (left.length !== right.length) return false; let difference = 0; for (let index = 0; index < left.length; index++) difference |= left.charCodeAt(index) ^ right.charCodeAt(index); return difference === 0; }

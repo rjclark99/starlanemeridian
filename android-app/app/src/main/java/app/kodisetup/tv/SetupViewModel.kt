@@ -31,6 +31,10 @@ import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 enum class SetupPhase {
     READY, PAIRING, VERIFYING_CONFIGURATION, CONFIGURATION_VERIFIED,
@@ -52,6 +56,8 @@ data class SetupUiState(
     val debridCode: String? = null,
     val debridUrl: String? = null,
     val debridExpiry: String? = null,
+    val debridAuthExpiresAt: String? = null,
+    val debridAuthCommandId: String? = null,
 )
 
 class SetupViewModel(application: Application) : AndroidViewModel(application) {
@@ -197,12 +203,32 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
     fun storagePermissionDenied() = update(busy = false, error = "STORAGE_PERMISSION_DENIED", message = "Storage access is required to save the Kodi bootstrap ZIP")
     fun continueToAccounts() { transition(SetupStep.ACCOUNT_LINK, "Link Real-Debrid with its official device authorization flow, or finish without linking") }
     fun markComplete() { workflowPrefs.edit().putBoolean("automatic", false).apply(); transition(SetupStep.COMPLETE, "Core setup complete") }
-    fun beginRealDebrid() = viewModelScope.launch(Dispatchers.IO) {
+    fun beginRealDebrid(commandId: String? = null) = viewModelScope.launch(Dispatchers.IO) {
         val openSourceClient = "X245A4XAIBGVM"
         update(busy = true, error = null, message = "Requesting a Real-Debrid device code...", phase = SetupPhase.REQUESTING_REAL_DEBRID_AUTH, progress = 88)
         runCatching {
             val code = realDebrid.begin(openSourceClient)
-            transition(SetupStep.ACCOUNT_LINK, "Open the URL and enter the code. This app never receives your password or payment details.", debridCode = code.userCode, debridUrl = code.verificationUrl)
+            require(code.verificationUrl == "https://real-debrid.com/device") { "Real-Debrid returned an unexpected authorization URL" }
+            val authorizationUrl = code.directVerificationUrl ?: Uri.parse(code.verificationUrl).buildUpon()
+                .appendQueryParameter("user_code", code.userCode).build().toString()
+            val parsedAuthorizationUrl = Uri.parse(authorizationUrl)
+            require(
+                parsedAuthorizationUrl.scheme == "https" &&
+                    parsedAuthorizationUrl.host == "real-debrid.com" &&
+                    parsedAuthorizationUrl.path == "/device" &&
+                    parsedAuthorizationUrl.getQueryParameter("user_code") == code.userCode &&
+                    parsedAuthorizationUrl.queryParameterNames == setOf("user_code") &&
+                    parsedAuthorizationUrl.fragment == null
+            ) { "Real-Debrid returned an unexpected direct authorization URL" }
+            val authorizationExpiresAt = isoDateAfter(code.expiresIn)
+            transition(
+                SetupStep.ACCOUNT_LINK,
+                "Open the URL and enter the code. This app never receives your password or payment details.",
+                debridCode = code.userCode,
+                debridUrl = authorizationUrl,
+                debridAuthExpiresAt = authorizationExpiresAt,
+                debridAuthCommandId = commandId,
+            )
             update(busy = true, phase = SetupPhase.WAITING_REAL_DEBRID_AUTH, progress = 92)
             val deadline = System.currentTimeMillis() + code.expiresIn * 1000L
             var credentials: RealDebridClient.Credentials? = null
@@ -211,8 +237,11 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             require(realDebrid.poll(credentials.clientId, credentials.clientSecret, code.deviceCode)) { "Real-Debrid token request failed" }
             val user = requireNotNull(realDebrid.user()) { "Real-Debrid account status was unavailable" }
             user.expiration
-        }.onSuccess { expiry -> transition(SetupStep.ACCOUNT_LINK, if (expiry == null) "Real-Debrid linked; no premium expiry was reported" else "Real-Debrid premium active until $expiry", debridCode = null, debridUrl = null, debridExpiry = expiry) }
-            .onFailure { update(busy = false, error = it.message ?: "Real-Debrid authorization failed", message = "Authorization was not completed") }
+        }.onSuccess { expiry -> transition(SetupStep.ACCOUNT_LINK, if (expiry == null) "Real-Debrid linked; no premium expiry was reported" else "Real-Debrid premium active until $expiry", debridCode = null, debridUrl = null, debridExpiry = expiry, debridAuthExpiresAt = null, debridAuthCommandId = null) }
+            .onFailure {
+                mutable.value = mutable.value.copy(debridCode = null, debridUrl = null, debridAuthExpiresAt = null, debridAuthCommandId = null)
+                update(busy = false, error = it.message ?: "Real-Debrid authorization failed", message = "Authorization was not completed")
+            }
     }
     fun grantInstallPermission() = installer.openUnknownSourcesSettings()
 
@@ -316,7 +345,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun transition(step: SetupStep, message: String, manifest: SetupManifest? = state.value.manifest, debridCode: String? = state.value.debridCode, debridUrl: String? = state.value.debridUrl, debridExpiry: String? = state.value.debridExpiry) {
+    private fun transition(step: SetupStep, message: String, manifest: SetupManifest? = state.value.manifest, debridCode: String? = state.value.debridCode, debridUrl: String? = state.value.debridUrl, debridExpiry: String? = state.value.debridExpiry, debridAuthExpiresAt: String? = state.value.debridAuthExpiresAt, debridAuthCommandId: String? = state.value.debridAuthCommandId) {
         val (phase, progress) = when (step) {
             SetupStep.WELCOME -> SetupPhase.READY to 0
             SetupStep.CONFIGURATION -> SetupPhase.CONFIGURATION_VERIFIED to 15
@@ -326,7 +355,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             SetupStep.ACCOUNT_LINK -> SetupPhase.ACCOUNT_LINKED to 94
             SetupStep.COMPLETE -> SetupPhase.COMPLETE to 100
         }
-        mutable.value = state.value.copy(step = step, phase = phase, progress = progress, busy = false, error = null, message = message, manifest = manifest, debridCode = debridCode, debridUrl = debridUrl, debridExpiry = debridExpiry)
+        mutable.value = state.value.copy(step = step, phase = phase, progress = progress, busy = false, error = null, message = message, manifest = manifest, debridCode = debridCode, debridUrl = debridUrl, debridExpiry = debridExpiry, debridAuthExpiresAt = debridAuthExpiresAt, debridAuthCommandId = debridAuthCommandId)
         workflowPrefs.edit().putString("step", step.name).apply()
         reportStatus()
     }
@@ -385,7 +414,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
                 "INSTALL_PROTON" -> installProton()
                 "PREPARE_BOOTSTRAP" -> prepareBootstrap()
                 "OPEN_KODI" -> openKodi()
-                "BEGIN_REAL_DEBRID_AUTH" -> beginRealDebrid()
+                "BEGIN_REAL_DEBRID_AUTH" -> beginRealDebrid(command.id)
                 "SYNC_CONFIG" -> loadConfiguration()
                 "RETRY_CURRENT_STEP", "RETRY_STEP" -> retryCurrentStep()
                 "OPEN_AUTHORIZATION" -> transition(SetupStep.ACCOUNT_LINK, "Complete authorization on the official provider screen")
@@ -404,4 +433,9 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         }
         return 0
     }
+
+    private fun isoDateAfter(seconds: Int): String =
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }.format(Date(System.currentTimeMillis() + seconds * 1000L))
 }

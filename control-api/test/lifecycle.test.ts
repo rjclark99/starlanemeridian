@@ -124,6 +124,35 @@ describe.sequential("control-plane lifecycle", () => {
     const empty = await SELF.fetch(await signedRequest(keys.privateKey, "GET", commandPath, "", paired.token));
     expect((await empty.json<{ commands: unknown[] }>()).commands).toEqual([]);
 
+    const authCommandResponse = await SELF.fetch(`https://control.test/v1/admin/devices/${paired.deviceId}/commands`, {
+      method: "POST", headers: adminHeaders, body: JSON.stringify({ kind: "BEGIN_REAL_DEBRID_AUTH", payload: {} }),
+    });
+    const authCommand = await authCommandResponse.json<{ id: string }>();
+    const authExpiry = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    const authStatusBody = JSON.stringify({
+      ...JSON.parse(statusBody),
+      setupStep: "ACCOUNT_LINK", setupPhase: "WAITING_REAL_DEBRID_AUTH", progressPercent: 92,
+      statusMessage: "Waiting for Real-Debrid authorization", busy: true,
+      debridAuthUrl: "https://real-debrid.com/device?user_code=ABCDEF12", debridAuthCode: "ABCDEF12",
+      debridAuthExpiresAt: authExpiry, debridAuthCommandId: authCommand.id,
+    });
+    const authStatus = await SELF.fetch(await signedRequest(keys.privateKey, "POST", `/v1/devices/${paired.deviceId}/status`, authStatusBody, paired.token));
+    expect(authStatus.status).toBe(200);
+    const listedForAuth = await (await SELF.fetch("https://control.test/v1/admin/devices", { headers: adminHeaders })).json<{ devices: Array<Record<string, unknown>> }>();
+    expect(listedForAuth.devices[0]).toMatchObject({
+      debridAuthUrl: "https://real-debrid.com/device?user_code=ABCDEF12", debridAuthCode: "ABCDEF12",
+      debridAuthExpiresAt: authExpiry, debridAuthCommandId: authCommand.id,
+    });
+
+    const unsafeAuthBody = JSON.stringify({
+      ...JSON.parse(statusBody),
+      debridAuthUrl: "https://attacker.invalid/device", debridAuthCode: "ABCDEF12",
+      debridAuthExpiresAt: authExpiry, debridAuthCommandId: authCommand.id,
+    });
+    const unsafeAuth = await SELF.fetch(await signedRequest(keys.privateKey, "POST", `/v1/devices/${paired.deviceId}/status`, unsafeAuthBody, paired.token));
+    expect(unsafeAuth.status).toBe(400);
+    expect(await unsafeAuth.json()).toEqual({ error: "invalid_debrid_authorization_url" });
+
     const deleted = await SELF.fetch(`https://control.test/v1/admin/devices/${paired.deviceId}`, { method: "DELETE", headers: adminHeaders });
     expect(deleted.status).toBe(204);
     const afterDelete = await SELF.fetch(await signedRequest(keys.privateKey, "POST", `/v1/devices/${paired.deviceId}/status`, statusBody, paired.token));
@@ -157,7 +186,7 @@ describe.sequential("control-plane lifecycle", () => {
     await bindings.DB.batch([
       bindings.DB.prepare("INSERT INTO households(id,alias,created_at) VALUES(?,?,?)").bind(householdId, "Retention Test", now - 1000),
       bindings.DB.prepare("INSERT INTO pairing_codes(code_hash,household_id,expires_at) VALUES(?,?,?)").bind("expired-code", householdId, now - 1),
-      bindings.DB.prepare("INSERT INTO devices(id,household_id,public_key_spki,token_hash,model,os_version,created_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)").bind(deviceId, householdId, "test-key", "test-token", "Retention TV", "9", now - 1000, now - 1000),
+      bindings.DB.prepare("INSERT INTO devices(id,household_id,public_key_spki,token_hash,model,os_version,created_at,last_seen_at,debrid_auth_url,debrid_auth_code,debrid_auth_expires_at,debrid_auth_command_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)").bind(deviceId, householdId, "test-key", "test-token", "Retention TV", "9", now - 1000, now - 1000, "https://real-debrid.com/device?user_code=EXPIRED1", "EXPIRED1", "2020-01-01T00:00:00.000Z", crypto.randomUUID()),
       bindings.DB.prepare("INSERT INTO request_nonces(device_id,nonce,expires_at) VALUES(?,?,?)").bind(deviceId, crypto.randomUUID(), now - 1),
       bindings.DB.prepare("INSERT INTO audit(id,actor,action,target_id,detail,created_at) VALUES(?,?,?,?,?,?)").bind(crypto.randomUUID(), "test", "old", householdId, "expired", now - 91 * 86400),
       bindings.DB.prepare("INSERT INTO device_status_events(id,device_id,setup_step,setup_phase,progress_percent,status_message,error_code,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), deviceId, "KODI", "KODI_READY", 45, "old", null, now - 91 * 86400),
@@ -167,5 +196,6 @@ describe.sequential("control-plane lifecycle", () => {
     expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM audit WHERE action='old'").first<{ count: number }>())?.count).toBe(0);
     expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM request_nonces WHERE device_id=?").bind(deviceId).first<{ count: number }>())?.count).toBe(0);
     expect((await bindings.DB.prepare("SELECT COUNT(*) AS count FROM device_status_events WHERE device_id=?").bind(deviceId).first<{ count: number }>())?.count).toBe(0);
+    expect(await bindings.DB.prepare("SELECT debrid_auth_code FROM devices WHERE id=?").bind(deviceId).first<{ debrid_auth_code: string | null }>()).toEqual({ debrid_auth_code: null });
   });
 });

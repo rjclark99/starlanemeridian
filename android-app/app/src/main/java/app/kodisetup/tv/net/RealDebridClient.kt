@@ -12,7 +12,14 @@ class RealDebridClient(private val vault: TokenVault) {
     private val json = Json { ignoreUnknownKeys = true }
     private val base = "https://api.real-debrid.com/oauth/v2"
 
-    @Serializable data class DeviceCode(@SerialName("device_code") val deviceCode: String, @SerialName("user_code") val userCode: String, val interval: Int, @SerialName("expires_in") val expiresIn: Int, @SerialName("verification_url") val verificationUrl: String)
+    @Serializable data class DeviceCode(
+        @SerialName("device_code") val deviceCode: String,
+        @SerialName("user_code") val userCode: String,
+        val interval: Int,
+        @SerialName("expires_in") val expiresIn: Int,
+        @SerialName("verification_url") val verificationUrl: String,
+        @SerialName("direct_verification_url") val directVerificationUrl: String? = null,
+    )
     @Serializable data class Token(@SerialName("access_token") val accessToken: String, @SerialName("refresh_token") val refreshToken: String, @SerialName("expires_in") val expiresIn: Int)
     @Serializable data class Credentials(@SerialName("client_id") val clientId: String, @SerialName("client_secret") val clientSecret: String)
     @Serializable data class User(val id: Int, val username: String, val premium: Int, val expiration: String?)

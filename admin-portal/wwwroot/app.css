@@ -147,6 +147,10 @@ nav .active { background: #52b8ff; color: #06111f; }
 .step-rail .current i { border-color: #58e0c2; box-shadow: 0 0 0 5px #58e0c21c; }
 .status-callout { display: grid; gap: 3px; margin: 16px 0; padding: 13px 15px; border-left: 3px solid #52b8ff; border-radius: 0 8px 8px 0; background: #071727b8; }
 .status-callout.has-error { border-left-color: #ff8a80; }
+.authorization-callout { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 14px 0; padding: 13px 15px; border: 1px solid #58e0c266; border-radius: 8px; background: #0b2a2d; }
+.authorization-callout strong { color: #f4faff; }
+.authorization-callout span { flex: 1 1 180px; color: #a9bfd7; }
+.authorization-callout a { padding: 9px 13px; }
 .event-empty { margin: 14px 0; color: #718aa4; font-size: .8125rem; }
 .event-timeline { margin: 14px 0 18px; border: 1px solid #294866; border-radius: 9px; background: #081727; }
 .event-timeline summary { padding: 12px 14px; color: #dceaff; font-weight: 700; cursor: pointer; }

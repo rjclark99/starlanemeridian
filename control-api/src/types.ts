@@ -36,4 +36,5 @@ export interface DeviceRow {
   security_patch: string | null; free_storage_mb: number | null; total_storage_mb: number | null; total_memory_mb: number | null;
   kodi_version: string | null; proton_version: string | null; install_permission: number | null; bootstrap_ready: number | null;
   automatic_setup: number | null; setup_phase: string | null; progress_percent: number | null; status_message: string | null; busy: number | null;
+  debrid_auth_url: string | null; debrid_auth_code: string | null; debrid_auth_expires_at: string | null; debrid_auth_command_id: string | null;
 }

@@ -126,7 +126,7 @@ const setupActions = [
   ["INSTALL_PROTON", "Install Proton VPN"],
   ["PREPARE_BOOTSTRAP", "Prepare Kodi bootstrap"],
   ["OPEN_KODI", "Open Kodi"],
-  ["BEGIN_REAL_DEBRID_AUTH", "Begin Real-Debrid link"],
+  ["BEGIN_REAL_DEBRID_AUTH", "Authorize Umbrella with Real-Debrid"],
   ["SYNC_CONFIG", "Sync configuration"],
   ["RETRY_CURRENT_STEP", "Retry current step"]
 ];
@@ -194,6 +194,7 @@ function renderDevice(device) {
       <span>${escapeHtml(device.statusMessage || "Waiting for the next signed device update")}</span>
       ${device.errorCode ? `<span class="error">${escapeHtml(device.errorCode)}</span>` : ""}
     </div>
+    ${device.debridAuthCode ? `<div class="authorization-callout"><strong>Real-Debrid code: ${escapeHtml(device.debridAuthCode)}</strong><span>Expires ${new Date(device.debridAuthExpiresAt).toLocaleTimeString()}</span><a href="${escapeHtml(device.debridAuthUrl)}" target="_blank" rel="noreferrer">Open authorization</a></div>` : ""}
     ${renderTimeline(device.events || [])}
     <dl class="device-facts">
       ${fact("Last seen", lastSeen ? `${relativeTime(ageSeconds)} - ${lastSeen.toLocaleString()}` : "Never")}
@@ -263,11 +264,21 @@ function bindDeviceActions() {
     const result = document.querySelector(`[data-command-result="${device}"]`);
     button.disabled = true;
     result.textContent = "Sending\u2026";
+    const authorizationTab = choice.value === "BEGIN_REAL_DEBRID_AUTH" ? openAuthorizationTab() : null;
     try {
-      await api(`/api/control/devices/${device}/commands/${choice.value}`, { method: "POST" });
-      result.textContent = "Action queued. The TV will collect it within about 30 seconds.";
+      const command = await api(`/api/control/devices/${device}/commands/${choice.value}`, { method: "POST" });
+      if (choice.value === "BEGIN_REAL_DEBRID_AUTH") {
+        result.textContent = "Action queued. Waiting for the TV to create a Real-Debrid code\u2026";
+        const authorization = await waitForDebridAuthorization(device, command.id);
+        result.textContent = `Real-Debrid code: ${authorization.debridAuthCode}. Complete authorization in the new tab.`;
+        if (authorizationTab) authorizationTab.location.replace(authorization.debridAuthUrl);
+        else result.innerHTML = `Real-Debrid code: <strong>${escapeHtml(authorization.debridAuthCode)}</strong>. <a href="${escapeHtml(authorization.debridAuthUrl)}" target="_blank" rel="noreferrer">Open authorization</a>.`;
+      } else {
+        result.textContent = "Action queued. The TV will collect it within about 30 seconds.";
+      }
       result.classList.remove("error");
     } catch (error) {
+      if (authorizationTab) authorizationTab.close();
       result.textContent = error.message;
       result.classList.add("error");
     } finally { button.disabled = false; }
@@ -282,6 +293,36 @@ function bindDeviceActions() {
     await api(`/api/control/households/${button.dataset.householdDelete}`, { method: "DELETE" });
     await loadDevices();
   });
+}
+
+function openAuthorizationTab() {
+  const tab = window.open("about:blank", "_blank");
+  if (!tab) return null;
+  tab.opener = null;
+  tab.document.title = "Waiting for Real-Debrid";
+  tab.document.body.textContent = "Waiting for the TV to create a Real-Debrid authorization code\u2026";
+  return tab;
+}
+
+async function waitForDebridAuthorization(deviceId, commandId) {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    const response = await api("/api/control/devices");
+    const device = (response.devices || []).find(item => item.id === deviceId);
+    if (device?.debridAuthCommandId === commandId) {
+      const url = new URL(device.debridAuthUrl);
+      const expiresAt = Date.parse(device.debridAuthExpiresAt);
+      const queryKeys = Array.from(url.searchParams.keys());
+      if (url.protocol !== "https:" || url.hostname !== "real-debrid.com" || url.pathname !== "/device" || url.username || url.password || url.hash ||
+          queryKeys.length !== 1 || queryKeys[0] !== "user_code" || url.searchParams.get("user_code") !== device.debridAuthCode ||
+          !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+        throw new Error("The TV returned an invalid or expired Real-Debrid authorization link");
+      }
+      return device;
+    }
+    await new Promise(resolve => setTimeout(resolve, 1_500));
+  }
+  throw new Error("The TV did not return a Real-Debrid authorization link within 60 seconds");
 }
 
 $("deviceRefresh").onclick = loadDevices;

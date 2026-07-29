@@ -2,7 +2,7 @@
 id: current.source-state
 kind: current
 status: active
-verified_at: 2026-07-28
+verified_at: 2026-07-29
 tags: [git, source, versions]
 authority: [git, config/manifest.json]
 supersedes: []
@@ -10,12 +10,12 @@ supersedes: []
 
 # Repository source state
 
-`main` is at `ec16ae2`, which contains private skin 2.2.17 and the root agent guidance.
-The preserved working tree adds the tested 2.2.18 Search-hover change, the 2.2.19
-presentation overlay, and the device-deployed 2.2.20 VOD-only private skin. The
-branding builder now targets only Umbrella. Do not describe these working-tree
-candidates as committed until Git proves it.
+The source line after `b88cbb3` contains private skin 2.2.20, the VOD-only provider
+policy, and command-correlated remote Real-Debrid device authorization across the
+Android app, control API, and local administration portal. Git establishes the exact
+commit and remote state; do not describe this source as deployed, migrated, or
+released without separate evidence.
 
-Verified source candidates: Android app 0.4.0/code 4, production skin builder 1.3.0,
+Verified source candidates: Android app 0.5.0/code 5, production skin builder 1.3.0,
 Bootstrap 1.1.4, private skin 2.2.20, and manifest `2026.07.11` at `test` stage.
 Inspect status and exact manifests again at task start.
