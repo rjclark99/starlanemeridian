@@ -25,6 +25,9 @@ class KodiBootstrapTests(unittest.TestCase):
         self.dialog_answers = []
         self.dialog_calls = []
         self.settings = {}
+        self.skin = "skin.estuary"
+        self.window_properties = {"starlane.umbrella.ready": "true"}
+        self.addon_enable_events = []
 
         xbmc = types.ModuleType("xbmc")
         xbmc.LOGINFO = 1
@@ -36,13 +39,19 @@ class KodiBootstrapTests(unittest.TestCase):
             request = json.loads(request_text)
             method = request["method"]
             if method == "Settings.GetSettingValue":
-                return json.dumps({"result": {"value": "skin.estuary"}})
+                return json.dumps({"result": {"value": self.skin}})
             if method == "Settings.SetSettingValue":
+                self.skin = request["params"]["value"]
                 return json.dumps({"result": True})
             if method == "Addons.SetAddonEnabled":
                 addon_id = request["params"]["addonid"]
+                self.addon_enable_events.append(
+                    (addon_id, request["params"]["enabled"])
+                )
                 if request["params"]["enabled"]:
                     self.installed.add(addon_id)
+                    if addon_id == "plugin.video.umbrella":
+                        self.window_properties["starlane.umbrella.ready"] = "true"
                 else:
                     self.installed.discard(addon_id)
                 return json.dumps({"result": "OK"})
@@ -119,6 +128,18 @@ class KodiBootstrapTests(unittest.TestCase):
         xbmcgui.Dialog = Dialog
         xbmcgui.DialogProgressBG = DialogProgressBG
 
+        class Window:
+            def __init__(self, _window_id):
+                pass
+
+            def getProperty(self, key):
+                return owner.window_properties.get(key, "")
+
+            def clearProperty(self, key):
+                owner.window_properties.pop(key, None)
+
+        xbmcgui.Window = Window
+
         xbmcvfs = types.ModuleType("xbmcvfs")
 
         def translate_path(path):
@@ -158,7 +179,7 @@ class KodiBootstrapTests(unittest.TestCase):
 
     def manifest(self):
         return {
-            "configVersion": "2026.07.31",
+            "configVersion": "2026.07.32",
             "repositories": [],
             "addons": [
                 {
@@ -262,6 +283,129 @@ class KodiBootstrapTests(unittest.TestCase):
                 "url": "https://github.com/example/package.zip",
                 "sha256": "a" * 64,
             }
+        )
+
+    def test_locked_upgrade_stops_old_provider_service_before_replacement(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            source = root / "package.zip"
+            self.addons_path = os.fspath(root / "addons")
+            target = Path(self.addons_path) / "plugin.video.umbrella"
+            target.mkdir(parents=True)
+            (target / "addon.xml").write_text(
+                '<addon id="plugin.video.umbrella" version="6.7.81" />',
+                encoding="utf-8",
+            )
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr(
+                    "plugin.video.umbrella/addon.xml",
+                    '<addon id="plugin.video.umbrella" version="6.7.81.1" />',
+                )
+            self.installed.add("plugin.video.umbrella")
+            self.addon_versions["plugin.video.umbrella"] = "6.7.81"
+            self.service.download = (
+                lambda _url, destination, _sha256, _prefixes: shutil.copyfile(
+                    source, destination
+                )
+            )
+
+            self.service.install_locked_package(
+                {
+                    "id": "plugin.video.umbrella",
+                    "version": "6.7.81.1",
+                    "url": "https://control.starlanemeridian.uk/v1/public/kodi/"
+                    "plugin.video.umbrella/plugin.video.umbrella-6.7.81.1.zip",
+                    "sha256": "a" * 64,
+                }
+            )
+
+            self.assertIn(
+                ("plugin.video.umbrella", False), self.addon_enable_events
+            )
+            self.assertNotIn("plugin.video.umbrella", self.installed)
+            installed = ElementTree.parse(target / "addon.xml").getroot()
+            self.assertEqual("6.7.81.1", installed.attrib["version"])
+
+    def test_registration_wait_requires_every_exact_locked_version(self):
+        packages = [
+            {"id": "plugin.video.example", "version": "1.2.3"},
+            {"id": "script.module.example", "version": "4.5.6"},
+        ]
+        self.installed.update(item["id"] for item in packages)
+        self.addon_versions.update(
+            {"plugin.video.example": "1.2.3", "script.module.example": "4.5.6"}
+        )
+        self.service.wait_for_registered_packages(packages, attempts=1, interval=0)
+
+        self.addon_versions["plugin.video.example"] = "1.2.2"
+        with self.assertRaisesRegex(ValueError, "plugin.video.example=1.2.3"):
+            self.service.wait_for_registered_packages(packages, attempts=1, interval=0)
+
+    def test_configuration_writes_settings_before_enabling_provider(self):
+        self.installed.add("plugin.video.umbrella")
+        events = []
+        original = self.service.set_addon_enabled
+        self.service.set_addon_enabled = (
+            lambda addon_id, enabled: events.append(("enable", addon_id, enabled))
+        )
+        original_set_bool = sys.modules["xbmcaddon"].Addon.setSettingBool
+        sys.modules["xbmcaddon"].Addon.setSettingBool = (
+            lambda _addon, key, value: events.append(("setting", key, value))
+        )
+        try:
+            self.service.configure_addon(
+                {
+                    "id": "plugin.video.umbrella",
+                    "enabled": True,
+                    "settings": {"general.checkAddonUpdates": False},
+                }
+            )
+        finally:
+            self.service.set_addon_enabled = original
+            sys.modules["xbmcaddon"].Addon.setSettingBool = original_set_bool
+        self.assertEqual(
+            [
+                ("setting", "general.checkAddonUpdates", False),
+                ("enable", "plugin.video.umbrella", True),
+            ],
+            events,
+        )
+        self.assertNotIn("starlane.umbrella.ready", self.window_properties)
+
+    def test_skin_activation_generates_shortcuts_before_reload(self):
+        current = {"skin": "skin.estuary"}
+
+        def setting():
+            return current["skin"]
+
+        def activate(value):
+            current["skin"] = value
+
+        self.service.skin_setting = setting
+        self.service.set_skin = activate
+        self.service.activate_skin_and_generate_shortcuts("skin.starlane.movies")
+        self.assertEqual(
+            [
+                (
+                    "RunScript(script.skinshortcuts,type=buildxml&mainmenuID=900&group=mainmenu|powermenu)",
+                    True,
+                ),
+                ("ReloadSkin()", True),
+            ],
+            self.commands,
+        )
+
+    def test_provider_readiness_is_bounded_and_required(self):
+        self.service.wait_for_provider_ready(
+            "plugin.video.umbrella", attempts=1, interval=0
+        )
+        self.window_properties.clear()
+        with self.assertRaisesRegex(ValueError, "did not finish initialising"):
+            self.service.wait_for_provider_ready(
+                "plugin.video.umbrella", attempts=1, interval=0
+            )
+        self.service.wait_for_provider_ready(
+            "script.module.cocoscrapers", attempts=1, interval=0
         )
 
     def test_locked_package_rejects_wrong_identity_before_extraction(self):
@@ -439,8 +583,44 @@ class KodiBootstrapTests(unittest.TestCase):
             "script.module.cocoscrapers",
             self.settings["external_provider.module"],
         )
-        self.assertEqual("2026.07.31", self.settings["applied_version"])
+        self.assertEqual("2026.07.32", self.settings["applied_version"])
         self.assertEqual(2, len(self.dialog_calls))
+
+    def test_run_does_not_activate_skin_when_provider_never_becomes_ready(self):
+        document = self.manifest()
+        self.settings.update(
+            {
+                "manifest_url": "https://example.invalid/manifest.json",
+                "public_key": "test-key",
+            }
+        )
+        self.service.fetch_and_verify = lambda _url, _key: document
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self.service.load_package_lock = lambda: packages
+        self.service.validate_lock_for_manifest = lambda _packages, _document: None
+        self.service.install_locked_packages = (
+            lambda items, _progress: self.installed.update(
+                item["id"] for item in items
+            )
+        )
+        self.service.configure_kodi_quality_of_life = lambda: None
+        self.service.wait_for_provider_ready = (
+            lambda addon_id: (_ for _ in ()).throw(ValueError("not ready"))
+            if addon_id == "plugin.video.umbrella"
+            else None
+        )
+        activated = []
+        self.service.activate_skin_and_generate_shortcuts = activated.append
+        self.dialog_answers = [True]
+
+        self.service.run()
+
+        self.assertEqual([], activated)
+        self.assertNotIn("applied_version", self.settings)
 
 
 if __name__ == "__main__":

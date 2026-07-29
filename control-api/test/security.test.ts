@@ -18,6 +18,16 @@ describe("security helpers", () => {
     expect(privateRedirect.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/download/skin-starlane-movies-2.2.20/skin.starlane.movies-2.2.20.zip.sha256");
     const unapprovedPrivateVersion = new Request("https://control.test/v1/public/kodi/skin.starlane.movies/skin.starlane.movies-2.2.21.zip");
     expect(kodiArtifact(unapprovedPrivateVersion, new URL(unapprovedPrivateVersion.url)).status).toBe(404);
+    const provider = new Request("https://control.test/v1/public/kodi/plugin.video.umbrella/plugin.video.umbrella-6.7.81.1.zip");
+    const providerRedirect = kodiArtifact(provider, new URL(provider.url));
+    expect(providerRedirect.status).toBe(307);
+    expect(providerRedirect.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/latest/download/plugin.video.umbrella-6.7.81.1.zip?download=1");
+    const upstreamProvider = new Request("https://control.test/v1/public/kodi/plugin.video.umbrella/plugin.video.umbrella-6.7.81.zip");
+    expect(kodiArtifact(upstreamProvider, new URL(upstreamProvider.url)).status).toBe(404);
+    const metadata = new Request("https://control.test/v1/public/kodi/addons.xml.sha256");
+    const metadataRedirect = kodiArtifact(metadata, new URL(metadata.url));
+    expect(metadataRedirect.status).toBe(307);
+    expect(metadataRedirect.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/latest/download/addons.xml.sha256?download=1");
   });
   it("round trips base64url", () => { const input = new Uint8Array([0, 1, 2, 250, 255]); expect(decodeBase64Url(base64Url(input))).toEqual(input); });
   it("converts a DER signature", () => { const der = new Uint8Array([0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x02]); const raw = derToP1363(der, 2); expect(Array.from(raw)).toEqual([0, 1, 0, 2]); });

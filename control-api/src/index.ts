@@ -42,6 +42,28 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 export function kodiArtifact(request: Request, url: URL): Response {
+  const metadata = url.pathname.match(/^\/v1\/public\/kodi\/(addons\.xml(?:\.sha256)?)$/);
+  if (metadata?.[1]) {
+    return new Response(null, {
+      status: 307,
+      headers: {
+        Location: `https://github.com/rjclark99/starlanemeridian/releases/latest/download/${metadata[1]}?download=1`,
+        "Cache-Control": "public, max-age=300",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
+  const provider = url.pathname.match(/^\/v1\/public\/kodi\/plugin\.video\.umbrella\/(plugin\.video\.umbrella-6\.7\.81\.1\.zip(?:\.sha256)?)$/);
+  if (provider?.[1]) {
+    return new Response(null, {
+      status: 307,
+      headers: {
+        Location: `https://github.com/rjclark99/starlanemeridian/releases/latest/download/${encodeURIComponent(provider[1])}?download=1`,
+        "Cache-Control": "public, max-age=300",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
   const privateSkin = url.pathname.match(/^\/v1\/public\/kodi\/skin\.starlane\.movies\/(skin\.starlane\.movies-2\.2\.20\.zip(?:\.sha256)?)$/);
   if (privateSkin?.[1]) {
     return new Response(null, {

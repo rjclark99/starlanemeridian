@@ -1,13 +1,23 @@
 import base64
+import hashlib
+import io
 import json
 import tempfile
 import unittest
 import importlib.util
+from unittest.mock import patch
 from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from release import build_kodi, canonical_payload, latest_skin_zip, safe_zip_tree, verify_manifest
+from release import (
+    build_kodi,
+    canonical_payload,
+    download_provider_source,
+    latest_skin_zip,
+    safe_zip_tree,
+    verify_manifest,
+)
 
 
 class ReleaseTests(unittest.TestCase):
@@ -95,6 +105,66 @@ class ReleaseTests(unittest.TestCase):
                 self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") for name in names))
             addons_xml = (output / "addons.xml").read_text(encoding="utf-8")
             self.assertIn('id="skin.starlane.movies"', addons_xml)
+
+    def test_kodi_repository_builds_hash_locked_branded_provider(self):
+        import zipfile
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            upstream = root / "plugin.video.umbrella-6.7.81.zip"
+            with zipfile.ZipFile(upstream, "w") as archive:
+                archive.writestr(
+                    "plugin.video.umbrella/addon.xml",
+                    '<addon id="plugin.video.umbrella" name="Umbrella" '
+                    'provider-name="Umbrella" version="6.7.81">'
+                    '<extension point="xbmc.addon.metadata"><summary>Umbrella</summary>'
+                    '<description>Umbrella</description><assets /></extension></addon>',
+                )
+            digest = hashlib.sha256(upstream.read_bytes()).hexdigest()
+            output = root / "kodi"
+            build_kodi(
+                output,
+                "https://github.com/example/project/releases/latest/download",
+                provider_archive=upstream,
+                provider_sha256=digest,
+            )
+            provider = (
+                output
+                / "plugin.video.umbrella"
+                / "plugin.video.umbrella-6.7.81.1.zip"
+            )
+            self.assertTrue(provider.is_file())
+            self.assertEqual(
+                hashlib.sha256(provider.read_bytes()).hexdigest(),
+                provider.with_name(provider.name + ".sha256")
+                .read_text(encoding="ascii")
+                .strip(),
+            )
+            self.assertIn(
+                'id="plugin.video.umbrella"',
+                (output / "addons.xml").read_text(encoding="utf-8"),
+            )
+
+    def test_provider_source_download_is_pinned_by_hash(self):
+        payload = b"reviewed upstream provider archive"
+        with tempfile.TemporaryDirectory() as name:
+            destination = Path(name) / "provider.zip"
+            with patch(
+                "release.PROVIDER_SOURCE_SHA256",
+                hashlib.sha256(payload).hexdigest(),
+            ), patch(
+                "release.urllib.request.urlopen",
+                return_value=io.BytesIO(payload),
+            ):
+                download_provider_source(destination)
+            self.assertEqual(payload, destination.read_bytes())
+
+            with patch("release.PROVIDER_SOURCE_SHA256", "0" * 64), patch(
+                "release.urllib.request.urlopen",
+                return_value=io.BytesIO(payload),
+            ):
+                with self.assertRaisesRegex(SystemExit, "hash mismatch"):
+                    download_provider_source(destination)
+            self.assertFalse(destination.exists())
 
 
 if __name__ == "__main__":

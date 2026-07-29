@@ -1,3 +1,4 @@
+import hashlib
 import sqlite3
 import tempfile
 import unittest
@@ -7,7 +8,12 @@ from pathlib import Path
 
 from PIL import Image
 
-from tools.build_kodi_branding_overlays import ADDONS, build, replace_human_brand
+from tools.build_kodi_branding_overlays import (
+    ADDONS,
+    build,
+    build_from_archive,
+    replace_human_brand,
+)
 from tools.kodi_texture_cache import matching_rows
 
 
@@ -99,6 +105,22 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                         "route = 'plugin://plugin.video.umbrella/'\n",
                         encoding="utf-8",
                     )
+                    router = addon_root / "resources/lib/modules/router.py"
+                    router.write_text(
+                        "if isUpdate:\n"
+                        "            from resources.lib.modules import changelog\n"
+                        "            changelog.get('Umbrella')\n"
+                        "elif action == 'changelog':\n"
+                        "    changelog.get('Umbrella')\n",
+                        encoding="utf-8",
+                    )
+                    (addon_root / "service.py").write_text(
+                        "def main():\n"
+                        "\twhile not control.monitor.abortRequested():\n"
+                        "\t\tSyncMyAccounts().run()\n"
+                        "\t\tPremAccntNotification().run()\n",
+                        encoding="utf-8",
+                    )
                 (addon_root / "addon.xml").write_text(
                     (
                         f'<addon id="{addon.addon_id}" name="{original_name}" '
@@ -141,15 +163,58 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                     self.assertIn("notification('Starlane Movies',", control)
                     self.assertIn("'context.useUmbrellaContext'", control)
                     self.assertIn("'plugin://plugin.video.umbrella/'", control)
+                    router = (
+                        addon_root / "resources/lib/modules/router.py"
+                    ).read_text(encoding="utf-8")
+                    self.assertNotIn("if isUpdate:\n            from resources.lib.modules import changelog", router)
+                    self.assertIn("elif action == 'changelog':", router)
+                    service = (addon_root / "service.py").read_text(encoding="utf-8")
+                    self.assertIn(
+                        "window.clearProperty('starlane.umbrella.ready')",
+                        service,
+                    )
+                    self.assertIn(
+                        "window.setProperty('starlane.umbrella.ready', 'true')",
+                        service,
+                    )
                 self.assertTrue((addon_root / "UPSTREAM_ATTRIBUTION.txt").is_file())
                 self.assertNotEqual(
                     Image.open(addon_root / "icon.png").getpixel((0, 0)),
                     (255, 0, 0),
                 )
                 with zipfile.ZipFile(artifact) as archive:
+                    self.assertEqual(
+                        artifact.name,
+                        f"{addon.addon_id}-{addon.branded_version}.zip",
+                    )
                     names = archive.namelist()
                     self.assertIn(f"{addon.addon_id}/addon.xml", names)
                     self.assertTrue(all("\\" not in name for name in names))
+
+    def test_archive_input_is_hash_locked_and_reproducible(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source_root = root / "source" / "plugin.video.umbrella"
+            source_root.mkdir(parents=True)
+            (source_root / "addon.xml").write_text(
+                '<addon id="plugin.video.umbrella" name="Umbrella" '
+                'provider-name="Umbrella" version="6.7.81">'
+                '<extension point="xbmc.addon.metadata"><summary>Umbrella</summary>'
+                '<description>Umbrella</description><assets /></extension></addon>',
+                encoding="utf-8",
+            )
+            archive_path = root / "upstream.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.write(
+                    source_root / "addon.xml",
+                    "plugin.video.umbrella/addon.xml",
+                )
+            digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+            first = build_from_archive(archive_path, digest, root / "first")[0]
+            second = build_from_archive(archive_path, digest, root / "second")[0]
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with self.assertRaisesRegex(ValueError, "expected SHA-256"):
+                build_from_archive(archive_path, "0" * 64, root / "bad")
 
 
 if __name__ == "__main__":

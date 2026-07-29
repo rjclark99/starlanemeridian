@@ -41,6 +41,7 @@ class KodiManifestTests(unittest.TestCase):
 
         self.assertIn("repository.umbrella", repositories)
         self.assertIn("repository.cocoscrapers", repositories)
+        self.assertTrue(all(not item["enabled"] for item in repositories.values()))
         self.assertIn("script.bingie.helper", addons)
         self.assertEqual("repository.titan.bingie.mod", addons["script.bingie.helper"]["repositoryId"])
         self.assertTrue(addons["script.bingie.helper"]["required"])
@@ -60,6 +61,7 @@ class KodiManifestTests(unittest.TestCase):
                 "provider.external.enabled": True,
                 "external_provider.name": "cocoscrapers",
                 "external_provider.module": "script.module.cocoscrapers",
+                "general.checkAddonUpdates": False,
             },
             addons["plugin.video.umbrella"]["settings"],
         )

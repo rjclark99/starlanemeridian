@@ -9,8 +9,12 @@ artwork are replaced.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import posixpath
 import re
 import shutil
+import stat
+import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 from dataclasses import dataclass
@@ -209,6 +213,31 @@ def rewrite_user_facing_python(addon_root: Path, addon: AddonBrand) -> None:
         for old, new in replacements.items():
             text = text.replace(old, new)
         path.write_text(text, encoding="utf-8", newline="")
+    router = addon_root / "resources/lib/modules/router.py"
+    if router.is_file():
+        text = router.read_text(encoding="utf-8-sig")
+        text = text.replace(
+            "from resources.lib.modules import changelog\n"
+            "            changelog.get('Umbrella')",
+            "# The Starlane bootstrap owns first-run presentation; keep the changelog manual.",
+        )
+        router.write_text(text, encoding="utf-8", newline="")
+    service = addon_root / "service.py"
+    if service.is_file():
+        text = service.read_text(encoding="utf-8-sig")
+        text = text.replace(
+            "def main():\n\twhile not control.monitor.abortRequested():",
+            "def main():\n"
+            "\twindow.clearProperty('starlane.umbrella.ready')\n"
+            "\twhile not control.monitor.abortRequested():",
+        )
+        text = text.replace(
+            "\t\tSyncMyAccounts().run()\n\t\tPremAccntNotification().run()",
+            "\t\tSyncMyAccounts().run()\n"
+            "\t\twindow.setProperty('starlane.umbrella.ready', 'true')\n"
+            "\t\tPremAccntNotification().run()",
+        )
+        service.write_text(text, encoding="utf-8", newline="")
 
 
 def update_metadata(addon_root: Path, addon: AddonBrand) -> None:
@@ -364,7 +393,8 @@ def audit_user_facing(addon_root: Path) -> None:
 
 
 def package(addon_root: Path, output_root: Path) -> Path:
-    zip_path = output_root / f"{addon_root.name}.zip"
+    version = ET.parse(addon_root / "addon.xml").getroot().attrib["version"]
+    zip_path = output_root / f"{addon_root.name}-{version}.zip"
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for path in sorted(addon_root.rglob("*")):
             if path.is_file():
@@ -403,12 +433,59 @@ def build(source_root: Path, output_root: Path) -> list[Path]:
     return built
 
 
+def build_from_archive(
+    source_archive: Path,
+    expected_sha256: str,
+    output_root: Path,
+) -> list[Path]:
+    actual_sha256 = hashlib.sha256(source_archive.read_bytes()).hexdigest()
+    if actual_sha256 != expected_sha256.lower():
+        raise ValueError(
+            f"{source_archive}: expected SHA-256 {expected_sha256}, found {actual_sha256}"
+        )
+    with tempfile.TemporaryDirectory() as temp_name:
+        source_root = Path(temp_name)
+        with zipfile.ZipFile(source_archive) as archive:
+            members = archive.infolist()
+            roots = {
+                member.filename.replace("\\", "/").split("/", 1)[0]
+                for member in members
+                if member.filename
+            }
+            if roots != {ADDONS[0].addon_id}:
+                raise ValueError("provider ZIP must contain the expected single add-on root")
+            for member in members:
+                normalized = posixpath.normpath(member.filename.replace("\\", "/"))
+                if (
+                    normalized == ".."
+                    or normalized.startswith("../")
+                    or normalized.startswith("/")
+                    or stat.S_ISLNK(member.external_attr >> 16)
+                ):
+                    raise ValueError("provider ZIP contains an unsafe path")
+            archive.extractall(source_root)
+        return build(source_root, output_root)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source-root", type=Path, required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--source-root", type=Path)
+    source.add_argument("--source-archive", type=Path)
+    parser.add_argument("--source-sha256")
     parser.add_argument("--output-root", type=Path, required=True)
     args = parser.parse_args()
-    for artifact in build(args.source_root.resolve(), args.output_root.resolve()):
+    if args.source_archive:
+        if not args.source_sha256:
+            parser.error("--source-sha256 is required with --source-archive")
+        artifacts = build_from_archive(
+            args.source_archive.resolve(),
+            args.source_sha256,
+            args.output_root.resolve(),
+        )
+    else:
+        artifacts = build(args.source_root.resolve(), args.output_root.resolve())
+    for artifact in artifacts:
         print(artifact)
 
 

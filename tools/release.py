@@ -11,11 +11,20 @@ import os
 import shutil
 import sys
 import tempfile
+import urllib.request
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
+PROVIDER_SOURCE_URL = (
+    "https://github.com/umbrellaplug/umbrellaplug.github.io/raw/"
+    "fb1fa4fe7fdab82091a6502da3f3610df2dcf71f/omega/zips/"
+    "plugin.video.umbrella/plugin.video.umbrella-6.7.81.zip"
+)
+PROVIDER_SOURCE_SHA256 = (
+    "59aca1a3910e0dfc559b47857456a236cd7b76a16c11296d7867c8eae6999b9c"
+)
 
 
 def canonical_payload(document: dict) -> bytes:
@@ -131,7 +140,13 @@ def latest_skin_zip(directory: Path) -> Path | None:
     return max(candidates, key=version, default=None)
 
 
-def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None:
+def build_kodi(
+    output: Path,
+    base_url: str,
+    data_url: str | None = None,
+    provider_archive: Path | None = None,
+    provider_sha256: str | None = None,
+) -> None:
     if not base_url.startswith("https://"):
         raise SystemExit("Kodi repository base URL must use HTTPS")
     data_url = data_url or base_url
@@ -174,11 +189,53 @@ def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None
             with zipfile.ZipFile(addon_zip) as archive:
                 addon_root = ElementTree.fromstring(archive.read(f"{addon_id}/addon.xml"))
                 metadata.append(ElementTree.tostring(addon_root, encoding="unicode"))
+        if provider_archive:
+            if not provider_sha256:
+                raise SystemExit("Provider source SHA-256 is required with a provider archive")
+            try:
+                from build_kodi_branding_overlays import build_from_archive
+            except ImportError:
+                from tools.build_kodi_branding_overlays import build_from_archive
+            provider_stage = Path(temp_name) / "provider"
+            provider_zip = build_from_archive(
+                provider_archive.resolve(),
+                provider_sha256,
+                provider_stage,
+            )[0]
+            provider_id = "plugin.video.umbrella"
+            provider_dir = output / provider_id
+            provider_dir.mkdir(exist_ok=True)
+            published_provider = provider_dir / provider_zip.name
+            shutil.copy2(provider_zip, published_provider)
+            write_sha256_sidecar(published_provider)
+            with zipfile.ZipFile(provider_zip) as archive:
+                provider_root = ElementTree.fromstring(
+                    archive.read(f"{provider_id}/addon.xml")
+                )
+                metadata.append(ElementTree.tostring(provider_root, encoding="unicode"))
         addons_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addons>\n" + "\n".join(metadata) + "\n</addons>\n"
         addons_bytes = addons_xml.encode("utf-8")
         # Write exact bytes so the published checksum is platform-independent on Windows and Linux.
         (output / "addons.xml").write_bytes(addons_bytes)
         (output / "addons.xml.sha256").write_bytes((hashlib.sha256(addons_bytes).hexdigest() + "\n").encode("ascii"))
+
+
+def download_provider_source(destination: Path) -> None:
+    request = urllib.request.Request(
+        PROVIDER_SOURCE_URL,
+        headers={"User-Agent": "StarlaneReleaseBuilder/1"},
+    )
+    with urllib.request.urlopen(request, timeout=60) as response, destination.open(
+        "wb"
+    ) as output:
+        shutil.copyfileobj(response, output)
+    actual = hashlib.sha256(destination.read_bytes()).hexdigest()
+    if actual != PROVIDER_SOURCE_SHA256:
+        destination.unlink(missing_ok=True)
+        raise SystemExit(
+            "Pinned provider source hash mismatch: expected %s, found %s"
+            % (PROVIDER_SOURCE_SHA256, actual)
+        )
 
 
 def parse_args() -> argparse.Namespace:
@@ -199,6 +256,8 @@ def parse_args() -> argparse.Namespace:
     kodi.add_argument("--output", type=Path, required=True)
     kodi.add_argument("--base-url", required=True)
     kodi.add_argument("--data-url")
+    kodi.add_argument("--provider-archive", type=Path)
+    kodi.add_argument("--provider-sha256")
     return parser.parse_args()
 
 
@@ -216,7 +275,26 @@ def main() -> None:
         verify_manifest(args.manifest, args.public_key)
         print("Manifest signature verified")
     elif args.command == "kodi":
-        build_kodi(args.output, args.base_url, args.data_url)
+        if args.provider_archive:
+            provider_sha256 = args.provider_sha256 or PROVIDER_SOURCE_SHA256
+            build_kodi(
+                args.output,
+                args.base_url,
+                args.data_url,
+                args.provider_archive,
+                provider_sha256,
+            )
+        else:
+            with tempfile.TemporaryDirectory() as temp_name:
+                provider_archive = Path(temp_name) / "plugin.video.umbrella-6.7.81.zip"
+                download_provider_source(provider_archive)
+                build_kodi(
+                    args.output,
+                    args.base_url,
+                    args.data_url,
+                    provider_archive,
+                    PROVIDER_SOURCE_SHA256,
+                )
         print(f"Kodi repository written to {args.output}")
 
 

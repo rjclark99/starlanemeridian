@@ -265,8 +265,6 @@ def validate_lock_for_manifest(packages, document):
 
 
 def addon_version(addon_id):
-    if not xbmc.getCondVisibility("System.HasAddon(%s)" % addon_id):
-        return ""
     try:
         return xbmcaddon.Addon(addon_id).getAddonInfo("version")
     except (RuntimeError, TypeError):
@@ -304,8 +302,10 @@ def inspect_package_archive(archive, package):
 
 
 def install_locked_package(package):
-    if addon_version(package["id"]) == package["version"]:
+    previous_version = addon_version(package["id"])
+    if previous_version == package["version"]:
         return
+    was_enabled = xbmc.getCondVisibility("System.HasAddon(%s)" % package["id"])
     addons_path = xbmcvfs.translatePath("special://home/addons")
     packages_path = os.path.join(addons_path, "packages")
     os.makedirs(packages_path, exist_ok=True)
@@ -321,11 +321,15 @@ def install_locked_package(package):
     staging = tempfile.mkdtemp(prefix=".starlane-", dir=addons_path)
     backup = os.path.join(addons_path, "." + package["id"] + ".starlane-backup")
     target = os.path.join(addons_path, package["id"])
+    disabled_for_upgrade = False
     try:
         with zipfile.ZipFile(archive_path) as archive:
             inspect_package_archive(archive, package)
             archive.extractall(staging)
         extracted = os.path.join(staging, package["id"])
+        if previous_version and was_enabled:
+            set_addon_enabled(package["id"], False)
+            disabled_for_upgrade = True
         if os.path.exists(backup):
             shutil.rmtree(backup)
         if os.path.exists(target):
@@ -335,6 +339,9 @@ def install_locked_package(package):
         except Exception:
             if os.path.exists(backup) and not os.path.exists(target):
                 os.replace(backup, target)
+            if disabled_for_upgrade:
+                xbmc.executebuiltin("UpdateLocalAddons", True)
+                set_addon_enabled(package["id"], True)
             raise
         if os.path.exists(backup):
             shutil.rmtree(backup)
@@ -351,10 +358,27 @@ def install_locked_packages(packages, progress):
         )
         install_locked_package(package)
     xbmc.executebuiltin("UpdateLocalAddons", True)
-    for package in packages:
-        set_addon_enabled(package["id"], True)
-        if not xbmc.getCondVisibility("System.HasAddon(%s)" % package["id"]):
-            raise ValueError("%s was not registered by Kodi" % package["id"])
+    wait_for_registered_packages(packages)
+
+
+def wait_for_registered_packages(packages, attempts=120, interval=0.25):
+    """Wait for Kodi's asynchronous add-on scan to expose every exact locked version."""
+    pending = {item["id"]: item["version"] for item in packages}
+    monitor = xbmc.Monitor()
+    for _attempt in range(attempts):
+        pending = {
+            addon_id: version
+            for addon_id, version in pending.items()
+            if addon_version(addon_id) != version
+        }
+        if not pending:
+            return
+        if monitor.waitForAbort(interval):
+            raise ValueError("Kodi stopped while registering add-ons")
+    details = ", ".join(
+        "%s=%s" % (addon_id, version) for addon_id, version in sorted(pending.items())
+    )
+    raise ValueError("Kodi did not register locked package versions: " + details)
 
 
 def install_repository(repository):
@@ -394,9 +418,10 @@ def install_repository(repository):
 
 
 def configure_addon(item):
-    if not xbmc.getCondVisibility("System.HasAddon(%s)" % item["id"]):
+    if not addon_version(item["id"]) and not xbmc.getCondVisibility(
+        "System.HasAddon(%s)" % item["id"]
+    ):
         raise ValueError("%s is not installed" % item["id"])
-    set_addon_enabled(item["id"], item["enabled"])
     target = xbmcaddon.Addon(item["id"])
     for key, value in item.get("settings", {}).items():
         if isinstance(value, bool):
@@ -405,6 +430,42 @@ def configure_addon(item):
             target.setSettingInt(key, value)
         else:
             target.setSettingString(key, str(value))
+    if item["id"] == "plugin.video.umbrella":
+        xbmcgui.Window(10000).clearProperty("starlane.umbrella.ready")
+    set_addon_enabled(item["id"], item["enabled"])
+
+
+def wait_for_provider_ready(addon_id, attempts=960, interval=0.25):
+    if addon_id != "plugin.video.umbrella":
+        return
+    window = xbmcgui.Window(10000)
+    monitor = xbmc.Monitor()
+    for _attempt in range(attempts):
+        if window.getProperty("starlane.umbrella.ready") == "true":
+            return
+        if monitor.waitForAbort(interval):
+            raise ValueError("Kodi stopped while waiting for the provider")
+    raise ValueError("Starlane on-demand provider did not finish initialising")
+
+
+def activate_skin_and_generate_shortcuts(skin_id):
+    previous = skin_setting() or "skin.estuary"
+    set_internal_setting("previous_skin", previous)
+    set_internal_setting("pending_skin", skin_id)
+    set_skin(skin_id)
+    monitor = xbmc.Monitor()
+    for _attempt in range(40):
+        if skin_setting() == skin_id:
+            break
+        if monitor.waitForAbort(0.25):
+            raise ValueError("Kodi stopped while activating the skin")
+    else:
+        raise ValueError("skin activation did not complete")
+    xbmc.executebuiltin(
+        "RunScript(script.skinshortcuts,type=buildxml&mainmenuID=900&group=mainmenu|powermenu)",
+        True,
+    )
+    xbmc.executebuiltin("ReloadSkin()", True)
 
 
 def run():
@@ -459,17 +520,29 @@ def run():
             except Exception as error:
                 failures.append(item["id"] + ": " + str(error))
                 log(failures[-1], xbmc.LOGERROR)
+        for item in enabled_addons:
+            try:
+                wait_for_provider_ready(item["id"])
+            except Exception as error:
+                failures.append(item["id"] + ": " + str(error))
+                log(failures[-1], xbmc.LOGERROR)
+        configured_ids = {item["id"] for item in enabled_addons}
+        if not package_install_failed:
+            for package in packages:
+                if package["id"] not in configured_ids:
+                    try:
+                        set_addon_enabled(package["id"], True)
+                    except Exception as error:
+                        failures.append(package["id"] + ": " + str(error))
+                        log(failures[-1], xbmc.LOGERROR)
         progress.update(85, "Starlane Movies", "Installing and activating the Starlane Movies skin")
         try:
-            if package_install_failed:
-                raise ValueError("verified package installation failed")
+            if failures:
+                raise ValueError("verified package or provider readiness failed")
             skin_id = document["skin"]["addonId"]
             if not xbmc.getCondVisibility("System.HasAddon(%s)" % skin_id):
                 raise ValueError("skin was not registered by Kodi")
-            previous = skin_setting() or "skin.estuary"
-            set_internal_setting("previous_skin", previous)
-            set_internal_setting("pending_skin", skin_id)
-            set_skin(skin_id)
+            activate_skin_and_generate_shortcuts(skin_id)
         except Exception as error:
             failures.append("skin: " + str(error))
         progress.update(100, "Starlane Movies", "Kodi package installation complete")
