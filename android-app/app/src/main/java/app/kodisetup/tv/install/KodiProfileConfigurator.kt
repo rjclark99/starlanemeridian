@@ -26,7 +26,7 @@ class KodiProfileConfigurator(private val externalStorageRoot: File) {
             externalStorageRoot,
             "Android/data/$KODI_PACKAGE/files/.kodi/userdata/guisettings.xml",
         )
-        val document = readOrCreate(settingsFile)
+        val document = readExisting(settingsFile)
         val settings = document.documentElement
         require(settings.tagName == "settings") { "Kodi guisettings.xml has an unexpected root" }
 
@@ -46,13 +46,9 @@ class KodiProfileConfigurator(private val externalStorageRoot: File) {
         return KodiProfileUpdate(matches.isEmpty() || changed, settingsFile)
     }
 
-    private fun readOrCreate(settingsFile: File): Document {
-        if (!settingsFile.isFile) {
-            val document = documentBuilder().newDocument()
-            document.appendChild(document.createElement("settings").apply {
-                setAttribute("version", "2")
-            })
-            return document
+    private fun readExisting(settingsFile: File): Document {
+        require(settingsFile.isFile) {
+            "Open Kodi once to create its profile, then return and prepare the bootstrap again"
         }
         require(settingsFile.length() <= MAX_SETTINGS_BYTES) {
             "Kodi guisettings.xml is unexpectedly large"

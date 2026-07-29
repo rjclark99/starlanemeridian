@@ -53,6 +53,11 @@ class ExperimentalSkinTests(unittest.TestCase):
         self.assertIn("Skin.SetBool(DisableSpotlightContent)", defaults)
         self.assertIn("Skin.Reset(EnableFixedFrameWidgets)", defaults)
         self.assertNotIn("Skin.SetBool(EnableFixedFrameWidgets)", defaults)
+        self.assertIn(
+            "String.IsEmpty(Skin.String(HomeLayout))"
+            '">Skin.SetString(HomeLayout,bingie)',
+            defaults,
+        )
         self.assertIn("Skin.SetString(widgetstyle,poster)", defaults)
 
         home_widgets = (

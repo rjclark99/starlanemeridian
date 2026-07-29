@@ -10,6 +10,7 @@
 
     <include name="startupskinsettingsvalues">
 		<setting id="HomeLayout.label" type="string">[UPPERCASE]Starlane Movies[/UPPERCASE]</setting>
+        <onload condition="String.IsEmpty(Skin.String(HomeLayout))">Skin.SetString(HomeLayout,bingie)</onload>
         <!-- The inherited spotlight depends on optional local/helper sources and can
              keep the home window in a permanent busy state. Starlane's section
              widgets provide discovery content directly through Umbrella. -->

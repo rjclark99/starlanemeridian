@@ -474,7 +474,34 @@ def activate_skin_and_generate_shortcuts(skin_id):
         "RunScript(script.skinshortcuts,type=buildxml&mainmenuID=900&group=mainmenu|powermenu)",
         True,
     )
+    wait_for_generated_skin_shortcuts(skin_id)
     xbmc.executebuiltin("ReloadSkin()", True)
+
+
+def wait_for_generated_skin_shortcuts(skin_id, attempts=120, interval=0.25):
+    includes_path = os.path.join(
+        xbmcvfs.translatePath("special://home/addons"),
+        skin_id,
+        "xml",
+        "script-skinshortcuts-includes.xml",
+    )
+    required = (
+        'include name="skinshortcuts-mainmenu"',
+        'include name="skinshortcuts-submenu"',
+        'include name="skinshortcuts-group-powermenu"',
+    )
+    monitor = xbmc.Monitor()
+    for _attempt in range(attempts):
+        try:
+            with open(includes_path, "r", encoding="utf-8") as generated:
+                content = generated.read(2 * 1024 * 1024)
+            if all(marker in content for marker in required):
+                return
+        except OSError:
+            pass
+        if monitor.waitForAbort(interval):
+            raise ValueError("Kodi stopped while generating the Home menu")
+    raise ValueError("Skin Shortcuts did not generate the required Home menu")
 
 
 def park_active_package_skin(skin_id):

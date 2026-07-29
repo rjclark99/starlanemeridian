@@ -13,14 +13,16 @@ class KodiProfileConfiguratorTest {
     val temporary = TemporaryFolder()
 
     @Test
-    fun createsMinimalKodiProfileWithUnknownSourcesEnabled() {
+    fun refusesToCreateAnIncompleteFreshKodiProfile() {
         val root = temporary.newFolder("external")
 
-        val update = KodiProfileConfigurator(root).enableUnknownSources("org.xbmc.kodi")
+        val error = runCatching {
+            KodiProfileConfigurator(root).enableUnknownSources("org.xbmc.kodi")
+        }.exceptionOrNull()
 
-        assertTrue(update.changed)
-        assertTrue(update.settingsFile.isFile)
-        assertEquals("true", settingValue(update.settingsFile, "addons.unknownsources"))
+        assertTrue(error is IllegalArgumentException)
+        assertTrue(error!!.message!!.contains("Open Kodi once"))
+        assertFalse(settingsFile(root).exists())
     }
 
     @Test

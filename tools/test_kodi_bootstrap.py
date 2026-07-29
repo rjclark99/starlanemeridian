@@ -400,19 +400,60 @@ class KodiBootstrapTests(unittest.TestCase):
         def activate(value):
             current["skin"] = value
 
-        self.service.skin_setting = setting
-        self.service.set_skin = activate
-        self.service.activate_skin_and_generate_shortcuts("skin.starlane.movies")
-        self.assertEqual(
-            [
-                (
-                    "RunScript(script.skinshortcuts,type=buildxml&mainmenuID=900&group=mainmenu|powermenu)",
-                    True,
-                ),
-                ("ReloadSkin()", True),
-            ],
-            self.commands,
-        )
+        with tempfile.TemporaryDirectory() as temporary:
+            self.addons_path = temporary
+            generated = (
+                Path(temporary)
+                / "skin.starlane.movies"
+                / "xml"
+                / "script-skinshortcuts-includes.xml"
+            )
+            generated.parent.mkdir(parents=True)
+            generated.write_text(
+                """
+                <includes>
+                  <include name="skinshortcuts-mainmenu" />
+                  <include name="skinshortcuts-submenu" />
+                  <include name="skinshortcuts-group-powermenu" />
+                </includes>
+                """,
+                encoding="utf-8",
+            )
+            self.service.skin_setting = setting
+            self.service.set_skin = activate
+            self.service.activate_skin_and_generate_shortcuts(
+                "skin.starlane.movies"
+            )
+            self.assertEqual(
+                [
+                    (
+                        "RunScript(script.skinshortcuts,type=buildxml&mainmenuID=900&group=mainmenu|powermenu)",
+                        True,
+                    ),
+                    ("ReloadSkin()", True),
+                ],
+                self.commands,
+            )
+
+    def test_skin_activation_rejects_incomplete_generated_shortcuts(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            self.addons_path = temporary
+            generated = (
+                Path(temporary)
+                / "skin.starlane.movies"
+                / "xml"
+                / "script-skinshortcuts-includes.xml"
+            )
+            generated.parent.mkdir(parents=True)
+            generated.write_text("<includes />", encoding="utf-8")
+            self.service.skin_setting = lambda: "skin.starlane.movies"
+            self.service.set_skin = lambda _value: None
+            with self.assertRaisesRegex(
+                ValueError, "did not generate the required Home menu"
+            ):
+                self.service.wait_for_generated_skin_shortcuts(
+                    "skin.starlane.movies", attempts=1, interval=0
+                )
 
     def test_active_package_skin_is_parked_before_provider_upgrade(self):
         self.skin = "skin.starlane.movies"
@@ -603,6 +644,7 @@ class KodiBootstrapTests(unittest.TestCase):
 
         self.service.install_locked_packages = install_all
         self.service.configure_kodi_quality_of_life = lambda: None
+        self.service.wait_for_generated_skin_shortcuts = lambda _skin_id: None
         self.dialog_answers = [True, False]
 
         self.service.run()
