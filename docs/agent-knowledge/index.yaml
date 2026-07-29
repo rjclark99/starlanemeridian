@@ -519,6 +519,20 @@ records:
     supersedes: []
     related: [subsystem.android-app, subsystem.signed-config-release]
     size_hint: small
+  - id: incident.real-debrid-direct-url
+    title: Real-Debrid direct URL exceeded relay allowlist
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-016-real-debrid-direct-url.md
+    summary: The app preferred an optional broader direct URL and then correctly rejected it against the relay allowlist.
+    tags: [android, real-debrid, oauth, security]
+    path_globs: [android-app/**, control-api/**, admin-portal/**]
+    read_when: [Real-Debrid reports an unexpected direct authorization URL]
+    authority: [official Real-Debrid device-code response, android-app/app/src/main/java/app/kodisetup/tv/net/RealDebridAuthorization.kt]
+    verified_at: 2026-07-29
+    supersedes: []
+    related: [decision.trust-boundaries, subsystem.android-app, subsystem.control-api]
+    size_hint: small
   - id: research.kodi-animations
     title: Kodi animation behavior
     kind: research

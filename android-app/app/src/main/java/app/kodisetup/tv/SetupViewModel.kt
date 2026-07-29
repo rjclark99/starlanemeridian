@@ -16,6 +16,7 @@ import app.kodisetup.tv.install.BootstrapExporter
 import app.kodisetup.tv.model.*
 import app.kodisetup.tv.net.Http
 import app.kodisetup.tv.net.ControlClient
+import app.kodisetup.tv.net.RealDebridAuthorization
 import app.kodisetup.tv.net.RealDebridClient
 import app.kodisetup.tv.security.DeviceIdentity
 import app.kodisetup.tv.security.TokenVault
@@ -208,18 +209,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         update(busy = true, error = null, message = "Requesting a Real-Debrid device code...", phase = SetupPhase.REQUESTING_REAL_DEBRID_AUTH, progress = 88)
         runCatching {
             val code = realDebrid.begin(openSourceClient)
-            require(code.verificationUrl == "https://real-debrid.com/device") { "Real-Debrid returned an unexpected authorization URL" }
-            val authorizationUrl = code.directVerificationUrl ?: Uri.parse(code.verificationUrl).buildUpon()
-                .appendQueryParameter("user_code", code.userCode).build().toString()
-            val parsedAuthorizationUrl = Uri.parse(authorizationUrl)
-            require(
-                parsedAuthorizationUrl.scheme == "https" &&
-                    parsedAuthorizationUrl.host == "real-debrid.com" &&
-                    parsedAuthorizationUrl.path == "/device" &&
-                    parsedAuthorizationUrl.getQueryParameter("user_code") == code.userCode &&
-                    parsedAuthorizationUrl.queryParameterNames == setOf("user_code") &&
-                    parsedAuthorizationUrl.fragment == null
-            ) { "Real-Debrid returned an unexpected direct authorization URL" }
+            val authorizationUrl = RealDebridAuthorization.deviceUrl(code)
             val authorizationExpiresAt = isoDateAfter(code.expiresIn)
             transition(
                 SetupStep.ACCOUNT_LINK,
