@@ -15,6 +15,11 @@ read-only checks: package/version, active skin, exact log matches, and relevant 
 Do not print complete sensitive settings. Before mutation stop Kodi and hash/preserve
 the exact targets. Prefer recoverable moves and targeted pushes.
 
+For a full Kodi profile backup, prefer a path-faithful archive created on the device,
+then pull and verify that single archive before deleting its temporary device copy.
+A direct Windows `adb pull` can fail when distinct Android paths differ only by case;
+do not rename, omit, or overwrite those files to force the copy.
+
 Use ADB-only local forwarding for Kodi JSON-RPC rather than enabling network services,
 then remove the forward. Do not expose port 5555 publicly. If Windows reports socket
 10013, check VPN/LAN policy once and ask the owner to permit LAN traffic; never change

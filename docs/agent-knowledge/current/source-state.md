@@ -10,11 +10,11 @@ supersedes: []
 
 # Repository source state
 
-The source line after `b88cbb3` contains private skin 2.2.20, the VOD-only provider
-policy, and command-correlated remote Real-Debrid device authorization across the
-Android app, control API, and local administration portal. Git establishes the exact
-commit and remote state; do not describe this source as deployed, migrated, or
-released without separate evidence.
+Commit `9e086b2` on `main` and `origin/main` contains private skin 2.2.20, the VOD-only
+provider policy, and command-correlated remote Real-Debrid device authorization
+across the Android app, control API, and local administration portal. Production
+deployment evidence is recorded separately in `current.deployed-state`; public
+release and signed-manifest state remain separate.
 
 Verified source candidates: Android app 0.5.0/code 5, production skin builder 1.3.0,
 Bootstrap 1.1.4, private skin 2.2.20, and manifest `2026.07.11` at `test` stage.
