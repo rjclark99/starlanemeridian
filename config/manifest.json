@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.11",
+  "configVersion": "2026.07.29",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -20,8 +20,8 @@
     }
   },
   "bootstrap": {
-    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.3.zip",
-    "sha256": "dad08a787f28f336926cfbd6ee6cac3ff333d9ae2104c195fb3e72fcddb27895"
+    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.5.zip",
+    "sha256": "66598cbd5c14019d15b76f7c8b1b201c796d9cb6ce8ab623287c8a5754597b42"
   },
   "applications": [
     {
@@ -41,10 +41,24 @@
       "required": true
     }
   ],
-  "repositories": [],
+  "repositories": [
+    {
+      "id": "repository.titan.bingie.mod",
+      "name": "BINGIE MOD Repository",
+      "addonId": "repository.titan.bingie.mod",
+      "source": {
+        "type": "github-release",
+        "repository": "AchillesPunks/repository.titan.bingie.mod",
+        "assetPattern": "repository.titan.bingie.mod-2.0.1.zip",
+        "resolvedUrl": "https://raw.githubusercontent.com/AchillesPunks/repository.titan.bingie.mod/d9f334ecc33c7d0e137dd1728af18815c512e577/repository.titan.bingie.mod/repository.titan.bingie.mod-2.0.1.zip"
+      },
+      "sha256": "7267cbc7f9b0de81ad7c0d613acb5b35070071437cd457caab6ef6481eb60bc4",
+      "enabled": true
+    }
+  ],
   "addons": [],
   "skin": {
-    "addonId": "skin.starlanemeridian",
+    "addonId": "skin.starlane.movies",
     "homeMenu": [
       {
         "id": "home",
@@ -168,6 +182,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "GMGltumQH1-JhtvckaFHLMMYIBMgVPFHA6lVq3yTYwEOnC61FRBijnW8xKxHNuJvG9SE5WFL8xGecR3Msm8GBg"
+    "value": "c_GUSqXd6LKo_PqSBHDVMwpwSjvq4JmzORFVvMfwKPpd-BNerFL2BI2rnM8bYPt9bma7ZhpUo4DxNUpivql3CA"
   }
 }

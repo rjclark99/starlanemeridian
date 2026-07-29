@@ -82,6 +82,19 @@ class ReleaseTests(unittest.TestCase):
                 addon_xml = archive.read("repository.kodisetup/addon.xml").decode("utf-8")
             self.assertIn('<datadir zip="true">https://control.example.test/v1/public/kodi/</datadir>', addon_xml)
             self.assertNotIn("${REPOSITORY_", addon_xml)
+            private_skin = output / "skin.starlane.movies" / "skin.starlane.movies-2.2.20.zip"
+            self.assertTrue(private_skin.is_file())
+            self.assertEqual(
+                private_skin.with_name(private_skin.name + ".sha256").read_text(encoding="ascii").strip(),
+                hashlib.sha256(private_skin.read_bytes()).hexdigest(),
+            )
+            with __import__("zipfile").ZipFile(private_skin) as archive:
+                names = archive.namelist()
+                self.assertIn("skin.starlane.movies/addon.xml", names)
+                self.assertIn("skin.starlane.movies/LICENSE", names)
+                self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") for name in names))
+            addons_xml = (output / "addons.xml").read_text(encoding="utf-8")
+            self.assertIn('id="skin.starlane.movies"', addons_xml)
 
 
 if __name__ == "__main__":

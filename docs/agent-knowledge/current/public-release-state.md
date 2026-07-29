@@ -28,3 +28,11 @@ The signed manifest remains the verified `2026.07.11` test manifest, and Bootstr
 `v0.3.8-test`. The new release is deliberately a prerelease: `v0.3.8-test` remains
 GitHub's non-prerelease `latest` target, so permanent `/latest/download` routes were
 not promoted without separate owner approval.
+
+Owner-approved experimental prerelease `skin-starlane-movies-2.2.20` publishes the
+complete GPL-attributed `skin.starlane.movies` 2.2.20 add-on source as an installable
+ZIP. Its SHA-256 is
+`02d3bd72326b9b6300d3cfd97647c16f7cbf1ac39bdddbe376b124bbd0eea84e`.
+The ZIP and LF-only checksum sidecar were downloaded before and after publication and
+matched the candidate bytes. This release does not alter the signed manifest,
+production skin, setup-app release, or GitHub's `latest` route.

@@ -108,7 +108,7 @@ def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for file in sorted(source.rglob("*")):
-            if file.is_file():
+            if file.is_file() and "__pycache__" not in file.parts and file.suffix != ".pyc":
                 relative = file.relative_to(source)
                 arcname = Path(root_name, relative) if root_name else relative
                 info = zipfile.ZipInfo(str(arcname).replace("\\", "/"), date_time=(2020, 1, 1, 0, 0, 0))
@@ -157,14 +157,23 @@ def build_kodi(output: Path, base_url: str, data_url: str | None = None) -> None
 
         metadata = [ElementTree.tostring(root, encoding="unicode")]
         skin_zip = latest_skin_zip(ROOT / "artifacts" / "skin")
-        if skin_zip:
-            skin_dir = output / "skin.starlanemeridian"
+        private_skin_source = ROOT / "kodi" / "skin.starlane.movies"
+        private_skin_root = ElementTree.parse(private_skin_source / "addon.xml").getroot()
+        private_skin_zip = Path(temp_name) / f"skin.starlane.movies-{private_skin_root.attrib['version']}.zip"
+        safe_zip_tree(private_skin_source, private_skin_zip, "skin.starlane.movies")
+        for addon_id, addon_zip in (
+            ("skin.starlanemeridian", skin_zip),
+            ("skin.starlane.movies", private_skin_zip),
+        ):
+            if not addon_zip:
+                continue
+            skin_dir = output / addon_id
             skin_dir.mkdir(exist_ok=True)
-            shutil.copy2(skin_zip, skin_dir / skin_zip.name)
-            write_sha256_sidecar(skin_dir / skin_zip.name)
-            with zipfile.ZipFile(skin_zip) as archive:
-                skin_root = ElementTree.fromstring(archive.read("skin.starlanemeridian/addon.xml"))
-                metadata.append(ElementTree.tostring(skin_root, encoding="unicode"))
+            shutil.copy2(addon_zip, skin_dir / addon_zip.name)
+            write_sha256_sidecar(skin_dir / addon_zip.name)
+            with zipfile.ZipFile(addon_zip) as archive:
+                addon_root = ElementTree.fromstring(archive.read(f"{addon_id}/addon.xml"))
+                metadata.append(ElementTree.tostring(addon_root, encoding="unicode"))
         addons_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addons>\n" + "\n".join(metadata) + "\n</addons>\n"
         addons_bytes = addons_xml.encode("utf-8")
         # Write exact bytes so the published checksum is platform-independent on Windows and Linux.
