@@ -505,6 +505,20 @@ records:
     supersedes: []
     related: [decision.compatibility-identifiers, research.dynamic-content-artwork]
     size_hint: small
+  - id: incident.android-manifest-url-allowlist
+    title: Android manifest URL allowlist mismatch
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-015-android-manifest-url-allowlist.md
+    summary: A pinned raw GitHub URL passed release validation but failed Android's repository URL allowlist.
+    tags: [android, manifest, release, github]
+    path_globs: [android-app/**, config/manifest.json]
+    read_when: [setup app reports Failed requirement or no verified configuration]
+    authority: [android-app/app/src/main/java/app/kodisetup/tv/security/ManifestSecurity.kt, config/manifest.json]
+    verified_at: 2026-07-29
+    supersedes: []
+    related: [subsystem.android-app, subsystem.signed-config-release]
+    size_hint: small
   - id: research.kodi-animations
     title: Kodi animation behavior
     kind: research

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.29",
+  "configVersion": "2026.07.30",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -50,7 +50,7 @@
         "type": "github-release",
         "repository": "AchillesPunks/repository.titan.bingie.mod",
         "assetPattern": "repository.titan.bingie.mod-2.0.1.zip",
-        "resolvedUrl": "https://raw.githubusercontent.com/AchillesPunks/repository.titan.bingie.mod/d9f334ecc33c7d0e137dd1728af18815c512e577/repository.titan.bingie.mod/repository.titan.bingie.mod-2.0.1.zip"
+        "resolvedUrl": "https://github.com/AchillesPunks/repository.titan.bingie.mod/raw/d9f334ecc33c7d0e137dd1728af18815c512e577/repository.titan.bingie.mod/repository.titan.bingie.mod-2.0.1.zip"
       },
       "sha256": "7267cbc7f9b0de81ad7c0d613acb5b35070071437cd457caab6ef6481eb60bc4",
       "enabled": true
@@ -182,6 +182,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "c_GUSqXd6LKo_PqSBHDVMwpwSjvq4JmzORFVvMfwKPpd-BNerFL2BI2rnM8bYPt9bma7ZhpUo4DxNUpivql3CA"
+    "value": "kjezsm1gNv-a9tbzQWUekJghoM1anLJKGu-f0JplJYtSaUqme03YYPMQSXlMoN_AA1zWOt8PKStaH9gjHPemBQ"
   }
 }
