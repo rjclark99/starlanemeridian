@@ -1,6 +1,17 @@
 # Current deployment status
 
-Last verified deployment: 28 July 2026.
+Last verified deployment: 29 July 2026.
+
+## Latest public release transition
+
+Owner-approved `v0.5.1-test` is now GitHub's non-prerelease `latest` release at source
+commit `a7bb9b0`. Its permanent routes serve setup app 0.5.0/code 5, signed manifest
+`2026.07.29`, Bootstrap 1.1.5, and `skin.starlane.movies` 2.2.20. All 27 public assets
+were downloaded after publication and matched the verified candidate byte-for-byte;
+the manifest signature, LF-only checksum inventory, GitHub `latest` routes, public
+health endpoint, and allowlisted Kodi routes passed. The older deployment narrative
+below remains historical evidence and is superseded for public-release state by this
+section and `docs/agent-knowledge/current/public-release-state.md`.
 
 ## Unreleased Starlane Movies rebrand
 
