@@ -115,10 +115,24 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                         encoding="utf-8",
                     )
                     (addon_root / "service.py").write_text(
+                        "testUmbrella = False\n"
+                        "\tif len(str(control.getUmbrellaVersion())) > 6:\n"
+                        "\t\trepoVersion = control.addon('repository.umbrellakodi').getAddonInfo('version')\n"
+                        "\t\trepoName = 'repository.umbrellakodi'\n"
+                        "\t\ttestUmbrella = True\n"
+                        "\telse:\n"
+                        "\t\ttry:\n"
+                        "\t\t\trepoVersion = control.addon('repository.umbrella').getAddonInfo('version')\n"
+                        "\t\t\trepoName = 'repository.umbrella'\n"
+                        "\t\texcept Exception:\n"
+                        "\t\t\trepoVersion = 'unknown'\n"
+                        "\t\t\trepoName = 'Unknown Repo'\n"
                         "def main():\n"
                         "\twhile not control.monitor.abortRequested():\n"
                         "\t\tSyncMyAccounts().run()\n"
-                        "\t\tPremAccntNotification().run()\n",
+                        "\t\tPremAccntNotification().run()\n"
+                        "\t\tif control.setting('general.checkAddonUpdates') == 'true':\n"
+                        "\t\t\tAddonCheckUpdate().run()\n",
                         encoding="utf-8",
                     )
                 (addon_root / "addon.xml").write_text(
@@ -177,6 +191,12 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                         "window.setProperty('starlane.umbrella.ready', 'true')",
                         service,
                     )
+                    self.assertIn("repoVersion = 'managed'", service)
+                    self.assertIn("repoName = 'Starlane package lock'", service)
+                    self.assertNotIn("repository.umbrellakodi", service)
+                    self.assertNotIn("control.addon('repository.umbrella')", service)
+                    self.assertNotIn("AddonCheckUpdate().run()", service)
+                    self.assertIn("package lock exclusively owns provider updates", service)
                 self.assertTrue((addon_root / "UPSTREAM_ATTRIBUTION.txt").is_file())
                 self.assertNotEqual(
                     Image.open(addon_root / "icon.png").getpixel((0, 0)),

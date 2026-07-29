@@ -10,6 +10,17 @@ supersedes: []
 
 # Public release state
 
+Owner-approved `v0.5.4-test` is the latest public release and targets source commit
+`10439cb`. Its 31 published assets were downloaded and matched the release candidate
+byte-for-byte. The signed manifest is `2026.07.32` (SHA-256
+`fc0769dd272430b1225528d91a79d672565681f876be31bf619ff57adc919c64`);
+Bootstrap 1.1.11 is
+`97629ea3ca9fcca446faa3b7a7ed62c2c1795e8a0c5db0b7a8add5aea98fbfb1`;
+and branded provider 6.7.81.1 is
+`dc4e9f8c295797cb14740be85a1de380e0912861fc455d76ceddc6af4707c176`.
+The corresponding metadata and exact-version routes were deployed and returned the
+expected bytes. The local 1.1.12/6.7.81.2 correction is not public.
+
 Owner-approved release `v0.5.2-test` targets `main` at `30735ab` and is GitHub's
 non-prerelease `latest` release. Permanent `/releases/latest/download/...` routes now
 serve setup app 0.5.0/code 5, Bootstrap 1.1.5, signed manifest `2026.07.30`, and

@@ -18,10 +18,12 @@ describe("security helpers", () => {
     expect(privateRedirect.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/download/skin-starlane-movies-2.2.20/skin.starlane.movies-2.2.20.zip.sha256");
     const unapprovedPrivateVersion = new Request("https://control.test/v1/public/kodi/skin.starlane.movies/skin.starlane.movies-2.2.21.zip");
     expect(kodiArtifact(unapprovedPrivateVersion, new URL(unapprovedPrivateVersion.url)).status).toBe(404);
-    const provider = new Request("https://control.test/v1/public/kodi/plugin.video.umbrella/plugin.video.umbrella-6.7.81.1.zip");
+    const provider = new Request("https://control.test/v1/public/kodi/plugin.video.umbrella/plugin.video.umbrella-6.7.81.2.zip");
     const providerRedirect = kodiArtifact(provider, new URL(provider.url));
     expect(providerRedirect.status).toBe(307);
-    expect(providerRedirect.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/latest/download/plugin.video.umbrella-6.7.81.1.zip?download=1");
+    expect(providerRedirect.headers.get("Location")).toBe("https://github.com/rjclark99/starlanemeridian/releases/latest/download/plugin.video.umbrella-6.7.81.2.zip?download=1");
+    const previousProvider = new Request("https://control.test/v1/public/kodi/plugin.video.umbrella/plugin.video.umbrella-6.7.81.1.zip");
+    expect(kodiArtifact(previousProvider, new URL(previousProvider.url)).status).toBe(404);
     const upstreamProvider = new Request("https://control.test/v1/public/kodi/plugin.video.umbrella/plugin.video.umbrella-6.7.81.zip");
     expect(kodiArtifact(upstreamProvider, new URL(upstreamProvider.url)).status).toBe(404);
     const metadata = new Request("https://control.test/v1/public/kodi/addons.xml.sha256");

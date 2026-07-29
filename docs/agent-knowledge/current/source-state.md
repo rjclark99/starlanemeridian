@@ -10,12 +10,14 @@ supersedes: []
 
 # Repository source state
 
-Branch `codex/kodi-first-run-authorisation` layers the one-shot Bootstrap commit
-`e288d77` and provider-readiness follow-up `10439cb` above the `main`/`origin/main`
-baseline `8af0f38`. The baseline contains private skin 2.2.20, the VOD-only provider
+Local `main`, `origin/main`, and `origin/codex/kodi-first-run-authorisation` are at
+`dfa1ea7`, which layers Android Unknown Sources automation above provider-readiness
+commit `10439cb`. The baseline contains private skin 2.2.20, the VOD-only provider
 policy, and command-correlated remote Real-Debrid device authorization across the
 Android app, control API, and local administration portal. The branch advances the
-source candidate to Bootstrap 1.1.11 and signed test manifest `2026.07.32`.
+checked-in source through signed test manifest `2026.07.32`. The coordinated
+integration candidate is Bootstrap 1.1.12, branded provider 6.7.81.2, and signed test
+manifest `2026.07.33`; it is not yet public.
 Production deployment evidence is recorded separately in `current.deployed-state`;
 public release and signed-manifest state remain separate.
 
@@ -36,11 +38,9 @@ After success it offers the Android official Real-Debrid device flow. Declining
 changes no configuration and prompts again next launch.
 
 Verified source candidates: Android app 0.5.2/code 7, production skin builder 1.3.0,
-Bootstrap 1.1.11, private skin 2.2.20, and signed manifest `2026.07.32` at `test`
-stage. Bootstrap 1.1.11 builds a deterministic
-Starlane overlay `plugin.video.umbrella` 6.7.81.1 from the exact pinned upstream
-6.7.81 archive, disables uncontrolled repository/provider updates, waits for exact
-package and provider readiness, and regenerates Skin Shortcuts before activating
-Home. Its local artifact and hashes are recorded in
-`incident.provider-overlay-bootstrap-order`. The candidate is not yet published,
-deployed, or installed on the reference device.
+Bootstrap 1.1.12, private skin 2.2.20, branded provider 6.7.81.2, and signed manifest
+`2026.07.33` at `test` stage. Bootstrap now parks an active Starlane skin,
+detects disabled installed versions through JSON-RPC, and enables the provider before
+settings access. The deterministic overlay removes its incompatible upstream
+repository-version probe. Artifact hashes and device evidence are recorded in
+`incident.provider-overlay-bootstrap-order`.

@@ -2,6 +2,24 @@
 
 Last verified deployment: 29 July 2026.
 
+## Coordinated Bootstrap 1.1.12 correction
+
+The coordinated integration candidate advances only the Kodi
+Bootstrap/provider/control-route remediation to Bootstrap 1.1.12, branded provider
+6.7.81.2, and signed test manifest `2026.07.33`; it is not yet public or deployed.
+Public `v0.5.4-test` remains the signed 1.1.11/6.7.81.1 release from `10439cb`.
+
+Hardware testing found that Kodi registers a disabled replacement in its add-on
+database while `xbmcaddon.Addon()` rejects it. Bootstrap now polls exact versions
+through `Addons.GetAddonDetails`, parks an active Starlane Home on Estuary during
+replacement, then enables the provider before accessing its settings. A second fault
+was caused by Umbrella treating Starlane's four-part version as an upstream test build
+and querying absent `repository.umbrellakodi`; the deterministic 6.7.81.2 overlay
+reports its Starlane package lock instead. A bounded Fire TV overlay registered and
+started 6.7.81.2, completed sync and skin confirmation, and produced no matching
+repository, unknown-add-on, exception, or error line. Candidate hashes and rollback
+evidence are in `incident.provider-overlay-bootstrap-order`.
+
 ## Latest public release transition
 
 Owner-approved `v0.5.2-test` is now GitHub's non-prerelease `latest` release at source

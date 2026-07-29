@@ -266,8 +266,15 @@ def validate_lock_for_manifest(packages, document):
 
 def addon_version(addon_id):
     try:
-        return xbmcaddon.Addon(addon_id).getAddonInfo("version")
-    except (RuntimeError, TypeError):
+        request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "Addons.GetAddonDetails",
+            "params": {"addonid": addon_id, "properties": ["version", "enabled"]},
+        }
+        result = json.loads(xbmc.executeJSONRPC(json.dumps(request)))
+        return result.get("result", {}).get("addon", {}).get("version", "")
+    except (RuntimeError, TypeError, ValueError):
         return ""
 
 
@@ -422,6 +429,11 @@ def configure_addon(item):
         "System.HasAddon(%s)" % item["id"]
     ):
         raise ValueError("%s is not installed" % item["id"])
+    if item["id"] == "plugin.video.umbrella":
+        xbmcgui.Window(10000).clearProperty("starlane.umbrella.ready")
+    set_addon_enabled(item["id"], item["enabled"])
+    if not item["enabled"]:
+        return
     target = xbmcaddon.Addon(item["id"])
     for key, value in item.get("settings", {}).items():
         if isinstance(value, bool):
@@ -430,9 +442,6 @@ def configure_addon(item):
             target.setSettingInt(key, value)
         else:
             target.setSettingString(key, str(value))
-    if item["id"] == "plugin.video.umbrella":
-        xbmcgui.Window(10000).clearProperty("starlane.umbrella.ready")
-    set_addon_enabled(item["id"], item["enabled"])
 
 
 def wait_for_provider_ready(addon_id, attempts=960, interval=0.25):
@@ -468,6 +477,28 @@ def activate_skin_and_generate_shortcuts(skin_id):
     xbmc.executebuiltin("ReloadSkin()", True)
 
 
+def park_active_package_skin(skin_id):
+    if skin_setting() != skin_id:
+        return
+    set_skin("skin.estuary")
+    monitor = xbmc.Monitor()
+    for _attempt in range(40):
+        if skin_setting() == "skin.estuary":
+            log("Active package skin parked on Estuary during provider upgrade")
+            return
+        if monitor.waitForAbort(0.25):
+            raise ValueError("Kodi stopped while parking the active skin")
+    raise ValueError("active package skin could not be parked")
+
+
+def provider_replacement_required(packages):
+    for package in packages:
+        if package["id"] == "plugin.video.umbrella":
+            expected = package.get("version", "")
+            return not expected or addon_version(package["id"]) != expected
+    return False
+
+
 def run():
     recover_pending_skin()
     manifest_url = ADDON.getSettingString("manifest_url")
@@ -489,6 +520,8 @@ def run():
     progress.create("Starlane Movies", "Preparing the approved Kodi package")
     failures = []
     try:
+        if provider_replacement_required(packages):
+            park_active_package_skin(document["skin"]["addonId"])
         enabled_repositories = [item for item in document["repositories"] if item["enabled"]]
         for index, repository in enumerate(enabled_repositories):
             progress.update(

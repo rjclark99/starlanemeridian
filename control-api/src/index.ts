@@ -53,7 +53,7 @@ export function kodiArtifact(request: Request, url: URL): Response {
       },
     });
   }
-  const provider = url.pathname.match(/^\/v1\/public\/kodi\/plugin\.video\.umbrella\/(plugin\.video\.umbrella-6\.7\.81\.1\.zip(?:\.sha256)?)$/);
+  const provider = url.pathname.match(/^\/v1\/public\/kodi\/plugin\.video\.umbrella\/(plugin\.video\.umbrella-6\.7\.81\.2\.zip(?:\.sha256)?)$/);
   if (provider?.[1]) {
     return new Response(null, {
       status: 307,

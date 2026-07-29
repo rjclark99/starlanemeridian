@@ -49,7 +49,7 @@ ADDONS = (
     AddonBrand(
         addon_id="plugin.video.umbrella",
         source_version="6.7.81",
-        branded_version="6.7.81.1",
+        branded_version="6.7.81.2",
         display_name="Starlane Movies: On Demand",
         subtitle="ON DEMAND",
         summary="Starlane Movies on-demand discovery and playback.",
@@ -225,6 +225,36 @@ def rewrite_user_facing_python(addon_root: Path, addon: AddonBrand) -> None:
     service = addon_root / "service.py"
     if service.is_file():
         text = service.read_text(encoding="utf-8-sig")
+        upstream_repository_probe = (
+            "\tif len(str(control.getUmbrellaVersion())) > 6:\n"
+            "\t\trepoVersion = control.addon('repository.umbrellakodi').getAddonInfo('version')\n"
+            "\t\trepoName = 'repository.umbrellakodi'\n"
+            "\t\ttestUmbrella = True\n"
+            "\telse:\n"
+            "\t\ttry:\n"
+            "\t\t\trepoVersion = control.addon('repository.umbrella').getAddonInfo('version')\n"
+            "\t\t\trepoName = 'repository.umbrella'\n"
+            "\t\texcept Exception:\n"
+            "\t\t\trepoVersion = 'unknown'\n"
+            "\t\t\trepoName = 'Unknown Repo'"
+        )
+        if upstream_repository_probe not in text:
+            raise ValueError(f"{service}: expected upstream repository-version probe")
+        text = text.replace(
+            upstream_repository_probe,
+            "\trepoVersion = 'managed'\n"
+            "\trepoName = 'Starlane package lock'",
+        )
+        upstream_update_check = (
+            "\t\tif control.setting('general.checkAddonUpdates') == 'true':\n"
+            "\t\t\tAddonCheckUpdate().run()"
+        )
+        if upstream_update_check not in text:
+            raise ValueError(f"{service}: expected upstream automatic update check")
+        text = text.replace(
+            upstream_update_check,
+            "\t\t# The signed Starlane package lock exclusively owns provider updates.",
+        )
         text = text.replace(
             "def main():\n\twhile not control.monitor.abortRequested():",
             "def main():\n"

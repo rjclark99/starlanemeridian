@@ -55,6 +55,22 @@ class KodiBootstrapTests(unittest.TestCase):
                 else:
                     self.installed.discard(addon_id)
                 return json.dumps({"result": "OK"})
+            if method == "Addons.GetAddonDetails":
+                addon_id = request["params"]["addonid"]
+                version = self.addon_versions.get(addon_id, "")
+                if version:
+                    return json.dumps(
+                        {
+                            "result": {
+                                "addon": {
+                                    "addonid": addon_id,
+                                    "version": version,
+                                    "enabled": addon_id in self.installed,
+                                }
+                            }
+                        }
+                    )
+                return json.dumps({"error": {"message": "Unknown addon"}})
             return json.dumps({"error": {"message": "unexpected method"}})
 
         xbmc.executeJSONRPC = json_rpc
@@ -179,7 +195,7 @@ class KodiBootstrapTests(unittest.TestCase):
 
     def manifest(self):
         return {
-            "configVersion": "2026.07.32",
+            "configVersion": "2026.07.33",
             "repositories": [],
             "addons": [
                 {
@@ -337,6 +353,9 @@ class KodiBootstrapTests(unittest.TestCase):
         )
         self.service.wait_for_registered_packages(packages, attempts=1, interval=0)
 
+        self.installed.discard("plugin.video.example")
+        self.service.wait_for_registered_packages(packages, attempts=1, interval=0)
+
         self.addon_versions["plugin.video.example"] = "1.2.2"
         with self.assertRaisesRegex(ValueError, "plugin.video.example=1.2.3"):
             self.service.wait_for_registered_packages(packages, attempts=1, interval=0)
@@ -365,8 +384,8 @@ class KodiBootstrapTests(unittest.TestCase):
             sys.modules["xbmcaddon"].Addon.setSettingBool = original_set_bool
         self.assertEqual(
             [
-                ("setting", "general.checkAddonUpdates", False),
                 ("enable", "plugin.video.umbrella", True),
+                ("setting", "general.checkAddonUpdates", False),
             ],
             events,
         )
@@ -394,6 +413,21 @@ class KodiBootstrapTests(unittest.TestCase):
             ],
             self.commands,
         )
+
+    def test_active_package_skin_is_parked_before_provider_upgrade(self):
+        self.skin = "skin.starlane.movies"
+        self.service.park_active_package_skin("skin.starlane.movies")
+        self.assertEqual("skin.estuary", self.skin)
+
+        self.service.park_active_package_skin("skin.starlane.movies")
+        self.assertEqual("skin.estuary", self.skin)
+
+    def test_skin_parking_is_required_only_for_provider_replacement(self):
+        package = {"id": "plugin.video.umbrella", "version": "6.7.81.2"}
+        self.addon_versions["plugin.video.umbrella"] = "6.7.81.1"
+        self.assertTrue(self.service.provider_replacement_required([package]))
+        self.addon_versions["plugin.video.umbrella"] = "6.7.81.2"
+        self.assertFalse(self.service.provider_replacement_required([package]))
 
     def test_provider_readiness_is_bounded_and_required(self):
         self.service.wait_for_provider_ready(
@@ -583,7 +617,7 @@ class KodiBootstrapTests(unittest.TestCase):
             "script.module.cocoscrapers",
             self.settings["external_provider.module"],
         )
-        self.assertEqual("2026.07.32", self.settings["applied_version"])
+        self.assertEqual("2026.07.33", self.settings["applied_version"])
         self.assertEqual(2, len(self.dialog_calls))
 
     def test_run_does_not_activate_skin_when_provider_never_becomes_ready(self):

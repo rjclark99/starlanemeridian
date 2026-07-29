@@ -10,6 +10,17 @@ supersedes: []
 
 # Reference device state
 
+The newest bounded Fire TV check on 29 July directly overlaid only the local branded
+provider candidate for diagnostic validation. Kodi registered
+`plugin.video.umbrella` 6.7.81.2, its service started and completed scraper account
+sync, Bootstrap reported configuration `2026.07.32` already applied, and the pending
+skin marker was clear after skin confirmation. The new Kodi log had no
+`repository.umbrellakodi`, unknown-add-on, exception, or error match. This proves the
+provider startup correction on the reference device; it is not evidence that
+Bootstrap 1.1.12, manifest `2026.07.33`, or a successor public release is deployed.
+The pre-test provider and profile rollback remain under
+`build/device-backups/2026-07-29-pre-bootstrap-1.1.11/`.
+
 The reference Fire TV now has the signed local Starlane Movies setup 0.5.2/code 7
 candidate installed in place with the production signer; application data was
 preserved. The final installed candidate SHA-256 is

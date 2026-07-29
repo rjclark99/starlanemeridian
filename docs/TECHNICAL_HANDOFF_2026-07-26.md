@@ -2,6 +2,25 @@
 
 Last verified: 28 July 2026, after physical deployment to the reference Fire TV.
 
+## 29 July 2026 Bootstrap/provider remediation update
+
+The repository baseline is now `dfa1ea7`; preserve its Android 0.5.2 Unknown Sources
+automation. The coordinated successor is Bootstrap 1.1.12, branded provider 6.7.81.2,
+and signed test manifest `2026.07.33`. Do not conflate it with public
+`v0.5.4-test`, which remains Bootstrap 1.1.11/provider 6.7.81.1 from `10439cb`, and do
+not push or publish the successor outside the coordinating task.
+
+Two device-only lifecycle assumptions were corrected. Exact package registration must
+be queried with Kodi JSON-RPC because `xbmcaddon.Addon()` rejects a disabled registered
+add-on. Provider settings can be opened only after enablement, so an active Starlane
+skin is temporarily parked on Estuary until provider readiness. Umbrella also mistakes
+a four-part branded version for an upstream test build and queries the absent
+`repository.umbrellakodi`; the 6.7.81.2 generator replaces that report with the
+Starlane package lock. The direct reference-device overlay started and synchronized
+6.7.81.2 with no matching repository/unknown-add-on/exception/error log entry.
+Exact hashes, rollback and test evidence are in
+`docs/agent-knowledge/incidents/INC-019-provider-overlay-bootstrap-order.md`.
+
 ## Read this first
 
 This document is the technical handoff for the current private Starlane Movies skin
