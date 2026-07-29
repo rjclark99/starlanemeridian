@@ -13,6 +13,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.kodisetup.tv.install.PackageInstallManager
 import app.kodisetup.tv.install.BootstrapExporter
+import app.kodisetup.tv.install.KodiProfileConfigurator
 import app.kodisetup.tv.model.*
 import app.kodisetup.tv.net.Http
 import app.kodisetup.tv.net.ControlClient
@@ -32,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
+import android.os.Environment
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -84,7 +86,9 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
                 reportStatus()
             }
             resumePendingInstall()
-            if (devicePrefs.contains("device_id")) loadConfiguration()
+            if (devicePrefs.contains("device_id") || restored != SetupStep.WELCOME) {
+                loadConfiguration()
+            }
             while (isActive) { pollCommands(); reportStatus(); delay(30_000) }
         }
     }
@@ -194,12 +198,26 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             val file = File(getApplication<Application>().cacheDir, "packages/repository.kodisetup.zip")
             Http.download(bootstrap.url, file, 25L * 1024 * 1024)
             require(ManifestSecurity.sha256(file) == bootstrap.sha256) { "Bootstrap hash mismatch" }
-            BootstrapExporter(getApplication()).export(file, "repository.kodisetup.zip")
-        }.onSuccess { location ->
+            val kodiPackage = state.value.manifest?.kodi?.packageName ?: "org.xbmc.kodi"
+            val unknownSourcesAutomated = if (Build.VERSION.SDK_INT < 29) {
+                @Suppress("DEPRECATION")
+                val externalRoot = Environment.getExternalStorageDirectory()
+                KodiProfileConfigurator(externalRoot).enableUnknownSources(kodiPackage)
+                true
+            } else {
+                false
+            }
+            BootstrapExporter(getApplication()).export(file, "repository.kodisetup.zip") to unknownSourcesAutomated
+        }.onSuccess { (location, unknownSourcesAutomated) ->
             workflowPrefs.edit().putBoolean("bootstrap_ready", true).apply()
-            transition(SetupStep.BOOTSTRAP, "Bootstrap saved to Downloads. In Kodi, enable Unknown Sources and install repository.kodisetup.zip. Location: $location")
+            val instruction = if (unknownSourcesAutomated) {
+                "Kodi Unknown Sources was enabled for this required build. Open Kodi and install repository.kodisetup.zip from Downloads."
+            } else {
+                "Android restricts Kodi profile access on this device. In Kodi, enable Unknown Sources and install repository.kodisetup.zip from Downloads."
+            }
+            transition(SetupStep.BOOTSTRAP, "$instruction Location: $location")
         }
-            .onFailure { update(busy = false, error = it.message ?: "Bootstrap export failed", message = "Bootstrap was not saved") }
+            .onFailure { update(busy = false, error = it.message ?: "Bootstrap preparation failed", message = "Bootstrap preparation did not complete") }
     }
     fun storagePermissionDenied() = update(busy = false, error = "STORAGE_PERMISSION_DENIED", message = "Storage access is required to save the Kodi bootstrap ZIP")
     fun continueToAccounts() { transition(SetupStep.ACCOUNT_LINK, "Link Real-Debrid with its official device authorization flow, or finish without linking") }

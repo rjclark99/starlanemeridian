@@ -10,6 +10,18 @@ supersedes: []
 
 # Reference device state
 
+The reference Fire TV now has the signed local Starlane Movies setup 0.5.2/code 7
+candidate installed in place with the production signer; application data was
+preserved. The final installed candidate SHA-256 is
+`9A342CD16C64775C652B2D218848E09D236FDF53F7E635A5EDB02C9D3589DC05`.
+With Kodi stopped and `addons.unknownsources` deliberately set false, the
+app received the visible Android storage permission, prepared the verified Bootstrap,
+merged the value to true, and Kodi retained true after launch. The pre-update APK and
+exact pre-test `guisettings.xml` are preserved under
+`build/device-backups/unknown-sources-pre-0.5.2-20260729/`; their SHA-256 values are
+`38AA5368710C9A026A1CF93A7AB31E47FD88D67078C1BA69F12C24259097FA96`
+and `38D7F344221EE570E27346C56CAE1DFA1054421DCE8EC95263BA5FDA0C8A9CCF`.
+
 The latest bounded device transition on 29 July preserved the failed Bootstrap 1.1.9
 log, settings, and add-on metadata under
 `build/device-backups/failed-one-shot-1.1.9-20260729/`, then cleared Kodi data with
@@ -33,11 +45,11 @@ Kodi's first native confirmation for `script.bingie.helper`; `applied_version` r
 `build/device-backups/initial-authorization-pre-1.1.9-20260729/` with archive SHA-256
 `8EEF39F457DD7D3B53753BD3A0FF117D6FC90544860AC25EB751F51CBB5EAAF7`.
 
-On 29 July 2026, with explicit owner authority, data was cleared for
+Earlier on 29 July 2026, with explicit owner authority, data was cleared for
 `org.xbmc.kodi` and `app.kodisetup.tv` after Bootstrap failed while installing the
-BINGIE MOD repository and Umbrella did not download. Both APKs remain installed:
-Kodi 21.3 and Starlane Movies setup 0.5.1/code 6. Kodi's `.kodi` profile is absent,
-and the setup app requires pairing again. The exact failed-bootstrap Kodi profile
+BINGIE MOD repository and Umbrella did not download. At that point both APKs remained
+installed: Kodi 21.3 and Starlane Movies setup 0.5.1/code 6. Kodi's `.kodi` profile
+was absent and the setup app required pairing again. The exact failed-bootstrap Kodi profile
 and both installed APKs are preserved under
 `build/device-backups/failed-bootstrap-pre-clear-20260729/`; the validated profile
 archive SHA-256 is

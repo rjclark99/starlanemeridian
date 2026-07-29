@@ -109,7 +109,12 @@ These rules are non-negotiable:
 - Do not automate CAPTCHA, acceptance of terms, account farming, registration submission, payment, or account transfer.
 - Use official device OAuth for Real-Debrid; tokens remain on the television device.
 - Require an exact owner-approved legal allowlist before publishing any third-party Kodi repository or add-on.
-- Leave Android developer options, ADB approval, unknown-source permission, and package-install confirmation as explicit user actions.
+- Leave Android developer options, ADB approval, Android's Install Unknown Apps
+  permission, runtime storage permission, and package-install confirmation as explicit
+  user actions. On owner-approved Android 9/Fire OS builds only, the setup app may
+  merge the single Kodi preference `addons.unknownsources=true` before first launch;
+  it must target only `org.xbmc.kodi`, preserve every other profile setting, and add no
+  shell, ADB, accessibility, arbitrary-settings, or remote-control capability.
 - Never replace a working local portal configuration or vault with a checked-in blank template.
 - Back up exact device, profile, database, and log state before risky hardware mutation.
 - Do not delete user data, viewing progress, databases, add-on settings, rollback skins, backups, or other recovery evidence unless the owner explicitly requests that exact destructive action.

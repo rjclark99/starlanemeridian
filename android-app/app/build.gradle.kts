@@ -13,8 +13,8 @@ android {
         applicationId = "app.kodisetup.tv"
         minSdk = 25
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.5.1"
+        versionCode = 7
+        versionName = "0.5.2"
         buildConfigField("String", "MANIFEST_URL", "\"${providers.gradleProperty("manifestUrl").orNull ?: "https://github.com/rjclark99/starlanemeridian/releases/latest/download/manifest.json"}\"")
         buildConfigField("String", "MANIFEST_PUBLIC_KEY", "\"${providers.gradleProperty("manifestPublicKey").orNull ?: ""}\"")
         buildConfigField("String", "CONTROL_API_URL", "\"${providers.gradleProperty("controlApiUrl").orNull ?: "https://control.starlanemeridian.uk"}\"")

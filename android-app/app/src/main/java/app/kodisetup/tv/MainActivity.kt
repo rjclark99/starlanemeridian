@@ -62,7 +62,7 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     LaunchedEffect(state.step, state.busy) {
-        if (!state.busy && state.step != SetupStep.COMPLETE) runCatching { primaryFocus.requestFocus() }
+        if (!state.busy) runCatching { primaryFocus.requestFocus() }
     }
     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF050B14), Color(0xFF102A42)))).padding(56.dp)) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -82,7 +82,16 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
                     SetupStep.PROTON -> Action("Prepare Kodi bootstrap", Modifier.focusRequester(primaryFocus)) { if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) else model.prepareBootstrap() }
                     SetupStep.BOOTSTRAP -> Action("I installed the bootstrap", Modifier.focusRequester(primaryFocus)) { model.continueToAccounts() }
                     SetupStep.ACCOUNT_LINK -> { Action("Link Real-Debrid", Modifier.focusRequester(primaryFocus)) { model.beginRealDebrid() }; state.debridCode?.let { Text("Code: $it  ${state.debridUrl.orEmpty()}", color = Color.White, fontSize = 18.sp) }; Action("Finish") { model.markComplete() } }
-                    SetupStep.COMPLETE -> Text("Setup can now be monitored from the Windows portal.", color = Color.White, fontSize = 18.sp)
+                    SetupStep.COMPLETE -> {
+                        Action("Prepare Kodi bootstrap", Modifier.focusRequester(primaryFocus)) {
+                            if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                                storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            } else {
+                                model.prepareBootstrap()
+                            }
+                        }
+                        Text("Setup can now be monitored from the Windows portal.", color = Color.White, fontSize = 18.sp)
+                    }
                 }
                 if (state.busy) Text("Working...", color = Color(0xFF61C8FF), fontSize = 18.sp)
             }

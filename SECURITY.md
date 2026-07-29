@@ -5,6 +5,13 @@
 - Release configuration is accepted only when its JSON Schema, Ed25519 signature, stage, minimum-app version, and revocation state validate.
 - APKs must match the configured SHA-256, package name, and signing-certificate SHA-256 before installation is offered.
 - Cloud commands use a closed enum. No shell, Kodi built-in string, URL, or script is accepted as a command payload.
+- On Android 9/Fire OS, after visible storage permission, the setup app may locally
+  enable only Kodi's `addons.unknownsources` preference for the fixed
+  `org.xbmc.kodi` package. The merge rejects malformed/oversized/entity-bearing XML
+  and preserves all other settings. It is not remotely parameterized and grants no
+  shell, ADB, accessibility, arbitrary-file, or arbitrary-Kodi-setting capability.
+  Android's Install Unknown Apps permission, runtime permission dialog, APK
+  confirmation, and Kodi's Install from ZIP action remain explicit.
 - Each device creates a non-exportable P-256 signing key in Android Keystore. Pairing binds its public key to a single short-lived code.
 - Device requests include a timestamp, nonce, body hash, and ECDSA signature. The API rejects stale or replayed nonces.
 - Real-Debrid OAuth tokens remain encrypted on the TV device. Only premium-expiry status may be reported.

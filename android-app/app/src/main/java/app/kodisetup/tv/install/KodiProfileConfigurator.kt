@@ -1,0 +1,124 @@
+package app.kodisetup.tv.install
+
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import java.io.File
+import javax.xml.XMLConstants
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.OutputKeys
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
+
+data class KodiProfileUpdate(val changed: Boolean, val settingsFile: File)
+
+/**
+ * Applies the single Kodi preference required before the signed Bootstrap can run.
+ *
+ * This is intentionally not a general Kodi settings writer. The caller supplies only
+ * Kodi's compatibility package ID, and this class can mutate only
+ * `addons.unknownsources`.
+ */
+class KodiProfileConfigurator(private val externalStorageRoot: File) {
+    fun enableUnknownSources(kodiPackageName: String): KodiProfileUpdate {
+        require(kodiPackageName == KODI_PACKAGE) { "Unsupported Kodi package identity" }
+        val settingsFile = File(
+            externalStorageRoot,
+            "Android/data/$KODI_PACKAGE/files/.kodi/userdata/guisettings.xml",
+        )
+        val document = readOrCreate(settingsFile)
+        val settings = document.documentElement
+        require(settings.tagName == "settings") { "Kodi guisettings.xml has an unexpected root" }
+
+        val matches = (0 until settings.childNodes.length)
+            .map { settings.childNodes.item(it) }
+            .filterIsInstance<Element>()
+            .filter { it.tagName == "setting" && it.getAttribute("id") == SETTING_ID }
+        require(matches.size <= 1) { "Kodi guisettings.xml contains duplicate Unknown Sources settings" }
+
+        val target = matches.firstOrNull() ?: document.createElement("setting").also {
+            it.setAttribute("id", SETTING_ID)
+            settings.appendChild(it)
+        }
+        val changed = target.textContent.trim() != "true"
+        if (changed) target.textContent = "true"
+        if (matches.isEmpty() || changed) writeAtomically(document, settingsFile)
+        return KodiProfileUpdate(matches.isEmpty() || changed, settingsFile)
+    }
+
+    private fun readOrCreate(settingsFile: File): Document {
+        if (!settingsFile.isFile) {
+            val document = documentBuilder().newDocument()
+            document.appendChild(document.createElement("settings").apply {
+                setAttribute("version", "2")
+            })
+            return document
+        }
+        require(settingsFile.length() <= MAX_SETTINGS_BYTES) {
+            "Kodi guisettings.xml is unexpectedly large"
+        }
+        val source = settingsFile.readText()
+        require(!source.contains("<!DOCTYPE", ignoreCase = true)) {
+            "Kodi guisettings.xml must not contain a document type"
+        }
+        require(!source.contains("<!ENTITY", ignoreCase = true)) {
+            "Kodi guisettings.xml must not contain entities"
+        }
+        return settingsFile.inputStream().use { documentBuilder().parse(it) }
+    }
+
+    private fun documentBuilder() = DocumentBuilderFactory.newInstance().also { factory ->
+        factory.isNamespaceAware = false
+        runCatching { factory.isXIncludeAware = false }
+        runCatching { factory.setExpandEntityReferences(false) }
+        runCatching {
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+        }
+        runCatching {
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+        }
+        runCatching {
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+        }
+    }.newDocumentBuilder()
+
+    private fun writeAtomically(document: Document, settingsFile: File) {
+        val parent = requireNotNull(settingsFile.parentFile)
+        require(parent.exists() || parent.mkdirs()) { "Kodi profile directory could not be created" }
+        val pending = File(parent, settingsFile.name + ".starlane-new")
+        val backup = File(parent, settingsFile.name + ".starlane-backup")
+        pending.delete()
+        require(!backup.exists()) { "An unresolved Kodi settings backup already exists" }
+
+        try {
+            TransformerFactory.newInstance().apply {
+                runCatching { setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true) }
+                runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalDTD", "") }
+                runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalStylesheet", "") }
+            }.newTransformer().apply {
+                setOutputProperty(OutputKeys.ENCODING, "UTF-8")
+                setOutputProperty(OutputKeys.INDENT, "yes")
+            }.transform(DOMSource(document), StreamResult(pending))
+
+            if (settingsFile.exists()) {
+                require(settingsFile.renameTo(backup)) {
+                    "Kodi guisettings.xml could not be preserved"
+                }
+            }
+            if (!pending.renameTo(settingsFile)) {
+                if (backup.exists()) backup.renameTo(settingsFile)
+                error("Kodi guisettings.xml could not be updated")
+            }
+            backup.delete()
+        } finally {
+            pending.delete()
+            if (!settingsFile.exists() && backup.exists()) backup.renameTo(settingsFile)
+        }
+    }
+
+    companion object {
+        private const val KODI_PACKAGE = "org.xbmc.kodi"
+        private const val SETTING_ID = "addons.unknownsources"
+        private const val MAX_SETTINGS_BYTES = 2L * 1024 * 1024
+    }
+}

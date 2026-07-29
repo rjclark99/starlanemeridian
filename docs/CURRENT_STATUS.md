@@ -17,9 +17,10 @@ section and `docs/agent-knowledge/current/public-release-state.md`.
 
 ## Unreleased first-run Kodi authorization candidate
 
-Bootstrap 1.1.10 and manifest `2026.07.31` are source candidates, not public-release or
-device-state claims. Stock Kodi continues to require its native Unknown Sources and
-Install from ZIP confirmations. The Bootstrap then presents one first-run approval
+Bootstrap 1.1.10 and manifest `2026.07.31` are source candidates, not public-release
+claims. Public setup app 0.5.0 still requires Kodi's native Unknown Sources step;
+the unreleased Android 9/Fire OS app candidate below enables that one preference
+locally. Install from ZIP remains explicit. The Bootstrap then presents one first-run approval
 before changing Kodi; refusal changes nothing and re-prompts next launch. Acceptance
 installs a transitively signed 38-package lock containing the exact allowlisted
 Umbrella/CocoScrapers stack, private-skin dependencies, and Starlane Movies skin.
@@ -37,6 +38,19 @@ installed all 38 locked packages without per-dependency prompts; the private ski
 active and Umbrella/CocoScrapers registered. The device applied the still-public
 signed manifest `2026.07.30`; the `2026.07.31` manifest remains a source candidate
 until a separately authorized public release.
+
+Android setup 0.5.2/code 7 is an unreleased local candidate. With explicit owner
+approval, its Android 9/Fire OS Bootstrap preparation now enables only Kodi's required
+`addons.unknownsources` preference after the visible storage-permission dialog. A
+physical false-to-true test passed on the reference Fire TV, and Kodi retained the
+value after launch. The updater targets only `org.xbmc.kodi`, preserves unrelated
+settings, rejects unsafe XML, and adds no remote, ADB, shell, accessibility, arbitrary
+file, or unattended APK-install capability. Android 10+ continues to show the manual
+Kodi instruction because scoped storage prevents cross-app profile access.
+The final signed local APK SHA-256 is
+`9A342CD16C64775C652B2D218848E09D236FDF53F7E635A5EDB02C9D3589DC05`
+and its signer SHA-256 remains
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
 
 ## Unreleased Starlane Movies rebrand
 

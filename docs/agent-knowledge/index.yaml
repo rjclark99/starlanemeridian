@@ -1,12 +1,12 @@
 schema_version: 1
-updated_at: 2026-07-28
+updated_at: 2026-07-29
 records:
   - id: current.source-state
     title: Repository source state
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: Checked-in baseline and uncommitted Bootstrap 1.1.10 one-shot package-lock candidate.
+    summary: Pushed Bootstrap 1.1.10 branch plus uncommitted Android 0.5.2 Kodi-profile candidate.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
@@ -48,7 +48,7 @@ records:
     kind: subsystem
     status: active
     path: docs/agent-knowledge/subsystems/android-app.md
-    summary: Kotlin/Compose setup application architecture and safety boundaries.
+    summary: Kotlin/Compose setup app, signed installs, OAuth, and narrow Android 9 Kodi-profile integration.
     tags: [android, kotlin, compose, security]
     path_globs: [android-app/**]
     read_when: [editing setup APK, device pairing, installation workflow]
@@ -546,6 +546,34 @@ records:
     verified_at: 2026-07-29
     supersedes: []
     related: [subsystem.kodi-bootstrap, subsystem.signed-config-release, decision.schema-allowlists]
+    size_hint: small
+  - id: incident.android-kodi-profile-bootstrap
+    title: Android Kodi-profile Bootstrap preparation
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-018-android-kodi-profile-bootstrap.md
+    summary: Fire OS XML features and offline manifest restoration initially blocked the narrow Unknown Sources merge.
+    tags: [android, kodi, bootstrap, fire-tv, xml]
+    path_globs: [android-app/**]
+    read_when: [Kodi Unknown Sources automation fails, offline Bootstrap action appears inert]
+    authority: [device test, android-app/app/src/main/java/app/kodisetup/tv/install/KodiProfileConfigurator.kt]
+    verified_at: 2026-07-29
+    supersedes: []
+    related: [subsystem.android-app, decision.trust-boundaries]
+    size_hint: small
+  - id: incident.provider-overlay-bootstrap-order
+    title: Provider overlay and Bootstrap ordering regression
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-019-provider-overlay-bootstrap-order.md
+    summary: Automated setup installed upstream Umbrella and activated Home during asynchronous provider and add-on startup.
+    tags: [kodi, bootstrap, umbrella, branding, widgets, skinshortcuts]
+    path_globs: [tools/build_kodi_branding_overlays.py, tools/release.py, kodi/repository.kodisetup/**, control-api/src/index.ts]
+    read_when: [Umbrella branding returns after setup or Home widgets fail immediately after automated installation]
+    authority: [reference-device Kodi log and add-on inspection, tools/build_kodi_branding_overlays.py, kodi/repository.kodisetup/service.py]
+    verified_at: 2026-07-29
+    supersedes: []
+    related: [incident.bootstrap-repository-readiness, incident.stale-skinshortcuts, subsystem.kodi-bootstrap]
     size_hint: small
   - id: research.kodi-animations
     title: Kodi animation behavior

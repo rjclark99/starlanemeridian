@@ -21,6 +21,16 @@ hosts, paths, query fields, codes, and commands; access tokens, refresh tokens, 
 credentials, and passwords remain on the TV and must never enter status, events,
 audit detail, or the portal.
 
+With explicit owner approval on 29 July 2026, the Android 9/Fire OS setup boundary
+also permits one device-local Kodi profile mutation: set
+`addons.unknownsources=true` for the fixed compatibility package
+`org.xbmc.kodi`. The app must first receive Android's visible runtime storage
+permission, preserve every other `guisettings.xml` value, reject unsafe XML, and keep
+Kodi's Install from ZIP action explicit. This exception is not a cloud command and
+must not expand into shell, ADB, accessibility, arbitrary paths, arbitrary Kodi
+settings, or unattended APK installation. Newer scoped-storage Android versions
+retain the manual Kodi step because cross-app profile access is unavailable.
+
 Rejected: cloud credential storage, arbitrary commands, remote shell/ADB, registration
 or payment automation. Revisit only through explicit security design and owner/legal
 approval. Validate schemas, authentication, replay protection, telemetry allowlists,
