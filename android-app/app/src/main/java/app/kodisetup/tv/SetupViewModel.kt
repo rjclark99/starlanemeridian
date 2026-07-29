@@ -14,6 +14,8 @@ import androidx.lifecycle.viewModelScope
 import app.kodisetup.tv.install.PackageInstallManager
 import app.kodisetup.tv.install.BootstrapExporter
 import app.kodisetup.tv.install.KodiProfileConfigurator
+import app.kodisetup.tv.install.KodiRealDebridCredentials
+import app.kodisetup.tv.install.KodiRealDebridHandoff
 import app.kodisetup.tv.model.*
 import app.kodisetup.tv.net.Http
 import app.kodisetup.tv.net.ControlClient
@@ -81,8 +83,9 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         val restored = runCatching { SetupStep.valueOf(workflowPrefs.getString("step", SetupStep.WELCOME.name)!!) }.getOrDefault(SetupStep.WELCOME)
         mutable.value = mutable.value.copy(step = restored)
         viewModelScope.launch(Dispatchers.IO) {
-            runCatching { realDebrid.user()?.expiration }.getOrNull()?.let { expiry ->
-                mutable.value = mutable.value.copy(debridExpiry = expiry)
+            runCatching { realDebrid.user() }.getOrNull()?.let { user ->
+                runCatching { stageRealDebridForKodi(user) }
+                mutable.value = mutable.value.copy(debridExpiry = user.expiration)
                 reportStatus()
             }
             resumePendingInstall()
@@ -244,14 +247,38 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             requireNotNull(credentials) { "Real-Debrid authorization expired" }
             require(realDebrid.poll(credentials.clientId, credentials.clientSecret, code.deviceCode)) { "Real-Debrid token request failed" }
             val user = requireNotNull(realDebrid.user()) { "Real-Debrid account status was unavailable" }
+            stageRealDebridForKodi(user, credentials.clientId, credentials.clientSecret)
             user.expiration
-        }.onSuccess { expiry -> transition(SetupStep.ACCOUNT_LINK, if (expiry == null) "Real-Debrid linked; no premium expiry was reported" else "Real-Debrid premium active until $expiry", debridCode = null, debridUrl = null, debridExpiry = expiry, debridAuthExpiresAt = null, debridAuthCommandId = null) }
+        }.onSuccess { expiry -> transition(SetupStep.ACCOUNT_LINK, if (expiry == null) "Real-Debrid linked to Starlane Movies; no premium expiry was reported" else "Real-Debrid linked to Starlane Movies; premium active until $expiry", debridCode = null, debridUrl = null, debridExpiry = expiry, debridAuthExpiresAt = null, debridAuthCommandId = null) }
             .onFailure {
                 mutable.value = mutable.value.copy(debridCode = null, debridUrl = null, debridAuthExpiresAt = null, debridAuthCommandId = null)
                 update(busy = false, error = it.message ?: "Real-Debrid authorization failed", message = "Authorization was not completed")
             }
     }
     fun grantInstallPermission() = installer.openUnknownSourcesSettings()
+
+    private fun stageRealDebridForKodi(
+        user: RealDebridClient.User,
+        clientId: String = requireNotNull(tokenVault.get("rd_client_id")),
+        clientSecret: String = requireNotNull(tokenVault.get("rd_client_secret")),
+    ) {
+        require(Build.VERSION.SDK_INT < 29) {
+            "Android restricts the local Kodi account handoff; authorize Real-Debrid in Starlane Movies: On Demand"
+        }
+        @Suppress("DEPRECATION")
+        val externalRoot = Environment.getExternalStorageDirectory()
+        val kodiPackage = state.value.manifest?.kodi?.packageName ?: "org.xbmc.kodi"
+        KodiRealDebridHandoff(externalRoot).write(
+            kodiPackage,
+            KodiRealDebridCredentials(
+                accessToken = requireNotNull(tokenVault.get("rd_access")),
+                refreshToken = requireNotNull(tokenVault.get("rd_refresh")),
+                clientId = clientId,
+                clientSecret = clientSecret,
+                username = user.username,
+            ),
+        )
+    }
 
     fun resumeWorkflow() {
         if (state.value.busy) return

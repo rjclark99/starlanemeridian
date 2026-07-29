@@ -21,10 +21,12 @@ class KodiBootstrapTests(unittest.TestCase):
         self.installed = set()
         self.addon_versions = {}
         self.addons_path = None
+        self.profile_path = None
         self.platform_android = True
         self.dialog_answers = []
         self.dialog_calls = []
         self.settings = {}
+        self.addon_settings = {}
         self.skin = "skin.estuary"
         self.window_properties = {"starlane.umbrella.ready": "true"}
         self.addon_enable_events = []
@@ -108,19 +110,30 @@ class KodiBootstrapTests(unittest.TestCase):
                 return ""
 
             def getSettingString(self, setting_id):
-                return owner.settings.get(setting_id, "")
+                settings = owner.settings if self.addon_id is None else owner.addon_settings.setdefault(self.addon_id, {})
+                return settings.get(setting_id, "")
 
             def setSettingString(self, setting_id, value):
-                owner.settings[setting_id] = value
+                settings = owner.settings if self.addon_id is None else owner.addon_settings.setdefault(self.addon_id, {})
+                settings[setting_id] = value
+
+            def getSetting(self, setting_id):
+                return self.getSettingString(setting_id)
+
+            def setSetting(self, setting_id, value):
+                self.setSettingString(setting_id, value)
 
             def getSettingBool(self, setting_id):
-                return owner.settings.get(setting_id, False)
+                settings = owner.settings if self.addon_id is None else owner.addon_settings.setdefault(self.addon_id, {})
+                return settings.get(setting_id, False)
 
             def setSettingBool(self, setting_id, value):
-                owner.settings[setting_id] = value
+                settings = owner.settings if self.addon_id is None else owner.addon_settings.setdefault(self.addon_id, {})
+                settings[setting_id] = value
 
             def setSettingInt(self, setting_id, value):
-                owner.settings[setting_id] = value
+                settings = owner.settings if self.addon_id is None else owner.addon_settings.setdefault(self.addon_id, {})
+                settings[setting_id] = value
 
         xbmcaddon.Addon = Addon
 
@@ -154,6 +167,9 @@ class KodiBootstrapTests(unittest.TestCase):
             def clearProperty(self, key):
                 owner.window_properties.pop(key, None)
 
+            def setProperty(self, key, value):
+                owner.window_properties[key] = value
+
         xbmcgui.Window = Window
 
         xbmcvfs = types.ModuleType("xbmcvfs")
@@ -161,6 +177,8 @@ class KodiBootstrapTests(unittest.TestCase):
         def translate_path(path):
             if path == "special://home/addons" and self.addons_path:
                 return self.addons_path
+            if path == self.service.REAL_DEBRID_HANDOFF and self.profile_path:
+                return self.profile_path
             return path
 
         xbmcvfs.translatePath = translate_path
@@ -195,7 +213,7 @@ class KodiBootstrapTests(unittest.TestCase):
 
     def manifest(self):
         return {
-            "configVersion": "2026.07.33",
+            "configVersion": "2026.07.34",
             "repositories": [],
             "addons": [
                 {
@@ -226,6 +244,69 @@ class KodiBootstrapTests(unittest.TestCase):
         source = (ADDON_ROOT / "service.py").read_text(encoding="utf-8")
         self.assertNotIn("InstallAddon(", source)
         self.assertNotIn("EnableAddon(", source)
+
+    def test_real_debrid_handoff_imports_only_umbrella_settings_and_deletes_source(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            handoff = Path(temporary) / "real-debrid-handoff.json"
+            self.profile_path = os.fspath(handoff)
+            self.installed.add("plugin.video.umbrella")
+            handoff.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "addonId": "plugin.video.umbrella",
+                        "accessToken": "access-value",
+                        "refreshToken": "refresh-value",
+                        "clientId": "client-id",
+                        "clientSecret": "client-secret",
+                        "username": "owner",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertTrue(self.service.consume_real_debrid_handoff())
+            self.assertFalse(handoff.exists())
+            self.assertEqual(
+                {
+                    "realdebrid.enable": "true",
+                    "realdebridtoken": "access-value",
+                    "realdebridrefresh": "refresh-value",
+                    "realdebrid.clientid": "client-id",
+                    "realdebridsecret": "client-secret",
+                    "realdebridusername": "owner",
+                },
+                self.addon_settings["plugin.video.umbrella"],
+            )
+            self.assertEqual(
+                "true", self.window_properties["umbrella.updateSettings"]
+            )
+
+    def test_real_debrid_handoff_rejects_extra_fields_without_mutation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            handoff = Path(temporary) / "real-debrid-handoff.json"
+            self.profile_path = os.fspath(handoff)
+            self.installed.add("plugin.video.umbrella")
+            handoff.write_text(
+                json.dumps(
+                    {
+                        "version": 1,
+                        "addonId": "plugin.video.umbrella",
+                        "accessToken": "access-value",
+                        "refreshToken": "refresh-value",
+                        "clientId": "client-id",
+                        "clientSecret": "client-secret",
+                        "username": "owner",
+                        "unexpected": "rejected",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "schema is invalid"):
+                self.service.consume_real_debrid_handoff()
+            self.assertTrue(handoff.exists())
+            self.assertNotIn("plugin.video.umbrella", self.addon_settings)
 
     def test_package_lock_covers_manifest_and_private_skin_requirements(self):
         packages = self.service.load_package_lock()
@@ -653,13 +734,14 @@ class KodiBootstrapTests(unittest.TestCase):
             ["repository.cocoscrapers", "repository.umbrella"],
             installed_repositories,
         )
-        self.assertTrue(self.settings["provider.external.enabled"])
-        self.assertEqual("cocoscrapers", self.settings["external_provider.name"])
+        provider_settings = self.addon_settings["plugin.video.umbrella"]
+        self.assertTrue(provider_settings["provider.external.enabled"])
+        self.assertEqual("cocoscrapers", provider_settings["external_provider.name"])
         self.assertEqual(
             "script.module.cocoscrapers",
-            self.settings["external_provider.module"],
+            provider_settings["external_provider.module"],
         )
-        self.assertEqual("2026.07.33", self.settings["applied_version"])
+        self.assertEqual("2026.07.34", self.settings["applied_version"])
         self.assertEqual(2, len(self.dialog_calls))
 
     def test_run_does_not_activate_skin_when_provider_never_becomes_ready(self):

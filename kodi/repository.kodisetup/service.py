@@ -47,6 +47,15 @@ SKIN_PREREQUISITES = {
     ),
 }
 SETUP_APP_PACKAGE = "app.kodisetup.tv"
+REAL_DEBRID_ADDON = "plugin.video.umbrella"
+REAL_DEBRID_HANDOFF = "special://profile/addon_data/repository.kodisetup/real-debrid-handoff.json"
+REAL_DEBRID_FIELDS = {
+    "accessToken": "realdebridtoken",
+    "refreshToken": "realdebridrefresh",
+    "clientId": "realdebrid.clientid",
+    "clientSecret": "realdebridsecret",
+    "username": "realdebridusername",
+}
 
 
 def log(message, level=xbmc.LOGINFO):
@@ -114,6 +123,67 @@ def offer_real_debrid_authorization(document):
         xbmc.executebuiltin("StartAndroidActivity(%s)" % SETUP_APP_PACKAGE, True)
     else:
         notify("Open Starlane Movies Setup on the TV to authorize Real-Debrid")
+
+
+def consume_real_debrid_handoff():
+    path = xbmcvfs.translatePath(REAL_DEBRID_HANDOFF)
+    if not os.path.exists(path):
+        return False
+    file_stat = os.lstat(path)
+    if not stat.S_ISREG(file_stat.st_mode) or file_stat.st_size < 2 or file_stat.st_size > 16384:
+        raise ValueError("Real-Debrid handoff file is invalid")
+    with open(path, "r", encoding="utf-8") as handoff:
+        document = json.load(handoff)
+    expected = {"version", "addonId", *REAL_DEBRID_FIELDS}
+    if (
+        not isinstance(document, dict)
+        or set(document) != expected
+        or document["version"] != 1
+        or document["addonId"] != REAL_DEBRID_ADDON
+    ):
+        raise ValueError("Real-Debrid handoff schema is invalid")
+    for field in REAL_DEBRID_FIELDS:
+        value = document[field]
+        maximum = 256 if field == "username" else 4096
+        if not isinstance(value, str) or not value or len(value) > maximum:
+            raise ValueError("Real-Debrid handoff value is invalid")
+    if not xbmc.getCondVisibility("System.HasAddon(%s)" % REAL_DEBRID_ADDON):
+        raise ValueError("Real-Debrid target add-on is not installed")
+
+    addon = xbmcaddon.Addon(REAL_DEBRID_ADDON)
+    home = xbmcgui.Window(10000)
+    home.setProperty("umbrella.updateSettings", "false")
+    try:
+        addon.setSetting("realdebrid.enable", "true")
+        for field, setting_id in REAL_DEBRID_FIELDS.items():
+            addon.setSetting(setting_id, document[field])
+    finally:
+        home.setProperty("umbrella.updateSettings", "true")
+    if not all(addon.getSetting(setting_id) for setting_id in REAL_DEBRID_FIELDS.values()):
+        raise ValueError("Real-Debrid settings did not persist")
+    os.remove(path)
+    notify("Real-Debrid linked to Starlane Movies")
+    log("Real-Debrid credentials imported locally")
+    return True
+
+
+def process_real_debrid_handoff():
+    try:
+        return consume_real_debrid_handoff()
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        log(str(error), xbmc.LOGERROR)
+        path = xbmcvfs.translatePath(REAL_DEBRID_HANDOFF)
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        notify("Real-Debrid handoff was rejected; authorize again")
+        return False
+
+
+def monitor_real_debrid_handoff(monitor, interval=2):
+    while not monitor.waitForAbort(interval):
+        process_real_debrid_handoff()
 
 
 def skin_setting():
@@ -620,7 +690,10 @@ if __name__ == "__main__":
     monitor = xbmc.Monitor()
     if not monitor.waitForAbort(5):
         try:
+            process_real_debrid_handoff()
             run()
+            process_real_debrid_handoff()
         except Exception as error:
             log(str(error), xbmc.LOGERROR)
             notify("Setup failed; check kodi.log")
+        monitor_real_debrid_handoff(monitor)
