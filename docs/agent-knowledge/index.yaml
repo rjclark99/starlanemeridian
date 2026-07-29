@@ -6,7 +6,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: Checked-in baseline and preserved 2.2.19 working-tree candidate.
+    summary: Checked-in baseline and uncommitted Bootstrap 1.1.10 one-shot package-lock candidate.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
@@ -104,7 +104,7 @@ records:
     kind: subsystem
     status: active
     path: docs/agent-knowledge/subsystems/kodi-bootstrap.md
-    summary: Kodi Python bootstrap, idempotent application, activation, and recovery.
+    summary: Kodi Python bootstrap, one-shot locked installation, activation, and recovery.
     tags: [kodi, python, bootstrap, repository]
     path_globs: [kodi/repository.kodisetup/**]
     read_when: [editing Kodi bootstrap, repository, activation, recovery]
@@ -532,6 +532,20 @@ records:
     verified_at: 2026-07-29
     supersedes: []
     related: [decision.trust-boundaries, subsystem.android-app, subsystem.control-api]
+    size_hint: small
+  - id: incident.bootstrap-repository-readiness
+    title: Bootstrap repository readiness and modal-install failure
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-017-bootstrap-repository-readiness.md
+    summary: Repository readiness and Kodi's modal InstallAddon builtin prevented complete one-shot installation.
+    tags: [kodi, bootstrap, repository, umbrella, dependencies]
+    path_globs: [kodi/repository.kodisetup/**, config/manifest.json]
+    read_when: [bootstrap cannot find a dependency or Umbrella is absent after setup]
+    authority: [preserved Kodi log, kodi/repository.kodisetup/service.py, config/manifest.json]
+    verified_at: 2026-07-29
+    supersedes: []
+    related: [subsystem.kodi-bootstrap, subsystem.signed-config-release, decision.schema-allowlists]
     size_hint: small
   - id: research.kodi-animations
     title: Kodi animation behavior

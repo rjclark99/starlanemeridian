@@ -15,6 +15,29 @@ previously verified dependency bytes and SHA-256. The older deployment narrative
 below remains historical evidence and is superseded for public-release state by this
 section and `docs/agent-knowledge/current/public-release-state.md`.
 
+## Unreleased first-run Kodi authorization candidate
+
+Bootstrap 1.1.10 and manifest `2026.07.31` are source candidates, not public-release or
+device-state claims. Stock Kodi continues to require its native Unknown Sources and
+Install from ZIP confirmations. The Bootstrap then presents one first-run approval
+before changing Kodi; refusal changes nothing and re-prompts next launch. Acceptance
+installs a transitively signed 38-package lock containing the exact allowlisted
+Umbrella/CocoScrapers stack, private-skin dependencies, and Starlane Movies skin.
+Bootstrap verifies hashes, identities, versions, ZIP safety, and the Android ABI,
+extracts in dependency order, and uses non-modal JSON-RPC enablement; it contains no
+Kodi `InstallAddon` or `EnableAddon` builtin calls. All 39 locked variants have been
+downloaded and hash-audited, and the required dependency graph is complete. On success
+it offers to open the Android setup app for official Real-Debrid device authorization.
+No Real-Debrid token, client credential, password, or sensitive settings enter Kodi
+Bootstrap or the manifest.
+
+The clean reference-TV test of Bootstrap 1.1.10 succeeded after the owner performed
+Kodi's explicit Unknown Sources and Install from ZIP actions. One Starlane approval
+installed all 38 locked packages without per-dependency prompts; the private skin is
+active and Umbrella/CocoScrapers registered. The device applied the still-public
+signed manifest `2026.07.30`; the `2026.07.31` manifest remains a source candidate
+until a separately authorized public release.
+
 ## Unreleased Starlane Movies rebrand
 
 On 24 July 2026 the user-facing product identity was changed to **Starlane Movies** in

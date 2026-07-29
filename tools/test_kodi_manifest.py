@@ -1,4 +1,5 @@
 import importlib
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -32,6 +33,37 @@ class KodiManifestTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsafe menu action"):
             self.module.validate(self.document)
 
+    def test_checked_in_manifest_installs_required_umbrella(self):
+        manifest_path = Path(__file__).resolve().parents[1] / "config" / "manifest.json"
+        document = json.loads(manifest_path.read_text(encoding="utf-8"))
+        repositories = {item["id"]: item for item in document["repositories"]}
+        addons = {item["id"]: item for item in document["addons"]}
+
+        self.assertIn("repository.umbrella", repositories)
+        self.assertIn("repository.cocoscrapers", repositories)
+        self.assertIn("script.bingie.helper", addons)
+        self.assertEqual("repository.titan.bingie.mod", addons["script.bingie.helper"]["repositoryId"])
+        self.assertTrue(addons["script.bingie.helper"]["required"])
+        self.assertIn("script.module.cocoscrapers", addons)
+        self.assertEqual(
+            "repository.cocoscrapers",
+            addons["script.module.cocoscrapers"]["repositoryId"],
+        )
+        self.assertTrue(addons["script.module.cocoscrapers"]["required"])
+        self.assertIn("plugin.video.umbrella", addons)
+        self.assertEqual("repository.umbrella", addons["plugin.video.umbrella"]["repositoryId"])
+        self.assertTrue(addons["plugin.video.umbrella"]["required"])
+        self.assertTrue(addons["plugin.video.umbrella"]["enabled"])
+        self.assertEqual("real-debrid-device-v1", addons["plugin.video.umbrella"]["authAdapter"])
+        self.assertEqual(
+            {
+                "provider.external.enabled": True,
+                "external_provider.name": "cocoscrapers",
+                "external_provider.module": "script.module.cocoscrapers",
+            },
+            addons["plugin.video.umbrella"]["settings"],
+        )
+
     def test_bootstrap_string_settings_have_kodi_readable_defaults(self):
         settings_path = Path(__file__).resolve().parents[1] / "kodi" / "repository.kodisetup" / "resources" / "settings.xml"
         root = ElementTree.parse(settings_path).getroot()
@@ -45,6 +77,9 @@ class KodiManifestTests(unittest.TestCase):
         defaults = {item.attrib["id"]: item.findtext("default") for item in string_settings}
         self.assertEqual("__unset__", defaults["pending_skin"])
         self.assertEqual("__unset__", defaults["previous_skin"])
+        authorization = root.find(".//setting[@id='installation_authorized']")
+        self.assertIsNotNone(authorization)
+        self.assertEqual("false", authorization.findtext("default"))
 
 
 if __name__ == "__main__":

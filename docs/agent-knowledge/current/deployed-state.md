@@ -10,7 +10,68 @@ supersedes: []
 
 # Reference device state
 
-The latest bounded device check reports Kodi 21.3 with private
+The latest bounded device transition on 29 July preserved the failed Bootstrap 1.1.9
+log, settings, and add-on metadata under
+`build/device-backups/failed-one-shot-1.1.9-20260729/`, then cleared Kodi data with
+owner authority. Kodi 21.3 remains installed and has been launched into a fresh
+profile. Verified local Bootstrap 1.1.10 is staged at
+`/sdcard/Download/repository.kodisetup-1.1.10.zip` but is not yet installed; Unknown
+Sources and Install from ZIP remain explicit owner actions. No successful 1.1.10
+device-install claim was made at that staging point.
+
+The owner subsequently completed the clean first-run flow and confirmed it succeeded
+without individual dependency authorization prompts. Fresh read-only verification
+found Bootstrap 1.1.10 installed, all 38 locked package IDs present, Bootstrap's
+one-time authorization persisted, `skin.starlane.movies` 2.2.20 active, and the
+production signed configuration `2026.07.30` applied. Umbrella 6.7.81 and
+CocoScrapers 1.0.39 registered and started. The source-only manifest remains
+`2026.07.31`; source, public-release, and device states are not conflated.
+
+The preceding 1.1.9 test accepted its one-time Starlane authorization, then stopped at
+Kodi's first native confirmation for `script.bingie.helper`; `applied_version` remained
+`unapplied`. The exact pre-1.1.9 Kodi profile is preserved at
+`build/device-backups/initial-authorization-pre-1.1.9-20260729/` with archive SHA-256
+`8EEF39F457DD7D3B53753BD3A0FF117D6FC90544860AC25EB751F51CBB5EAAF7`.
+
+On 29 July 2026, with explicit owner authority, data was cleared for
+`org.xbmc.kodi` and `app.kodisetup.tv` after Bootstrap failed while installing the
+BINGIE MOD repository and Umbrella did not download. Both APKs remain installed:
+Kodi 21.3 and Starlane Movies setup 0.5.1/code 6. Kodi's `.kodi` profile is absent,
+and the setup app requires pairing again. The exact failed-bootstrap Kodi profile
+and both installed APKs are preserved under
+`build/device-backups/failed-bootstrap-pre-clear-20260729/`; the validated profile
+archive SHA-256 is
+`E08BEE29DD38715C588D805067EB6C12938A36F96780DDCC2D28F7C303EE77C2`.
+
+Later on 29 July, local Bootstrap 1.1.6 was copied into the fresh Kodi profile and
+Kodi registered it as installed but disabled, as expected for a package not confirmed
+through Kodi's Install from ZIP flow. Its verified ZIP is also staged on the TV at
+`/sdcard/Download/repository.kodisetup-1.1.6.zip`, SHA-256
+`9B0ED26FF18E8F02D0FD5A8FB576AD2EA593CAC78C5F287D5C4AE29C5437C5BB`.
+No Bootstrap service code has executed and this is not a successful device test.
+Unknown Sources and ZIP confirmation remain explicit owner actions. The valid fresh
+pre-install profile backup is
+`build/device-backups/fresh-pre-bootstrap-20260729/kodi-fresh-pre-bootstrap-20260729-valid.tar.gz`,
+SHA-256 `8AEFA67C3D5D68A8FE95230175AC34E7D140CA7C9A9E6BD3E60EA2A8073152F5`.
+
+The owner then confirmed Install from ZIP and the device test advanced through 1.1.7
+to verified local Bootstrap 1.1.8. Version 1.1.8 installed the private skin's exact
+declared prerequisite list in order, installed and activated
+`skin.starlane.movies` 2.2.20, set applied configuration `2026.07.30`, and cleared
+both pending and previous skin recovery values on the second launch. The active skin
+remained `skin.starlane.movies`. The device ZIP and local candidate both have SHA-256
+`A63529447D8AB51BC00179A16E1CEE7E79B92E41A55C686D9A5B2E2D346D79D3`.
+
+Umbrella remains absent in device state because the production signed manifest is
+still `2026.07.30`, whose add-on list is empty. Consequently the skin logs expected
+missing `plugin.video.umbrella` routes. The source candidate manifest `2026.07.31`
+contains the pinned official Umbrella repository and required Umbrella entry but is
+unsigned and unpublished; no Umbrella device-install claim is made. Exact intermediate
+Bootstrap rollback evidence is under
+`build/device-backups/bootstrap-1.1.6-pre-1.1.7-20260729/` and
+`build/device-backups/bootstrap-1.1.7-pre-1.1.8-20260729/`.
+
+Immediately before this reset, the bounded device check reported Kodi 21.3 with private
 `skin.starlane.movies` 2.2.20 active. The main menu is VOD-only: Search, Home, New &
 Popular, TV Shows, Movies, Categories, and My List. Mad Titan and The Crew, their
 profile data, and cached install packages are absent. Starlane Movies: On Demand
@@ -18,7 +79,8 @@ profile data, and cached install packages are absent. Starlane Movies: On Demand
 zero FenLight, Mad Titan, The Crew, Live TV ID, or Sports ID references. Production
 skin 1.2.4 remains installed. Private 2.2.19 is the immediate rollback.
 
-The setup application was upgraded in place to 0.5.0/code 5 using an APK signed by
+Earlier deployment evidence recorded the setup application upgraded in place to
+0.5.0/code 5 using an APK signed by
 the same certificate as the previously installed 0.3.0 build. It retained its
 pairing and reported app version 5 through the production control plane. Kodi
 remained running as 21.3 during the setup-app upgrade.

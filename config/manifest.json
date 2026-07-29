@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.07.30",
+  "configVersion": "2026.07.31",
   "stage": "test",
   "minimumSetupAppVersion": 1,
   "kodi": {
@@ -20,8 +20,8 @@
     }
   },
   "bootstrap": {
-    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.5.zip",
-    "sha256": "66598cbd5c14019d15b76f7c8b1b201c796d9cb6ce8ab623287c8a5754597b42"
+    "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.10.zip",
+    "sha256": "c6bcbb331c52031f5a574b072ecfa00c58d818cac7f561abd49e16412dc22883"
   },
   "applications": [
     {
@@ -54,9 +54,67 @@
       },
       "sha256": "7267cbc7f9b0de81ad7c0d613acb5b35070071437cd457caab6ef6481eb60bc4",
       "enabled": true
+    },
+    {
+      "id": "repository.cocoscrapers",
+      "name": "CocoScrapers Repository",
+      "addonId": "repository.cocoscrapers",
+      "source": {
+        "type": "github-release",
+        "repository": "not-coco-joe/repository.cocoscrapers",
+        "assetPattern": "repository.cocoscrapers-1.0.0.zip",
+        "resolvedUrl": "https://github.com/not-coco-joe/repository.cocoscrapers/raw/3b313077fc8e645f295bf5e4d44f8c34f9427fe7/zips/repository.cocoscrapers/repository.cocoscrapers-1.0.0.zip"
+      },
+      "sha256": "9f32a572818065af9fab6c2131513470dc004fe1bb23e7fc040cfef0239d6b22",
+      "enabled": true
+    },
+    {
+      "id": "repository.umbrella",
+      "name": "Umbrella Repository",
+      "addonId": "repository.umbrella",
+      "source": {
+        "type": "github-release",
+        "repository": "umbrellaplug/umbrellaplug.github.io",
+        "assetPattern": "repository.umbrella-2.2.6.zip",
+        "resolvedUrl": "https://github.com/umbrellaplug/umbrellaplug.github.io/raw/fb1fa4fe7fdab82091a6502da3f3610df2dcf71f/repository.umbrella-2.2.6.zip"
+      },
+      "sha256": "055105e00c7da090cc124947bc5c5e9cdae310f8687fc4c16f83d51b89750128",
+      "enabled": true
     }
   ],
-  "addons": [],
+  "addons": [
+    {
+      "id": "script.bingie.helper",
+      "name": "BINGIE MOD Helper",
+      "repositoryId": "repository.titan.bingie.mod",
+      "required": true,
+      "enabled": true,
+      "settings": {},
+      "authAdapter": null
+    },
+    {
+      "id": "script.module.cocoscrapers",
+      "name": "CocoScrapers Module",
+      "repositoryId": "repository.cocoscrapers",
+      "required": true,
+      "enabled": true,
+      "settings": {},
+      "authAdapter": null
+    },
+    {
+      "id": "plugin.video.umbrella",
+      "name": "Starlane Movies: On Demand",
+      "repositoryId": "repository.umbrella",
+      "required": true,
+      "enabled": true,
+      "settings": {
+        "provider.external.enabled": true,
+        "external_provider.name": "cocoscrapers",
+        "external_provider.module": "script.module.cocoscrapers"
+      },
+      "authAdapter": "real-debrid-device-v1"
+    }
+  ],
   "skin": {
     "addonId": "skin.starlane.movies",
     "homeMenu": [
@@ -182,6 +240,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "kjezsm1gNv-a9tbzQWUekJghoM1anLJKGu-f0JplJYtSaUqme03YYPMQSXlMoN_AA1zWOt8PKStaH9gjHPemBQ"
+    "value": "0zPCG2thPqIoV67rpOjXn1G9jv6t7DVnO0VkOzuAIZ3venB-qroIv41Db2q83gc-1ph6MS2ZdPue-U1eSWE4Dw"
   }
 }

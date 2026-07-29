@@ -16,6 +16,10 @@
           <default>unapplied</default>
           <control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
+        <setting id="installation_authorized" type="boolean" label="Initial package installation authorized" help="One-time setup consent">
+          <default>false</default>
+          <control type="toggle"><enabled>false</enabled></control>
+        </setting>
         <setting id="pending_skin" type="string" label="Pending skin activation" help="Internal recovery state">
           <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
