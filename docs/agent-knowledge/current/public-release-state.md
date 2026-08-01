@@ -2,7 +2,7 @@
 id: current.public-release-state
 kind: current
 status: active
-verified_at: 2026-07-29
+verified_at: 2026-08-01
 tags: [release, manifest, github]
 authority: [github-release, downloaded-bytes, config/manifest.json]
 supersedes: []
@@ -10,7 +10,22 @@ supersedes: []
 
 # Public release state
 
-Owner-approved `v0.5.5-test` is the latest public release and targets combined source
+Owner-approved `v0.5.8-test` is the latest public release and targets source commit
+`3c99980`. Its signed manifest is `2026.07.37`, SHA-256
+`810298f27d1550cc3fe54e91bdf9f714edac1390f123537a1126e8bf41ef3fec`.
+Bootstrap 1.1.13 is
+`e51a3270e5e5a4a3cae1b241eab8950e3eade0a7a69cfacaff6c06b833c5fe35`;
+setup APK 0.5.3/code 8 is
+`357fff753fb160565fccf6482626bc7209fdd8a636303128b370b11f95afa41b`
+with production signer
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
+All 15 uploaded assets matched the LF-only checksum inventory where listed; all four
+Kodi sidecars and ZIP roots passed; the manifest signature passed; and the manifest,
+Bootstrap, and APK `latest/download` routes matched the tagged assets byte-for-byte.
+`v0.5.6-test` and `v0.5.7-test` remain public superseded evidence and must not be used
+because their Bootstrap bytes did not match their signed manifests.
+
+Former owner-approved `v0.5.5-test` targeted combined source
 commit `d4c96cb`. All 31 draft assets matched the release candidate before publication,
 and all 31 public assets matched after publication. The signed manifest is
 `2026.07.33` (SHA-256

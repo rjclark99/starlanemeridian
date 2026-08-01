@@ -463,6 +463,20 @@ records:
     supersedes: []
     related: [decision.offline-signing]
     size_hint: small
+  - id: incident.cross-platform-zip-metadata
+    title: Cross-platform ZIP metadata drift
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-020-cross-platform-zip-metadata.md
+    summary: Windows and Linux produced different signed-release ZIP hashes until all archive bytes and metadata were pinned.
+    tags: [kodi, release, checksums, windows, github-actions]
+    path_globs: [tools/release.py, tools/test_release.py, config/manifest.json]
+    read_when: [release ZIP hash differs between local signing and CI]
+    authority: [tools/release.py, tools/test_release.py, github-actions]
+    verified_at: 2026-08-01
+    supersedes: []
+    related: [incident.checksum-crlf, incident.empty-release-secrets, subsystem.signed-config-release]
+    size_hint: small
   - id: incident.semantic-version-parsing
     title: Two-part vendor versions
     kind: incident

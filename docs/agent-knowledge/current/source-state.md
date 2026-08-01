@@ -2,7 +2,7 @@
 id: current.source-state
 kind: current
 status: active
-verified_at: 2026-07-29
+verified_at: 2026-08-01
 tags: [git, source, versions]
 authority: [git, config/manifest.json]
 supersedes: []
@@ -10,23 +10,16 @@ supersedes: []
 
 # Repository source state
 
-The public `v0.5.5-test` implementation baseline is `d4c96cb`, followed by its
-documentation update `12162e3`. Fresh-install correction `60a562b` makes the private
-skin default an unset `HomeLayout` to `bingie`, makes Bootstrap wait for generated
-main, submenu, and power-menu Skin Shortcuts includes before reloading, and prevents
-the Android app from manufacturing an incomplete fresh `guisettings.xml`. The retained
-`origin/codex/kodi-first-run-authorisation` branch is at its intermediate Android
-commit `dfa1ea7`. The combined baseline contains private skin 2.2.20, the VOD-only provider
-policy, and command-correlated remote Real-Debrid device authorization across the
-Android app, control API, and local administration portal. It contains Bootstrap
-1.1.12, branded provider 6.7.81.2, and signed test manifest `2026.07.33`; those bytes
-are public in owner-approved `v0.5.5-test`.
-Production deployment evidence is recorded separately in `current.deployed-state`;
-public release and signed-manifest state remain separate. The `60a562b` corrections
-are source/device-tested changes, not new public release bytes.
+`main` and `origin/main` are at `3c99980`. The source contains Android setup
+0.5.3/code 8, Bootstrap 1.1.13, production skin 1.3.0, private skin 2.2.20,
+branded provider 6.7.81.2, and signed test manifest `2026.07.37`. Commit `0609e30`
+links command-correlated remote Real-Debrid authorization to the local Kodi provider;
+the token remains on the television. Commits `c8ae9f1`, `0c536ce`, and `3c99980`
+make Kodi archives portable across Windows and Linux and add a CI assertion that the
+generated Bootstrap archive equals the signed-manifest digest. Public-release and
+production-service evidence remain recorded separately.
 
-The same integration candidate contains Android setup 0.5.2/code 7. On Android 9/Fire
-OS it locally enables Kodi's single required
+On Android 9/Fire OS, Android setup 0.5.3/code 8 locally enables Kodi's single required
 `addons.unknownsources` preference during Bootstrap preparation after visible storage
 permission; newer scoped-storage Android versions retain the manual step. Kodi's
 Install from ZIP confirmation remains explicit. On the
@@ -41,9 +34,7 @@ declared hashes and their required dependencies form a complete topological clos
 After success it offers the Android official Real-Debrid device flow. Declining
 changes no configuration and prompts again next launch.
 
-Verified source candidates: Android app 0.5.2/code 7, production skin builder 1.3.0,
-Bootstrap 1.1.12, private skin 2.2.20, branded provider 6.7.81.2, and signed manifest
-`2026.07.33` at `test` stage. Bootstrap now parks an active Starlane skin,
+Bootstrap now parks an active Starlane skin,
 detects disabled installed versions through JSON-RPC, and enables the provider before
 settings access. The deterministic overlay removes its incompatible upstream
 repository-version probe. Artifact hashes and device evidence are recorded in
