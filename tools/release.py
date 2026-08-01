@@ -113,6 +113,19 @@ def verify_manifest(path: Path, public_path: Path) -> None:
         raise SystemExit("Manifest signature verification failed") from error
 
 
+PORTABLE_TEXT_SUFFIXES = {
+    ".css", ".html", ".ini", ".js", ".json", ".md", ".po", ".properties",
+    ".py", ".txt", ".xml",
+}
+
+
+def portable_zip_bytes(file: Path) -> bytes:
+    value = file.read_bytes()
+    if file.suffix.lower() in PORTABLE_TEXT_SUFFIXES:
+        return value.replace(b"\r\n", b"\n")
+    return value
+
+
 def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
@@ -123,7 +136,7 @@ def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None)
                 info = zipfile.ZipInfo(str(arcname).replace("\\", "/"), date_time=(2020, 1, 1, 0, 0, 0))
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o644 << 16
-                archive.writestr(info, file.read_bytes())
+                archive.writestr(info, portable_zip_bytes(file))
 
 
 def write_sha256_sidecar(path: Path) -> None:

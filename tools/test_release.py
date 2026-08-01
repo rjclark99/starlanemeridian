@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 import importlib.util
+import zipfile
 from unittest.mock import patch
 from pathlib import Path
 
@@ -62,6 +63,23 @@ class ReleaseTests(unittest.TestCase):
             first, second = root / "first.zip", root / "second.zip"
             safe_zip_tree(source, first, "addon.id"); safe_zip_tree(source, second, "addon.id")
             self.assertEqual(first.read_bytes(), second.read_bytes())
+
+    def test_zip_normalizes_text_line_endings_across_build_hosts(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            windows = root / "windows"; linux = root / "linux"
+            windows.mkdir(); linux.mkdir()
+            windows.joinpath("service.py").write_bytes(b"first\r\nsecond\r\n")
+            linux.joinpath("service.py").write_bytes(b"first\nsecond\n")
+            windows.joinpath("icon.png").write_bytes(b"binary\r\nbytes")
+            linux.joinpath("icon.png").write_bytes(b"binary\r\nbytes")
+            first, second = root / "windows.zip", root / "linux.zip"
+            safe_zip_tree(windows, first, "addon.id")
+            safe_zip_tree(linux, second, "addon.id")
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with zipfile.ZipFile(first) as archive:
+                self.assertEqual(archive.read("addon.id/service.py"), b"first\nsecond\n")
+                self.assertEqual(archive.read("addon.id/icon.png"), b"binary\r\nbytes")
 
     def test_latest_skin_artifact_is_selected_semantically(self):
         with tempfile.TemporaryDirectory() as name:
