@@ -71,6 +71,10 @@ class ReleaseTests(unittest.TestCase):
             windows.mkdir(); linux.mkdir()
             windows.joinpath("service.py").write_bytes(b"first\r\nsecond\r\n")
             linux.joinpath("service.py").write_bytes(b"first\nsecond\n")
+            windows.joinpath("Z-last-on-Windows.py").write_bytes(b"same\r\n")
+            linux.joinpath("Z-last-on-Windows.py").write_bytes(b"same\n")
+            windows.joinpath("a-first-on-Windows.py").write_bytes(b"same\r\n")
+            linux.joinpath("a-first-on-Windows.py").write_bytes(b"same\n")
             windows.joinpath("icon.png").write_bytes(b"binary\r\nbytes")
             linux.joinpath("icon.png").write_bytes(b"binary\r\nbytes")
             first, second = root / "windows.zip", root / "linux.zip"
@@ -78,6 +82,11 @@ class ReleaseTests(unittest.TestCase):
             safe_zip_tree(linux, second, "addon.id")
             self.assertEqual(first.read_bytes(), second.read_bytes())
             with zipfile.ZipFile(first) as archive:
+                self.assertTrue(all(info.create_system == 3 for info in archive.infolist()))
+                self.assertLess(
+                    archive.namelist().index("addon.id/Z-last-on-Windows.py"),
+                    archive.namelist().index("addon.id/a-first-on-Windows.py"),
+                )
                 self.assertEqual(archive.read("addon.id/service.py"), b"first\nsecond\n")
                 self.assertEqual(archive.read("addon.id/icon.png"), b"binary\r\nbytes")
 

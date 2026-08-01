@@ -134,11 +134,12 @@ def safe_zip_tree(
 ) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(destination, "w", compression=compression, compresslevel=9) as archive:
-        for file in sorted(source.rglob("*")):
+        for file in sorted(source.rglob("*"), key=lambda path: path.relative_to(source).as_posix()):
             if file.is_file() and "__pycache__" not in file.parts and file.suffix != ".pyc":
                 relative = file.relative_to(source)
                 arcname = Path(root_name, relative) if root_name else relative
                 info = zipfile.ZipInfo(str(arcname).replace("\\", "/"), date_time=(2020, 1, 1, 0, 0, 0))
+                info.create_system = 3
                 info.compress_type = compression
                 info.external_attr = 0o644 << 16
                 archive.writestr(info, portable_zip_bytes(file))
