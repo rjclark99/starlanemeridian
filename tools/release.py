@@ -126,15 +126,20 @@ def portable_zip_bytes(file: Path) -> bytes:
     return value
 
 
-def safe_zip_tree(source: Path, destination: Path, root_name: str | None = None) -> None:
+def safe_zip_tree(
+    source: Path,
+    destination: Path,
+    root_name: str | None = None,
+    compression: int = zipfile.ZIP_DEFLATED,
+) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    with zipfile.ZipFile(destination, "w", compression=compression, compresslevel=9) as archive:
         for file in sorted(source.rglob("*")):
             if file.is_file() and "__pycache__" not in file.parts and file.suffix != ".pyc":
                 relative = file.relative_to(source)
                 arcname = Path(root_name, relative) if root_name else relative
                 info = zipfile.ZipInfo(str(arcname).replace("\\", "/"), date_time=(2020, 1, 1, 0, 0, 0))
-                info.compress_type = zipfile.ZIP_DEFLATED
+                info.compress_type = compression
                 info.external_attr = 0o644 << 16
                 archive.writestr(info, portable_zip_bytes(file))
 
@@ -179,7 +184,8 @@ def build_kodi(
         addon_dir = output / "repository.kodisetup"
         addon_dir.mkdir(exist_ok=True)
         zip_path = addon_dir / f"repository.kodisetup-{version}.zip"
-        safe_zip_tree(staged, zip_path, "repository.kodisetup")
+        # Stored entries avoid zlib-version drift between Windows signing and Linux CI.
+        safe_zip_tree(staged, zip_path, "repository.kodisetup", zipfile.ZIP_STORED)
         write_sha256_sidecar(zip_path)
         shutil.copy2(staged / "icon.png", addon_dir / "icon.png") if (staged / "icon.png").exists() else None
 

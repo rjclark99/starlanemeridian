@@ -96,6 +96,18 @@ class ReleaseTests(unittest.TestCase):
             expected = (output / "addons.xml.sha256").read_text(encoding="ascii").strip()
             self.assertEqual(hashlib.sha256((output / "addons.xml").read_bytes()).hexdigest(), expected)
 
+    def test_bootstrap_archive_matches_signed_manifest(self):
+        with tempfile.TemporaryDirectory() as name:
+            output = Path(name) / "kodi"
+            build_kodi(
+                output,
+                "https://github.com/rjclark99/starlanemeridian/releases/latest/download",
+                "https://control.starlanemeridian.uk/v1/public/kodi",
+            )
+            document = json.loads((Path(__file__).resolve().parents[1] / "config" / "manifest.json").read_text(encoding="utf-8"))
+            archive = next((output / "repository.kodisetup").glob("repository.kodisetup-*.zip"))
+            self.assertEqual(hashlib.sha256(archive.read_bytes()).hexdigest(), document["bootstrap"]["sha256"])
+
     def test_kodi_repository_uses_routable_data_layout_and_zip_sidecars(self):
         import hashlib
         with tempfile.TemporaryDirectory() as name:
