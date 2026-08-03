@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-21T20:36:49.945949+00:00",
+  "checkedAt": "2026-08-03T10:52:13.752029+00:00",
   "reviewRequired": true,
   "warning": "Do not promote these candidates until package identity, compatibility, SHA-256, and signer certificate are independently verified.",
   "kodi": {
@@ -17,13 +17,13 @@
     }
   },
   "protonVpn": {
-    "version": "5.19.43.0",
-    "releaseUrl": "https://github.com/ProtonVPN/android-app/releases/tag/5.19.43.0",
+    "version": "5.19.61.0",
+    "releaseUrl": "https://github.com/ProtonVPN/android-app/releases/tag/5.19.61.0",
     "apkAssets": [
       {
-        "name": "ProtonVPN-5.19.43.0.605194300.-production-vanilla-direct-release.apk",
-        "url": "https://github.com/ProtonVPN/android-app/releases/download/5.19.43.0/ProtonVPN-5.19.43.0.605194300.-production-vanilla-direct-release.apk",
-        "sha256": "sha256:e5a0b80a6cfcdb86789de95b3f325fa0352c0b44249fc8222eddb854f511e8f0"
+        "name": "ProtonVPN-5.19.61.0.605196100.-production-vanilla-direct-release.apk",
+        "url": "https://github.com/ProtonVPN/android-app/releases/download/5.19.61.0/ProtonVPN-5.19.61.0.605196100.-production-vanilla-direct-release.apk",
+        "sha256": "sha256:568b0f05ae0411b932de2ac8bff96c5c2268e617b75f9194d0122a838517633a"
       }
     ]
   }
