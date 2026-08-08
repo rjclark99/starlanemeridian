@@ -80,6 +80,16 @@ manifest verification, and the unchanged provider package-lock hash pass locally
 Umbrella logo or background is present in those canonical assets. One fresh Linux draft
 remains the required proof.
 
+Run `31272824941` showed equal provider size but a different digest after canonical
+artwork, isolating the last variable to native filesystem path ordering. Commit
+`1de1fc3` sorts provider ZIP entries by their explicit POSIX archive names; the local
+provider now exactly reproduces the observed Linux digest
+`a81eb2bcdb10c97ebf53193753080cc4c917ece7ffcb3e920daac7a19830fb38`.
+It signs manifest `2026.08.41` with Bootstrap hash
+`72270e8c611e4686322f45ac7e9922089346b6d2c21f6812f7ab2d3119beb6bb`.
+Focused ordering, lock, signature, Bootstrap, and project-control checks pass. A clean
+GitHub run remains the final cross-host confirmation.
+
 The clean local source state includes the project-control rollout, bounded Home
 **Show more** terminal navigation, complete ordered provider/network discovery, local
 artwork fallbacks, Android one-run scope-bound consent and verified resume, and

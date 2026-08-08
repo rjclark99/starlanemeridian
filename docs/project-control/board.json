@@ -130,7 +130,7 @@
       "packet": "docs/project-control/active/acceptance.content-release-readiness-v1-task.json",
       "writer_paths": [],
       "history": ["proposed", "ready", "active", "blocked", "ready", "active", "blocked", "ready", "active"],
-      "summary": "Unpublished runs safely stopped before upload exposed the remaining host variables. Commit 2843f00 fixed .xsp/LICENSE inputs; run 31272444959 then isolated provider image encoding. Commit 5a41f22 uses four checked-in Starlane provider assets and passes focused lock/signature checks. One fresh Linux draft, publication approval, and device acceptance remain gated."
+      "summary": "Unpublished runs safely stopped before upload exposed each host variable. Commit 5a41f22 made provider artwork canonical; run 31272824941 then isolated native ZIP entry ordering. Commit 1de1fc3 uses POSIX-name ordering, reproduces the Linux digest exactly, and signs manifest 2026.08.41. One clean GitHub draft, publication approval, and device acceptance remain gated."
     },
     {
       "id": "ux.widget-image-audit-v1",

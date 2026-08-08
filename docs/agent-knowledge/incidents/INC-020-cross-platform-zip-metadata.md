@@ -52,3 +52,9 @@ approved Starlane provider images as release inputs, removes runtime provider-ar
 and removes the unrelated Android brand-asset generation step from the signed-release job.
 This keeps the locked provider hash unchanged while eliminating image-library and font
 rasterization from that package's build boundary.
+
+Run `31272824941` then produced the same provider byte count but a different digest,
+proving content equality with host-dependent ZIP member order. Commit `1de1fc3` sorts
+provider members by their POSIX archive names. The Windows build then exactly matched
+the Linux digest observed in that run. Archive order must never rely on native `Path`
+comparison when a digest is signed or locked.

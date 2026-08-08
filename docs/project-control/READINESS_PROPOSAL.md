@@ -53,6 +53,9 @@
 - Run `31272444959` accepted the skin but stopped on host-dependent provider image bytes.
   Commit `5a41f22` replaces runtime rendering with four checked-in, visually reviewed
   Starlane provider assets; focused tests and the unchanged package lock pass locally.
+- Run `31272824941` reduced the provider difference to ZIP member order. Commit
+  `1de1fc3` uses explicit POSIX-name ordering and reproduces that Linux digest exactly;
+  manifest `2026.08.41` and the resulting Bootstrap digest are signed and verified.
 
 ## Remaining gated acceptance
 
