@@ -175,14 +175,14 @@
       "id": "ops.panel-separation-v1",
       "title": "Separate owner device manager from the client repository",
       "priority": "high",
-      "status": "active",
+      "status": "complete",
       "task_class": "implement",
       "affected_state": "source",
       "role": "feature_implementer",
       "packet": null,
       "writer_paths": [".github/workflows", "docs", "tools/test_release.py", "README.md", "SECURITY.md", "AGENTS.md"],
-      "history": ["proposed", "ready", "active"],
-      "summary": "Standalone local-only panel is validated and running; client source, CI, release, documentation, and regression separation are in progress."
+      "history": ["proposed", "ready", "active", "review", "complete"],
+      "summary": "Standalone panel is validated, backed up, running loopback-only, and remote-free; the client tree and future release workflow exclude it, the candidate branch is pushed, and CI run 31264659093 passed."
     }
   ]
 }

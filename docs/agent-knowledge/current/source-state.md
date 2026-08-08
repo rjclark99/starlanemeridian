@@ -32,6 +32,13 @@ coupling and adds a regression that forbids owner-tooling release assets. Existi
 public releases remain separate public-release state and may still contain a legacy
 panel ZIP until an explicitly authorised publication mutation removes it.
 
+The source candidate is committed and pushed on `codex/fresh-install-candidate`.
+GitHub Actions run `31264659093` passed configuration/Kodi, control-service, and
+Android jobs. The candidate versions are Android `0.5.9`/code 10, Bootstrap `1.1.16`,
+private skin `2.2.22`, branded provider `6.7.81.3`, and offline-signed test manifest
+`2026.08.38`. No merge, draft release, publication, deployment, or device mutation
+has occurred.
+
 The working tree now contains the owner-requested, uncommitted project-control rollout
 and a product source candidate. The candidate adds bounded Home **Show more** terminal
 navigation, complete ordered provider/network discovery, local artwork fallbacks,
