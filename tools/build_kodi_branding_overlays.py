@@ -457,7 +457,10 @@ def package(addon_root: Path, output_root: Path) -> Path:
     version = ET.parse(addon_root / "addon.xml").getroot().attrib["version"]
     zip_path = output_root / f"{addon_root.name}-{version}.zip"
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as archive:
-        for path in sorted(addon_root.rglob("*")):
+        for path in sorted(
+            addon_root.rglob("*"),
+            key=lambda candidate: candidate.relative_to(addon_root.parent).as_posix(),
+        ):
             if path.is_file():
                 info = zipfile.ZipInfo(
                     path.relative_to(addon_root.parent).as_posix(),

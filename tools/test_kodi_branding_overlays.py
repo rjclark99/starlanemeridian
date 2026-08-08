@@ -39,6 +39,8 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                     b'<addon id="plugin.video.umbrella" version="6.7.81.3" />' + newline
                 )
                 addon.joinpath("service.py").write_bytes(b"first" + newline + b"second" + newline)
+                addon.joinpath("Z-last-on-Windows.py").write_bytes(b"same" + newline)
+                addon.joinpath("a-first-on-Windows.py").write_bytes(b"same" + newline)
                 addon.joinpath("icon.png").write_bytes(b"binary\r\nbytes")
                 output = root / f"{host}-output"
                 output.mkdir()
@@ -55,6 +57,10 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                 self.assertEqual(
                     archive.read("plugin.video.umbrella/icon.png"),
                     b"binary\r\nbytes",
+                )
+                self.assertLess(
+                    archive.namelist().index("plugin.video.umbrella/Z-last-on-Windows.py"),
+                    archive.namelist().index("plugin.video.umbrella/a-first-on-Windows.py"),
                 )
 
     def test_discovery_previews_are_complete_ordered_and_keep_full_lists(self):
