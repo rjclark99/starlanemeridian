@@ -96,23 +96,36 @@ data URL changes the Bootstrap bytes.
   local copy is at `build/addon-install/2026-07-26/plugin.video.umbrella-6.7.81.zip`,
   so no download is needed to rebuild.
 
+## Release status: verified draft, not published
+
+Manifest `2026.08.42` is signed and verified. Signed-release run `31280750978` built
+`v0.5.10-test` from `main` at `42a7cb2`. All 14 draft assets were downloaded and verified:
+LF-only inventory with no gaps or mismatches, correct sidecars, valid manifest signature,
+APK `0.5.10`/code 11 with the unchanged production signer, SBOM clean of owner tooling,
+and the provider archive byte-identical to the Windows-built candidate.
+
+The release is still `draft=true`. The public `latest/download` routes continue to serve
+`v0.5.9-test`.
+
 ## What to do next
 
-Everything an agent can do is done. The remaining steps need the owner.
-
-1. **Sign the manifest.** `config/manifest.json` signature value is deliberately blank
-   so a stale signature cannot be mistaken for a valid one. Run
-   `python tools/release.py sign config/manifest.json --private-key <offline key>`.
-   No agent may handle that key.
-2. **Publish as tag `v0.5.10-test`.** The provider URL is baked into Bootstrap's
-   `package-lock.json`, so any other tag breaks the chain.
-3. **Build the release APK** with the production keystore in CI. `assembleRelease` was
-   not run locally for that reason.
-4. **Re-run `python tools/verify_kodi_package_lock.py` after publication.** Before it,
-   the provider URL 404s by design.
-5. **Resume acceptance areas 4 to 7** on the device once the signed release is installed.
-6. Decide whether `minimumSetupAppVersion` 11 is right. It forces an APK update; the
+1. **Publish the `v0.5.10-test` draft** — owner action, still gated.
+2. **Then verify the public routes** and run
+   `python tools/verify_kodi_package_lock.py`. It cannot pass earlier: the lock's provider
+   URL points at `v0.5.10-test`, whose assets are not publicly downloadable while the
+   release is a draft.
+3. **Resume acceptance areas 4 to 7** on the device. Start with the Providers row: Amazon,
+   Apple TV+ and Hulu were the three imgur-hosted logos showing the region notice.
+4. Decide whether `minimumSetupAppVersion` 11 is right. It forces an APK update; the
    reason is that code 10's activator cannot talk to Kodi at all.
+5. Optional robustness fix: the lock's private-skin entry still points at the
+   `v0.5.9-test` tag. Those bytes are unchanged so it resolves correctly, but the current
+   release carries the same archive and repointing would remove the cross-release
+   dependency.
+
+`gh` is installed at `C:\Program Files\GitHub CLI\gh.exe` and authenticated for
+`rjclark99` with `workflow` scope. Existing shells may have a stale PATH; a new terminal
+finds it.
 
 ## Environment notes
 

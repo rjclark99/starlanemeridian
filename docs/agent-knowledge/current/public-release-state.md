@@ -10,6 +10,46 @@ supersedes: []
 
 # Public release state
 
+`v0.5.10-test` exists as an **unpublished draft** created by successful signed-release run
+`31280750978` from `main` at `42a7cb2`. It is not public: `draft=true`,
+`publishedAt=null`, and the `latest/download` routes still serve `v0.5.9-test`.
+Publication remains a separate owner-authorised action.
+
+All 14 draft assets were downloaded and independently verified on 8 August 2026. The
+LF-only `SHA256SUMS` names all 13 other assets exactly once with no duplicates, no
+missing uploads, no unlisted uploads, and every digest matching. All five `.sha256`
+sidecars are LF-only and correct. Manifest `2026.08.42` is test-stage, verifies against
+`config/manifest.pub`, declares minimum setup app code 11, and selects Bootstrap 1.1.17
+digest `f28f45bb29ef4c6d79cd6f8f5246806d5ae223a9bc5332c5c87e2726702be2b8`, which matches
+the uploaded archive. The SBOM is valid SPDX JSON with 185 packages and contains no
+owner-panel, vault, or private-runtime paths.
+
+The branded provider 6.7.81.4 digest is
+`512d2ba29e4ffc64ad62492f8a7a948ba55a2c16af9dff5ec75025c1c264aaf8`, **byte-identical to
+the Windows-built local candidate**, which clears the
+`incident.cross-platform-zip-metadata` risk for this archive with direct evidence. The
+private skin 2.2.22 digest is unchanged at
+`2342155764da3cbf8ad3d0cafa1df5c01629011f542f138f12ea316bbb798a2c`. Setup APK identity is
+package `app.kodisetup.tv`, versionName `0.5.10`, versionCode 11, Android signature scheme
+v2 only, and production signer
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`, matching every prior
+release.
+
+Two observations that are not defects. The published `manifest.json` is LF-only (7570
+bytes) while the repository copy is CRLF (7816 bytes) because `release.py sign` writes
+through Windows text mode; the two are identical after newline normalisation and both
+verify, since the signature covers canonical JSON rather than raw bytes. The production
+skin advanced to `skin.starlanemeridian` 1.3.0, built by CI from the reviewed Kodi source
+ZIP; it is published for rollback only and is deliberately absent from the signed package
+lock, so no hash contract covers it.
+
+Still unverified until publication: the `latest/download` routes, and
+`tools/verify_kodi_package_lock.py`, because the lock's provider URL points at
+`v0.5.10-test` whose assets are not publicly downloadable while the release is a draft.
+The lock's private-skin entry still points at the `v0.5.9-test` tag; those bytes are
+unchanged so it resolves and hashes correctly today, but the new release also carries the
+same archive and pointing at the current tag would remove the cross-release dependency.
+
 Owner-approved `v0.5.9-test` is the current GitHub **Latest** full release and was built
 by successful signed-release run `31273093709` from source `da26ba0`. It was first
 published as a pre-release and then promoted to Latest on 8 August 2026 with the owner's

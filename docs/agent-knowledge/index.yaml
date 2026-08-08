@@ -34,7 +34,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/public-release-state.md
-    summary: v0.5.9-test is the promoted GitHub Latest release; its 8 August fresh-device acceptance attempt failed and the four causes are fixed in source but unreleased.
+    summary: v0.5.9-test remains the public Latest release; a fully verified v0.5.10-test draft exists but is unpublished, so the latest routes and the network lock check are still outstanding.
     tags: [release, manifest, github]
     path_globs: [.github/workflows/**, config/**, tools/release.py]
     read_when: [publishing, release comparison, public route checks]
