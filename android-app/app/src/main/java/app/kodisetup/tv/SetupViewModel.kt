@@ -1,6 +1,7 @@
 package app.kodisetup.tv
 
 import android.app.Application
+import android.app.ActivityManager
 import android.content.Intent
 import android.content.Context
 import android.content.pm.PackageInstaller
@@ -13,9 +14,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.kodisetup.tv.install.PackageInstallManager
 import app.kodisetup.tv.install.BootstrapExporter
-import app.kodisetup.tv.install.KodiProfileConfigurator
+import app.kodisetup.tv.install.BootstrapAppliedVersionReader
+import app.kodisetup.tv.install.FixedBootstrapTransaction
+import app.kodisetup.tv.install.FixedBootstrapEligibility
 import app.kodisetup.tv.install.KodiRealDebridCredentials
 import app.kodisetup.tv.install.KodiRealDebridHandoff
+import app.kodisetup.tv.install.KodiLoopbackBootstrapActivator
+import app.kodisetup.tv.automation.AutomationConsentCoordinator
+import app.kodisetup.tv.automation.AutomationSecurityScope
+import app.kodisetup.tv.automation.AutomationScope
+import app.kodisetup.tv.automation.ConsentStatus
+import app.kodisetup.tv.automation.SharedPreferencesConsentStorage
 import app.kodisetup.tv.model.*
 import app.kodisetup.tv.net.Http
 import app.kodisetup.tv.net.ControlClient
@@ -32,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
@@ -63,7 +73,16 @@ data class SetupUiState(
     val debridExpiry: String? = null,
     val debridAuthExpiresAt: String? = null,
     val debridAuthCommandId: String? = null,
+    val consentGeneration: String? = null,
+    val consentScope: AutomationScope? = null,
+    val consentRequestId: String? = null,
+    val automationRunning: Boolean = false,
 )
+
+internal object BootstrapRecoveryPolicy {
+    fun shouldRetry(applied: Boolean, busy: Boolean, apiLevel: Int, strictConsent: Boolean, fixedEligibility: Boolean): Boolean =
+        !applied && !busy && apiLevel in 25..28 && strictConsent && fixedEligibility
+}
 
 class SetupViewModel(application: Application) : AndroidViewModel(application) {
     private val mutable = MutableStateFlow(SetupUiState())
@@ -74,10 +93,15 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
     private val devicePrefs = application.getSharedPreferences("device_pairing", Context.MODE_PRIVATE)
     private val installPrefs = application.getSharedPreferences("install_status", Context.MODE_PRIVATE)
     private val workflowPrefs = application.getSharedPreferences("setup_workflow", Context.MODE_PRIVATE)
+    private val consent = AutomationConsentCoordinator(
+        SharedPreferencesConsentStorage(application.getSharedPreferences("automation_consent", Context.MODE_PRIVATE)),
+        BuildConfig.VERSION_CODE,
+    )
     private val tokenVault = TokenVault(application)
     private val realDebrid = RealDebridClient(tokenVault)
     private val telemetry = DeviceTelemetry(application)
     private var installMonitor: Job? = null
+    private var bootstrapPreparation: Job? = null
 
     init {
         val restored = runCatching { SetupStep.valueOf(workflowPrefs.getString("step", SetupStep.WELCOME.name)!!) }.getOrDefault(SetupStep.WELCOME)
@@ -98,7 +122,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
 
     fun pair(code: String) = viewModelScope.launch(Dispatchers.IO) {
         update(busy = true, error = null, message = "Pairing this TV...", phase = SetupPhase.PAIRING, progress = 5)
-        runCatching { require(code.matches(Regex("^[0-9]{8}$"))) { "Enter the 8-digit code from the Windows portal" }; control.pair(code) }
+        runCatching { require(code.matches(Regex("^[0-9]{8}$"))) { "Enter the 8-digit owner-provided pairing code" }; control.pair(code) }
             .onSuccess { result ->
                 devicePrefs.edit().putString("device_id", result.deviceId).remove("device_token").apply()
                 tokenVault.put("control_token", result.token)
@@ -137,25 +161,64 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             }
             json.decodeFromJsonElement(SetupManifest.serializer(), selected)
         }.onSuccess { manifest ->
+            val restoredConsent = consent.current(AutomationSecurityScope.digest(manifest))
             val restored = state.value.step.takeUnless { it == SetupStep.WELCOME } ?: SetupStep.CONFIGURATION
             transition(restored, "Configuration ${manifest.configVersion} verified", manifest = manifest)
-            if (workflowPrefs.getBoolean("automatic", false)) advanceAutomatedWorkflow()
+            mutable.value = mutable.value.copy(
+                consentGeneration = restoredConsent?.takeIf { it.status == ConsentStatus.REQUESTED }?.generation,
+                consentScope = restoredConsent?.takeIf { it.status == ConsentStatus.REQUESTED }?.scope,
+                consentRequestId = restoredConsent?.takeIf { it.status == ConsentStatus.REQUESTED }?.requestId,
+                automationRunning = restoredConsent?.status == ConsentStatus.GRANTED && restoredConsent.scope == AutomationScope.STRICT_SETUP,
+            )
+            if (strictAutomationIsActive()) advanceAutomatedWorkflow()
+            else if (restoredConsent?.status == ConsentStatus.GRANTED &&
+                workflowPrefs.getString("handled_command_id", null) != restoredConsent.requestId
+            ) executeApprovedAction(restoredConsent.scope, restoredConsent.generation, restoredConsent.requestId)
         }
             .onFailure { update(busy = false, error = it.message ?: "Configuration failed", message = "Using no unverified configuration") }
     }
 
     fun startAutomatedSetup() {
-        workflowPrefs.edit().putBoolean("automatic", true).apply()
-        val startingStep = if (state.value.step == SetupStep.COMPLETE) SetupStep.CONFIGURATION else state.value.step
-        transition(startingStep, "Remote setup started")
-        if (state.value.manifest == null) loadConfiguration() else advanceAutomatedWorkflow()
+        requestLocalConsent(AutomationScope.STRICT_SETUP, "local-strict-setup")
+    }
+
+    fun grantAutomationConsent() {
+        val generation = state.value.consentGeneration ?: return
+        val requestId = state.value.consentRequestId
+        val securityScope = state.value.manifest?.let(AutomationSecurityScope::digest) ?: AutomationSecurityScope.UNVERIFIED
+        val granted = consent.grant(generation, securityScope) ?: return
+        mutable.value = mutable.value.copy(consentGeneration = null, consentScope = null, consentRequestId = null)
+        if (granted.scope == AutomationScope.STRICT_SETUP) {
+            workflowPrefs.edit().putBoolean("automatic", true).putString("automation_generation", granted.generation).apply()
+            mutable.value = mutable.value.copy(automationRunning = true)
+            val startingStep = if (state.value.step == SetupStep.COMPLETE) SetupStep.CONFIGURATION else state.value.step
+            transition(startingStep, "Locally approved setup started")
+            advanceAutomatedWorkflow()
+        } else executeApprovedAction(granted.scope, granted.generation, requestId)
+    }
+
+    fun cancelAutomationConsent() {
+        consent.invalidate()
+        mutable.value = mutable.value.copy(consentGeneration = null, consentScope = null, consentRequestId = null)
+        update(message = "Automated setup was not approved")
+    }
+
+    fun stopAutomatedSetup() {
+        consent.invalidate()
+        installMonitor?.cancel()
+        workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
+        mutable.value = mutable.value.copy(
+            busy = false, automationRunning = false, consentGeneration = null, consentScope = null,
+            consentRequestId = null, message = "Automated setup stopped; no further automated steps will run",
+        )
+        reportStatus()
     }
 
     fun installKodi() {
         val packageName = state.value.manifest?.kodi?.packageName
         if (packageName != null && isInstalled(packageName)) {
             transition(SetupStep.KODI, "Kodi is already installed")
-            if (workflowPrefs.getBoolean("automatic", false)) advanceAutomatedWorkflow()
+            if (strictAutomationIsActive()) advanceAutomatedWorkflow()
             return
         }
         installArtifact(state.value.manifest?.kodi?.architectures?.get(preferredAbi()), packageName, SetupStep.KODI)
@@ -165,7 +228,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         val app = state.value.manifest?.applications?.firstOrNull { it.id == "proton-vpn" } ?: return
         if (isInstalled(app.packageName)) {
             transition(SetupStep.PROTON, "Proton VPN is already installed")
-            if (workflowPrefs.getBoolean("automatic", false)) advanceAutomatedWorkflow()
+            if (strictAutomationIsActive()) advanceAutomatedWorkflow()
             return
         }
         val artifact = app.artifacts.firstOrNull { it.abi == preferredAbi() } ?: app.artifacts.firstOrNull { it.abi == null }
@@ -190,41 +253,120 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
     fun openProton() = installProton()
 
     fun continueToBootstrap() { transition(SetupStep.BOOTSTRAP, "Install the Kodi Setup Bootstrap ZIP from Downloads") }
-    fun prepareBootstrap() = viewModelScope.launch(Dispatchers.IO) {
+    fun prepareBootstrap() {
+        if (bootstrapPreparation?.isActive == true || state.value.busy) return
+        bootstrapPreparation = viewModelScope.launch(Dispatchers.IO) {
         if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             update(busy = false, error = "STORAGE_PERMISSION_REQUIRED", message = "Select Prepare Kodi bootstrap and allow storage access")
             return@launch
         }
         val bootstrap = state.value.manifest?.bootstrap ?: return@launch
-        update(busy = true, error = null, message = "Downloading and verifying the Kodi bootstrap...", phase = SetupPhase.DOWNLOADING_BOOTSTRAP, progress = 72)
+        val configVersion = state.value.manifest?.configVersion ?: return@launch
+        val strictGeneration = activeStrictGeneration()
+        val fixedAutomatic = FixedBootstrapEligibility.usesAutomaticPath(Build.VERSION.SDK_INT, strictGeneration != null)
+        if (!fixedAutomatic && workflowPrefs.getString("bootstrap_prepared_version", null) == configVersion) {
+            transition(SetupStep.BOOTSTRAP, "Bootstrap is already verified in Downloads. In Kodi, enable Unknown Sources, install repository.kodisetup.zip, and approve Bootstrap.")
+            return@launch
+        }
+        val expectedScope = state.value.manifest?.let(AutomationSecurityScope::digest) ?: return@launch
+        val resumeFixedActivation = fixedAutomatic &&
+            workflowPrefs.getBoolean("bootstrap_launch_pending", false) &&
+            workflowPrefs.getString("bootstrap_auto_installed_version", null) == configVersion
+        update(
+            busy = true,
+            error = null,
+            message = if (resumeFixedActivation) "Resuming verified Kodi bootstrap activation..." else "Downloading and verifying the Kodi bootstrap...",
+            phase = SetupPhase.DOWNLOADING_BOOTSTRAP,
+            progress = 72,
+        )
         runCatching {
+            if (resumeFixedActivation) {
+                revalidateManifestScope(expectedScope, bootstrap.url, bootstrap.sha256)
+                val activated = activateFixedBootstrap(requireNotNull(strictGeneration), expectedScope)
+                return@runCatching "Bootstrap activation resumed and ${if (activated) "enabled" else "confirmed"} through Kodi; approve its fixed setup prompt in Kodi"
+            }
             val file = File(getApplication<Application>().cacheDir, "packages/repository.kodisetup.zip")
             Http.download(bootstrap.url, file, 25L * 1024 * 1024)
             require(ManifestSecurity.sha256(file) == bootstrap.sha256) { "Bootstrap hash mismatch" }
-            val kodiPackage = state.value.manifest?.kodi?.packageName ?: "org.xbmc.kodi"
-            val unknownSourcesAutomated = if (Build.VERSION.SDK_INT < 29) {
-                @Suppress("DEPRECATION")
-                val externalRoot = Environment.getExternalStorageDirectory()
-                KodiProfileConfigurator(externalRoot).enableUnknownSources(kodiPackage)
-                true
+            require(strictGeneration == null || strictConsentStillValid(strictGeneration)) { "Automated setup was stopped" }
+            if (fixedAutomatic) {
+                revalidateManifestScope(expectedScope, bootstrap.url, bootstrap.sha256)
+                @Suppress("DEPRECATION") val root = Environment.getExternalStorageDirectory()
+                val result = FixedBootstrapTransaction(root).install(file, bootstrap.sha256) {
+                    requireFixedBootstrapGate(requireNotNull(strictGeneration), expectedScope)
+                }
+                workflowPrefs.edit().putBoolean("bootstrap_ready", true).putString("bootstrap_auto_installed_version", configVersion)
+                    .putBoolean("bootstrap_launch_pending", true).apply()
+                val activated = activateFixedBootstrap(requireNotNull(strictGeneration), expectedScope)
+                "Bootstrap ${result.version} installed atomically and ${if (activated) "enabled" else "already enabled"} through Kodi; approve its fixed setup prompt in Kodi"
             } else {
-                false
+                val location = BootstrapExporter(getApplication()).export(file, "repository.kodisetup.zip")
+                workflowPrefs.edit().putBoolean("bootstrap_ready", true).putString("bootstrap_prepared_version", configVersion).apply()
+                "In Kodi, enable Unknown Sources, install repository.kodisetup.zip from Downloads, and approve Bootstrap. Location: $location"
             }
-            BootstrapExporter(getApplication()).export(file, "repository.kodisetup.zip") to unknownSourcesAutomated
-        }.onSuccess { (location, unknownSourcesAutomated) ->
-            workflowPrefs.edit().putBoolean("bootstrap_ready", true).apply()
-            val instruction = if (unknownSourcesAutomated) {
-                "Kodi Unknown Sources was enabled for this required build. Open Kodi and install repository.kodisetup.zip from Downloads."
-            } else {
-                "Android restricts Kodi profile access on this device. In Kodi, enable Unknown Sources and install repository.kodisetup.zip from Downloads."
-            }
-            transition(SetupStep.BOOTSTRAP, "$instruction Location: $location")
+        }.onSuccess { instruction ->
+            transition(SetupStep.BOOTSTRAP, instruction)
         }
             .onFailure { update(busy = false, error = it.message ?: "Bootstrap preparation failed", message = "Bootstrap preparation did not complete") }
+        }
     }
+
+    private fun activateFixedBootstrap(strictGeneration: String, expectedScope: String): Boolean {
+        requireFixedBootstrapActivationGate(strictGeneration, expectedScope)
+        val intent = requireNotNull(getApplication<Application>().packageManager.getLaunchIntentForPackage(FIXED_KODI_PACKAGE)) {
+            "Kodi launch activity is unavailable"
+        }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        getApplication<Application>().startActivity(intent)
+        val activated = KodiLoopbackBootstrapActivator().activate {
+            bootstrapPreparation?.ensureActive()
+            requireFixedBootstrapActivationGate(strictGeneration, expectedScope)
+        }
+        requireFixedBootstrapActivationGate(strictGeneration, expectedScope)
+        getApplication<Application>().startActivity(intent)
+        workflowPrefs.edit().putBoolean("bootstrap_launch_pending", false).apply()
+        return activated
+    }
+
     fun storagePermissionDenied() = update(busy = false, error = "STORAGE_PERMISSION_DENIED", message = "Storage access is required to save the Kodi bootstrap ZIP")
-    fun continueToAccounts() { transition(SetupStep.ACCOUNT_LINK, "Link Real-Debrid with its official device authorization flow, or finish without linking") }
-    fun markComplete() { workflowPrefs.edit().putBoolean("automatic", false).apply(); transition(SetupStep.COMPLETE, "Core setup complete") }
+    fun checkBootstrapApplied() {
+        if (state.value.busy) return
+        val expected = state.value.manifest?.configVersion ?: return
+        val observed = if (Build.VERSION.SDK_INT < 29) runCatching {
+            @Suppress("DEPRECATION") val root = Environment.getExternalStorageDirectory()
+            BootstrapAppliedVersionReader(root).read(state.value.manifest?.kodi?.packageName ?: "org.xbmc.kodi")
+        }.getOrNull() else null
+        val applied = observed == expected
+        if (applied) {
+            workflowPrefs.edit().putString("bootstrap_applied_version", observed).apply()
+            consent.invalidate()
+            workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
+            mutable.value = mutable.value.copy(automationRunning = false)
+            transition(SetupStep.ACCOUNT_LINK, "Bootstrap $observed was observed as applied. Link Real-Debrid or finish.")
+        } else {
+            val generation = activeStrictGeneration()
+            val expectedScope = state.value.manifest?.let(AutomationSecurityScope::digest)
+            val eligible = generation != null && expectedScope != null && runCatching {
+                requireFixedBootstrapGate(generation, expectedScope)
+            }.isSuccess
+            if (BootstrapRecoveryPolicy.shouldRetry(applied, state.value.busy, Build.VERSION.SDK_INT, generation != null, eligible)) {
+                update(message = "Bootstrap is not yet applied; retrying the fixed loopback activation")
+                prepareBootstrap()
+            } else {
+                update(message = "Waiting for Kodi Bootstrap to report applied configuration $expected. Complete the visible Kodi confirmations, then check again.")
+            }
+        }
+    }
+    fun markComplete() {
+        val expected = state.value.manifest?.configVersion
+        if (expected == null || workflowPrefs.getString("bootstrap_applied_version", null) != expected) {
+            update(error = "BOOTSTRAP_NOT_OBSERVED", message = "Setup cannot complete until Bootstrap reports the verified configuration as applied")
+            return
+        }
+        consent.invalidate()
+        workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
+        mutable.value = mutable.value.copy(automationRunning = false)
+        transition(SetupStep.COMPLETE, "Core setup complete from observed Bootstrap state")
+    }
     fun beginRealDebrid(commandId: String? = null) = viewModelScope.launch(Dispatchers.IO) {
         val openSourceClient = "X245A4XAIBGVM"
         update(busy = true, error = null, message = "Requesting a Real-Debrid device code...", phase = SetupPhase.REQUESTING_REAL_DEBRID_AUTH, progress = 88)
@@ -288,12 +430,12 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             workflowPrefs.edit().remove("proton_store_opened").apply()
             transition(SetupStep.PROTON, "Proton VPN installed successfully")
         }
-        if (workflowPrefs.getBoolean("automatic", false)) advanceAutomatedWorkflow()
+        if (strictAutomationIsActive()) advanceAutomatedWorkflow()
     }
 
     fun openKodi() {
-        val packageName = state.value.manifest?.kodi?.packageName ?: "org.xbmc.kodi"
-        val intent = getApplication<Application>().packageManager.getLaunchIntentForPackage(packageName)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val packageName = FIXED_KODI_PACKAGE
+        val intent = getApplication<Application>().packageManager.getLaunchIntentForPackage(FIXED_KODI_PACKAGE)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (intent == null) update(error = "KODI_NOT_INSTALLED", message = "Kodi is not installed")
         else runCatching { getApplication<Application>().startActivity(intent) }
             .onSuccess { update(error = null, message = "Kodi opened for bootstrap confirmation", phase = SetupPhase.WAITING_KODI_BOOTSTRAP, progress = 84) }
@@ -314,6 +456,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun installArtifact(artifact: Artifact?, packageName: String?, target: SetupStep) = viewModelScope.launch(Dispatchers.IO) {
         if (artifact == null || packageName == null) { update(error = "No compatible package configured", message = "Installation cannot continue"); return@launch }
+        val strictGeneration = activeStrictGeneration()
         if (workflowPrefs.getString("pending_install_package", null) == packageName) {
             update(busy = false, error = null, message = "Waiting for the Android package installer to finish")
             monitorInstall(packageName, target)
@@ -329,6 +472,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             val archive = requireNotNull(getApplication<Application>().packageManager.getPackageArchiveInfo(file.absolutePath, 0)) { "Downloaded file is not an APK" }
             require(archive.packageName == packageName) { "Package identity mismatch" }
             require(ManifestSecurity.archiveSignerSha256(getApplication(), file) == artifact.signerSha256) { "Package signer mismatch" }
+            require(strictGeneration == null || strictConsentStillValid(strictGeneration)) { "Automated setup was stopped" }
             installPrefs.edit().remove("$packageName.status").remove("$packageName.message").apply()
             workflowPrefs.edit().putString("pending_install_package", packageName).putString("pending_install_target", target.name).apply()
             installer.install(file, packageName)
@@ -351,7 +495,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
                 PackageInstaller.STATUS_SUCCESS -> {
                     clearPendingInstall()
                     transition(target, "$packageName installed successfully")
-                    if (workflowPrefs.getBoolean("automatic", false)) advanceAutomatedWorkflow()
+                    if (strictAutomationIsActive()) advanceAutomatedWorkflow()
                     return@launch
                 }
                 else -> {
@@ -402,7 +546,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             PackageInstaller.STATUS_SUCCESS -> {
                 clearPendingInstall()
                 transition(target, "$packageName installed successfully")
-                if (workflowPrefs.getBoolean("automatic", false)) advanceAutomatedWorkflow()
+                if (strictAutomationIsActive()) advanceAutomatedWorkflow()
             }
             Int.MIN_VALUE, PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 update(busy = false, error = null, message = "Waiting for the Android package installer to finish")
@@ -443,19 +587,93 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         val id = devicePrefs.getString("device_id", null) ?: return
         val token = tokenVault.get("control_token") ?: return
         runCatching { control.commands(id, token).commands }.getOrDefault(emptyList()).forEach { command ->
+            if (workflowPrefs.getString("handled_command_id", null) == command.id) return@forEach
             when (command.kind) {
-                "START_SETUP" -> startAutomatedSetup()
-                "INSTALL_KODI" -> installKodi()
-                "INSTALL_PROTON" -> installProton()
-                "PREPARE_BOOTSTRAP" -> prepareBootstrap()
-                "OPEN_KODI" -> openKodi()
-                "BEGIN_REAL_DEBRID_AUTH" -> beginRealDebrid(command.id)
-                "SYNC_CONFIG" -> loadConfiguration()
-                "RETRY_CURRENT_STEP", "RETRY_STEP" -> retryCurrentStep()
+                "START_SETUP" -> requestLocalConsent(AutomationScope.STRICT_SETUP, command.id)
+                "INSTALL_KODI" -> requestLocalConsent(AutomationScope.INSTALL_KODI, command.id)
+                "INSTALL_PROTON" -> requestLocalConsent(AutomationScope.INSTALL_PROTON, command.id)
+                "PREPARE_BOOTSTRAP" -> requestLocalConsent(AutomationScope.PREPARE_BOOTSTRAP, command.id)
+                "OPEN_KODI" -> requestLocalConsent(AutomationScope.OPEN_KODI, command.id)
+                "BEGIN_REAL_DEBRID_AUTH" -> requestLocalConsent(AutomationScope.BEGIN_REAL_DEBRID_AUTH, command.id)
+                "SYNC_CONFIG" -> requestLocalConsent(AutomationScope.SYNC_CONFIG, command.id)
+                "RETRY_CURRENT_STEP", "RETRY_STEP" -> requestLocalConsent(AutomationScope.RETRY_CURRENT_STEP, command.id)
                 "OPEN_AUTHORIZATION" -> transition(SetupStep.ACCOUNT_LINK, "Complete authorization on the official provider screen")
                 "REQUEST_DIAGNOSTICS" -> update(message = "Diagnostics were requested. Nothing will be sent without your confirmation.")
             }
         }
+    }
+
+    private fun requestLocalConsent(scope: AutomationScope, requestId: String) {
+        val securityScope = state.value.manifest?.let(AutomationSecurityScope::digest) ?: AutomationSecurityScope.UNVERIFIED
+        val requested = consent.request(scope, requestId, securityScope)
+        mutable.value = mutable.value.copy(
+            busy = false,
+            consentGeneration = requested.generation,
+            consentScope = requested.scope,
+            consentRequestId = requested.requestId,
+            message = "Local approval is required before automated setup can act",
+        )
+        reportStatus()
+    }
+
+    private fun executeApprovedAction(scope: AutomationScope, generation: String, requestId: String?) {
+        val securityScope = state.value.manifest?.let(AutomationSecurityScope::digest) ?: AutomationSecurityScope.UNVERIFIED
+        if (!consent.isGranted(scope, generation, securityScope)) return
+        requestId?.let { workflowPrefs.edit().putString("handled_command_id", it).apply() }
+        when (scope) {
+            AutomationScope.STRICT_SETUP -> Unit
+            AutomationScope.INSTALL_KODI -> installKodi()
+            AutomationScope.INSTALL_PROTON -> installProton()
+            AutomationScope.PREPARE_BOOTSTRAP -> prepareBootstrap()
+            AutomationScope.OPEN_KODI -> openKodi()
+            AutomationScope.BEGIN_REAL_DEBRID_AUTH -> beginRealDebrid()
+            AutomationScope.SYNC_CONFIG -> loadConfiguration()
+            AutomationScope.RETRY_CURRENT_STEP -> retryCurrentStep()
+        }
+    }
+
+    private fun activeStrictGeneration(): String? =
+        workflowPrefs.getString("automation_generation", null)?.takeIf { strictConsentStillValid(it) }
+
+    private fun strictConsentStillValid(generation: String): Boolean {
+        val securityScope = state.value.manifest?.let(AutomationSecurityScope::digest) ?: return false
+        return consent.isGranted(AutomationScope.STRICT_SETUP, generation, securityScope)
+    }
+
+    private fun strictAutomationIsActive(): Boolean {
+        if (!workflowPrefs.getBoolean("automatic", false)) return false
+        val generation = workflowPrefs.getString("automation_generation", null) ?: return false
+        val active = strictConsentStillValid(generation)
+        if (!active) {
+            workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
+            mutable.value = mutable.value.copy(automationRunning = false)
+        }
+        return active
+    }
+    private fun requireFixedBootstrapGate(generation: String, expectedScope: String) {
+        val permission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        val installed = state.value.manifest?.kodi?.packageName == FIXED_KODI_PACKAGE && isInstalled(FIXED_KODI_PACKAGE)
+        require(state.value.manifest?.let(AutomationSecurityScope::digest) == expectedScope) { "Verified manifest scope changed" }
+        require(consent.isGranted(AutomationScope.STRICT_SETUP, generation, expectedScope)) { "Local setup consent is no longer current" }
+        val processes = (getApplication<Application>().getSystemService(ActivityManager::class.java)).runningAppProcesses
+        val active = processes?.any { process -> process.processName == FIXED_KODI_PACKAGE || process.pkgList?.contains(FIXED_KODI_PACKAGE) == true } == true
+        FixedBootstrapEligibility.requireEligible(Build.VERSION.SDK_INT, true, permission, installed, processes != null, active)
+    }
+
+    private fun requireFixedBootstrapActivationGate(generation: String, expectedScope: String) {
+        require(Build.VERSION.SDK_INT in 25..28) { "Fixed Bootstrap activation is unavailable" }
+        require(state.value.manifest?.kodi?.packageName == FIXED_KODI_PACKAGE && isInstalled(FIXED_KODI_PACKAGE)) { "Official Kodi is unavailable" }
+        require(state.value.manifest?.let(AutomationSecurityScope::digest) == expectedScope) { "Verified manifest scope changed" }
+        require(consent.isGranted(AutomationScope.STRICT_SETUP, generation, expectedScope)) { "Local setup consent is no longer current" }
+    }
+
+    private fun revalidateManifestScope(expectedScope: String, expectedUrl: String, expectedHash: String) {
+        val cache = File(getApplication<Application>().filesDir, "last-verified-manifest.json")
+        require(cache.isFile) { "Verified manifest cache is unavailable" }
+        val verified = ManifestSecurity.verify(cache.readText(), BuildConfig.MANIFEST_PUBLIC_KEY, BuildConfig.VERSION_CODE)
+        val manifest = json.decodeFromJsonElement(SetupManifest.serializer(), verified)
+        require(AutomationSecurityScope.digest(manifest) == expectedScope) { "Verified manifest security scope changed" }
+        require(manifest.bootstrap.url == expectedUrl && manifest.bootstrap.sha256 == expectedHash) { "Bootstrap selection changed" }
     }
     private fun preferredAbi() = if (Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }) "arm64-v8a" else "armeabi-v7a"
     private fun isAmazonDevice() = Build.MANUFACTURER.equals("Amazon", ignoreCase = true)
@@ -473,4 +691,6 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }.format(Date(System.currentTimeMillis() + seconds * 1000L))
+
+    private companion object { const val FIXED_KODI_PACKAGE = "org.xbmc.kodi" }
 }

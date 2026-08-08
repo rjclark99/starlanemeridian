@@ -19,7 +19,7 @@ object RealDebridAuthorization {
         require(userCode.matches(code.userCode)) { "Real-Debrid returned an unexpected device code" }
 
         // Real-Debrid's optional direct URL can use a broader /authorize flow. The
-        // remote portal may relay only the official device page and short-lived code.
+        // The control service may relay only the official device page and short-lived code.
         return "https://real-debrid.com/device?user_code=${code.userCode}"
     }
 }

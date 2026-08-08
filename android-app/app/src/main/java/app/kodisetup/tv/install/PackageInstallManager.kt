@@ -20,7 +20,10 @@ class PackageInstallManager(private val context: Context) {
 
     fun install(apk: File, expectedPackage: String) {
         require(canRequestInstalls()) { "Install unknown apps permission is required" }
-        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply { setAppPackageName(expectedPackage) }
+        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
+            setAppPackageName(expectedPackage)
+            if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)
+        }
         val installer = context.packageManager.packageInstaller
         val sessionId = installer.createSession(params)
         installer.openSession(sessionId).use { session ->
