@@ -32,12 +32,11 @@ coupling and adds a regression that forbids owner-tooling release assets. Existi
 public releases remain separate public-release state and may still contain a legacy
 panel ZIP until an explicitly authorised publication mutation removes it.
 
-The product source candidate was committed at `fcbec9c`; checksum-inventory correction
-and evidence commit `7d56f57` is the current verified GitHub `main`. GitHub Actions run
-`31270686136` passed configuration/Kodi, control-service, and Android jobs for that
-exact main commit. The candidate
+The product source candidate was committed at `fcbec9c`; GitHub `main` advanced through
+reproducibility evidence commit `5691da3`. GitHub Actions run `31271671055` passed
+configuration/Kodi, control-service, and Android jobs for that exact main commit. The candidate
 versions are Android `0.5.9`/code 10, Bootstrap `1.1.16`, private skin `2.2.22`,
-branded provider `6.7.81.3`, and offline-signed test manifest `2026.08.39`. No draft
+branded provider `6.7.81.3`, and offline-signed test manifest `2026.08.40`. No draft
 publication, deployment, or new device acceptance has occurred.
 
 The owner-approved signed-release run `31270299401` created an unpublished
@@ -59,7 +58,19 @@ text for those locked archives, adds a workflow pre-upload package-lock gate, up
 their hashes, and re-signs configuration `2026.08.39` for deterministic Bootstrap hash
 `728fd821b0cfffe2c47601ce6b90d3af242b1a68798c563c9fcb0efa85384d51`.
 Two independent local builds matched byte-for-byte; all 90 Python/Kodi tests passed.
-This correction is not yet on GitHub `main`; the draft must not be published or used.
+
+Signed-release run `31271814880` then proved that two more host inputs were not yet
+canonical: 172 `.xsp` playlists plus the extensionless licence retained Windows CRLF,
+and branded artwork selected host system fonts. The new pre-upload gate stopped the run
+before Android signing or asset upload. Commit `2843f00` normalizes only the identified
+text inputs, renders with the already bundled Starlane fonts, updates the locked skin
+hash to `2342155764da3cbf8ad3d0cafa1df5c01629011f542f138f12ea316bbb798a2c`
+and provider hash to `0278683f400c4f71c529dded83a8c13144b12e2aa99f48005b38d9d160d54279`,
+and signs configuration `2026.08.40` for Bootstrap hash
+`c40ca4675fa2e4bcb7959edb49c567f2e1ea676653a780882decdb948c40d64d`.
+The local package gate, signature verification, 90 unaffected tests, and the corrected
+Bootstrap regression pass. A new Linux draft remains required; no existing draft is safe
+to publish or use.
 
 The clean local source state includes the project-control rollout, bounded Home
 **Show more** terminal navigation, complete ordered provider/network discovery, local

@@ -18,9 +18,9 @@
 
 ## Validation completed
 
-- GitHub main `7d56f57` passed GitHub Actions run `31270686136` across
+- GitHub main `5691da3` passed GitHub Actions run `31271671055` across
   configuration/Kodi, control-service, and Android jobs.
-- The offline signature on local manifest `2026.08.39` verifies against the checked-in
+- The offline signature on local manifest `2026.08.40` verifies against the checked-in
   public key, and its Bootstrap digest matches deterministic Bootstrap 1.1.16 bytes.
 - Project-control schemas, authority gates, release regressions, package-lock checks,
   Python compilation, Kodi tooling, Android unit tests, and Android lint pass.
@@ -45,6 +45,11 @@
   packages, adds a mandatory pre-upload lock check, updates the signed hashes, and
   re-signs configuration `2026.08.39`. Two builds matched byte-for-byte and all 90
   Python/Kodi tests passed.
+- Run `31271814880` was then stopped before upload because `.xsp`/`LICENSE` line endings
+  and host-selected artwork fonts still differed on Linux. Commit `2843f00` fixes only
+  those inputs, updates the skin/provider locks, and signs manifest `2026.08.40`.
+  Local lock, signature, and corrected Bootstrap checks pass; one fresh Linux draft is
+  the remaining cross-host proof.
 
 ## Remaining gated acceptance
 
@@ -54,6 +59,6 @@ focused/unfocused terminal cards, provider/network order, failed art, exact dire
 opening, consent cancellation, installer denial, Stop, process restart, Kodi warnings,
 Bootstrap decline/revoke/scope change, observed completion, and skin rollback.
 
-The candidate manifest is offline-signed and the reproducibility correction is local.
+The candidate manifest is offline-signed and the final portability correction is local.
 GitHub main update, draft replacement, publication, deployment, and fresh-device
 acceptance remain separately gated.

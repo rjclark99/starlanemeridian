@@ -36,3 +36,12 @@ text files to LF, pins archive ordering and Unix metadata, and adds a workflow c
 that compares built assets with the package lock before upload. Two independent local
 builds matched exactly. Any package whose SHA-256 is part of a signed lock must use a
 cross-host byte-reproducible archive format; sidecar agreement alone is insufficient.
+
+The next Linux run, `31271814880`, was stopped by that new gate before upload. Its exact
+size delta showed that the private skin also contained `.xsp` smart playlists and an
+extensionless `LICENSE` whose CRLF bytes were not yet canonicalized. Provider artwork
+also selected Segoe UI on Windows but Pillow's fallback font on Linux. Commit `2843f00`
+adds only those missing text classes and switches both artwork generators to the existing
+bundled Starlane fonts. The resulting local skin byte count and digest exactly match the
+Linux run; the provider and Bootstrap locks were regenerated and manifest `2026.08.40`
+was signed. Cross-host proof still requires one fresh Linux draft run.
