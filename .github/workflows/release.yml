@@ -22,7 +22,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.13" }
       - run: pip install -r tools/requirements.txt
-      - run: python tools/build_brand_assets.py
       - name: Prepare signing material
         env:
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

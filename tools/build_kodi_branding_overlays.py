@@ -21,13 +21,9 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
-
-
 ROOT = Path(__file__).resolve().parents[1]
 BRAND = ROOT / "assets" / "branding"
-EMBLEM = BRAND / "starlane-movies-emblem-v2.png"
-BACKGROUND = BRAND / "starlane-movies-home-1920x1080.jpg"
+CANONICAL_PROVIDER_ARTWORK = BRAND / "provider-overlay"
 MINT = "ff67e8c4"
 VISIBLE_BRAND = re.compile(r"(?<![A-Za-z0-9_])(?:Umbrella|UMBRELLA)(?![A-Za-z0-9_])")
 PROVIDER_ARTWORK_THEME = "starlane movies"
@@ -37,8 +33,6 @@ PORTABLE_TEXT_SUFFIXES = frozenset({
     ".css", ".html", ".ini", ".js", ".json", ".md", ".po", ".properties",
     ".py", ".txt", ".xml",
 })
-REGULAR_FONT = ROOT / "kodi" / "skin.starlane.movies" / "fonts" / "Regular-new.ttf"
-BOLD_FONT = ROOT / "kodi" / "skin.starlane.movies" / "fonts" / "Bold-new.ttf"
 
 
 @dataclass(frozen=True)
@@ -115,70 +109,6 @@ UMBRELLA_PYTHON_VISIBLE_REPLACEMENTS = {
         "kwargs.get('heading','Umbrella')": "kwargs.get('heading','Starlane Movies')",
     },
 }
-
-
-def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    candidate = BOLD_FONT if bold else REGULAR_FONT
-    if not candidate.is_file():
-        raise FileNotFoundError(f"Required bundled brand font is missing: {candidate}")
-    return ImageFont.truetype(str(candidate), size)
-
-
-def contain(image: Image.Image, size: tuple[int, int]) -> Image.Image:
-    clone = image.copy()
-    clone.thumbnail(size, Image.Resampling.LANCZOS)
-    return clone
-
-
-def make_icon(subtitle: str, size: int = 512) -> Image.Image:
-    result = Image.new("RGBA", (size, size), "#050B14")
-    emblem = contain(Image.open(EMBLEM).convert("RGBA"), (round(size * 0.58), round(size * 0.58)))
-    result.alpha_composite(emblem, ((size - emblem.width) // 2, round(size * 0.06)))
-    draw = ImageDraw.Draw(result)
-    draw.text(
-        (size // 2, round(size * 0.69)),
-        "STARLANE MOVIES",
-        anchor="mm",
-        font=font(round(size * 0.064), True),
-        fill="#F4FAFF",
-    )
-    draw.line(
-        (round(size * 0.22), round(size * 0.77), round(size * 0.78), round(size * 0.77)),
-        fill="#67E8C4",
-        width=max(2, round(size * 0.006)),
-    )
-    draw.text(
-        (size // 2, round(size * 0.84)),
-        subtitle,
-        anchor="mm",
-        font=font(round(size * 0.055), True),
-        fill="#91A8C0",
-    )
-    return result
-
-
-def make_fanart(subtitle: str) -> Image.Image:
-    result = Image.open(BACKGROUND).convert("RGBA")
-    result.alpha_composite(Image.new("RGBA", result.size, (5, 11, 20, 70)))
-    emblem = contain(Image.open(EMBLEM).convert("RGBA"), (250, 250))
-    result.alpha_composite(emblem, (110, 120))
-    draw = ImageDraw.Draw(result)
-    draw.text((390, 170), "STARLANE MOVIES", font=font(56, True), fill="#F4FAFF")
-    draw.text((392, 245), subtitle, font=font(38, True), fill="#67E8C4")
-    draw.line((392, 310, 860, 310), fill="#67E8C4", width=4)
-    draw.text((392, 330), "YOUR MEDIA. ON COURSE.", font=font(22), fill="#91A8C0")
-    return result.convert("RGB")
-
-
-def make_banner(subtitle: str) -> Image.Image:
-    result = Image.new("RGBA", (758, 140), "#050B14")
-    emblem = contain(Image.open(EMBLEM).convert("RGBA"), (116, 116))
-    result.alpha_composite(emblem, (18, 12))
-    draw = ImageDraw.Draw(result)
-    draw.text((160, 29), "STARLANE MOVIES", font=font(36, True), fill="#F4FAFF")
-    draw.text((162, 78), subtitle, font=font(25, True), fill="#67E8C4")
-    draw.line((162, 114, 700, 114), fill="#67E8C4", width=3)
-    return result
 
 
 def replace_human_brand(text: str, addon: AddonBrand) -> str:
@@ -418,9 +348,10 @@ def prepare_artwork_theme(addon_root: Path, addon: AddonBrand) -> None:
 
 
 def replace_artwork(addon_root: Path, addon: AddonBrand) -> None:
-    icon = make_icon(addon.subtitle)
-    fanart = make_fanart(addon.subtitle)
-    banner = make_banner(addon.subtitle)
+    artwork = {
+        name: (CANONICAL_PROVIDER_ARTWORK / name).read_bytes()
+        for name in ("icon.png", "fanart.jpg", "banner.png", "circle.png")
+    }
     icon_targets = [
         addon_root / "icon.png",
         addon_root / "resources" / "artwork" / "icon.png",
@@ -434,13 +365,13 @@ def replace_artwork(addon_root: Path, addon: AddonBrand) -> None:
     ]
     for target in icon_targets:
         if target.is_file():
-            icon.save(target, optimize=True)
+            target.write_bytes(artwork["icon.png"])
     for target in fanart_targets:
         if target.is_file():
-            fanart.save(target, quality=92, optimize=True)
+            target.write_bytes(artwork["fanart.jpg"])
     banner_target = addon_root / "resources" / "artwork" / PROVIDER_ARTWORK_THEME / "banner.png"
     if banner_target.is_file():
-        banner.save(banner_target, optimize=True)
+        banner_target.write_bytes(artwork["banner.png"])
     circle_target = (
         addon_root
         / "resources"
@@ -451,10 +382,7 @@ def replace_artwork(addon_root: Path, addon: AddonBrand) -> None:
         / "umbrellacircle.png"
     )
     if circle_target.is_file():
-        circle = contain(Image.open(EMBLEM).convert("RGBA"), (54, 54))
-        canvas = Image.new("RGBA", (60, 60))
-        canvas.alpha_composite(circle, ((60 - circle.width) // 2, (60 - circle.height) // 2))
-        canvas.save(circle_target, optimize=True)
+        circle_target.write_bytes(artwork["circle.png"])
 
 
 def preserve_upstream_records(addon_root: Path, addon: AddonBrand) -> None:

@@ -11,8 +11,7 @@ from PIL import Image
 
 from tools.build_kodi_branding_overlays import (
     ADDONS,
-    BOLD_FONT,
-    REGULAR_FONT,
+    CANONICAL_PROVIDER_ARTWORK,
     build,
     build_from_archive,
     package,
@@ -23,11 +22,11 @@ from tools.kodi_texture_cache import matching_rows
 
 
 class KodiBrandingOverlayTests(unittest.TestCase):
-    def test_brand_art_uses_bundled_fonts(self):
-        self.assertTrue(REGULAR_FONT.is_file())
-        self.assertTrue(BOLD_FONT.is_file())
-        self.assertTrue(REGULAR_FONT.is_relative_to(Path(__file__).resolve().parents[1]))
-        self.assertTrue(BOLD_FONT.is_relative_to(Path(__file__).resolve().parents[1]))
+    def test_provider_artwork_is_checked_in_release_input(self):
+        for name in ("icon.png", "fanart.jpg", "banner.png", "circle.png"):
+            artwork = CANONICAL_PROVIDER_ARTWORK / name
+            self.assertTrue(artwork.is_file())
+            self.assertGreater(artwork.stat().st_size, 100)
 
     def test_package_is_cross_platform_and_uses_stored_entries(self):
         with tempfile.TemporaryDirectory() as temp:

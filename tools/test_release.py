@@ -32,6 +32,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("cp config/manifest.json artifacts/manifest.json", workflow)
         self.assertIn("release.py checksums", workflow)
         self.assertIn("verify_kodi_package_lock.py --local-assets", workflow)
+        self.assertNotIn("python tools/build_brand_assets.py", workflow)
         self.assertNotIn("find artifacts -type f", workflow)
         self.assertIn("artifacts/manifest.json", workflow)
         self.assertFalse((root / "admin-portal").exists())
