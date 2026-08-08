@@ -51,9 +51,10 @@ jobs:
           CONTROL_API_URL: ${{ secrets.CONTROL_API_URL }}
         run: gradle :app:assembleRelease -PreleaseStoreFile=../.secrets/release.jks -PreleaseStorePassword="$STORE_PASSWORD" -PreleaseKeyAlias="$KEY_ALIAS" -PreleaseKeyPassword="$KEY_PASSWORD" -PmanifestUrl="$MANIFEST_URL" -PmanifestPublicKey="$MANIFEST_PUBLIC_KEY" -PcontrolApiUrl="$CONTROL_API_URL"
       - run: cp android-app/app/build/outputs/apk/release/app-release.apk artifacts/setup.apk
+      - run: cp config/manifest.json artifacts/manifest.json
       - uses: anchore/sbom-action@v0
         with: { path: ".", output-file: "artifacts/sbom.spdx.json", format: "spdx-json" }
-      - run: find artifacts -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/SHA256SUMS
+      - run: python tools/release.py checksums --artifacts artifacts --output artifacts/SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
@@ -63,4 +64,4 @@ jobs:
             artifacts/SHA256SUMS
             artifacts/sbom.spdx.json
             artifacts/kodi/**/*
-            config/manifest.json
+            artifacts/manifest.json

@@ -18,6 +18,7 @@ from release import (
     latest_skin_zip,
     safe_zip_tree,
     verify_manifest,
+    write_release_checksums,
 )
 
 
@@ -28,12 +29,60 @@ class ReleaseTests(unittest.TestCase):
         for forbidden in ("admin-portal", "KodiSetup.Admin", "Admin-win", "households.vault"):
             self.assertNotIn(forbidden, workflow)
         self.assertIn("draft: true", workflow)
+        self.assertIn("cp config/manifest.json artifacts/manifest.json", workflow)
+        self.assertIn("release.py checksums", workflow)
+        self.assertNotIn("find artifacts -type f", workflow)
+        self.assertIn("artifacts/manifest.json", workflow)
         self.assertFalse((root / "admin-portal").exists())
         self.assertFalse((root / "admin-portal.tests").exists())
         self.assertFalse((root / "tools" / "start_admin_portal.ps1").exists())
         owner_guide = (root / "docs" / "OWNER_SETUP_GUIDE.md").read_text(encoding="utf-8")
         self.assertNotIn("repository.kodisetup-1.1.0.zip", owner_guide)
         self.assertIn("repository.kodisetup-1.1.16.zip", owner_guide)
+
+    def test_release_checksum_inventory_matches_only_uploaded_assets(self):
+        with tempfile.TemporaryDirectory() as name:
+            artifacts = Path(name) / "artifacts"
+            kodi = artifacts / "kodi" / "repository.kodisetup"
+            kodi.mkdir(parents=True)
+            expected = {
+                "setup.apk": b"apk",
+                "manifest.json": b"manifest",
+                "sbom.spdx.json": b"sbom",
+                "repository.kodisetup-1.1.16.zip": b"bootstrap",
+            }
+            for filename, payload in expected.items():
+                destination = kodi / filename if filename.startswith("repository.") else artifacts / filename
+                destination.write_bytes(payload)
+            (artifacts / "kodi-source.zip").write_bytes(b"build input")
+            skin_input = artifacts / "skin" / "skin.starlanemeridian-1.3.0.zip"
+            skin_input.parent.mkdir()
+            skin_input.write_bytes(b"duplicate build output")
+
+            output = artifacts / "SHA256SUMS"
+            write_release_checksums(artifacts, output)
+
+            lines = output.read_bytes().splitlines()
+            self.assertTrue(output.read_bytes().endswith(b"\n"))
+            self.assertNotIn(b"\r", output.read_bytes())
+            actual_names = {line.split(b"  ", 1)[1].decode("ascii") for line in lines}
+            self.assertEqual(set(expected), actual_names)
+            for line in lines:
+                digest, filename = line.decode("ascii").split("  ", 1)
+                self.assertEqual(hashlib.sha256(expected[filename]).hexdigest(), digest)
+
+    def test_release_checksum_inventory_rejects_flattened_name_collisions(self):
+        with tempfile.TemporaryDirectory() as name:
+            artifacts = Path(name) / "artifacts"
+            for filename in ("setup.apk", "manifest.json", "sbom.spdx.json"):
+                (artifacts / filename).parent.mkdir(parents=True, exist_ok=True)
+                (artifacts / filename).write_bytes(filename.encode("ascii"))
+            for directory in ("first", "second"):
+                target = artifacts / "kodi" / directory / "same.zip"
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(directory.encode("ascii"))
+            with self.assertRaisesRegex(SystemExit, "Duplicate flattened"):
+                write_release_checksums(artifacts, artifacts / "SHA256SUMS")
 
     def test_canonical_payload_blanks_signature_and_sorts(self):
         value = {"z": 1, "signature": {"value": "secret", "algorithm": "Ed25519"}, "a": 2}

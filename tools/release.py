@@ -258,6 +258,43 @@ def download_provider_source(destination: Path) -> None:
         )
 
 
+def write_release_checksums(artifacts: Path, output: Path) -> None:
+    """Write checksums for exactly the files uploaded to the client release."""
+    required = [
+        artifacts / "setup.apk",
+        artifacts / "manifest.json",
+        artifacts / "sbom.spdx.json",
+    ]
+    missing = [path.name for path in required if not path.is_file()]
+    kodi = artifacts / "kodi"
+    if not kodi.is_dir():
+        missing.append("kodi/")
+    if missing:
+        raise SystemExit("Missing release assets: " + ", ".join(missing))
+
+    files = required + sorted(
+        (path for path in kodi.rglob("*") if path.is_file()),
+        key=lambda path: path.as_posix(),
+    )
+    by_name: dict[str, Path] = {}
+    for path in files:
+        name = path.name
+        if not name or any(character in name for character in "\r\n"):
+            raise SystemExit(f"Unsafe release asset name: {name!r}")
+        if name in by_name:
+            raise SystemExit(
+                f"Duplicate flattened release asset name: {name}"
+            )
+        by_name[name] = path
+
+    lines = [
+        f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {name}\n"
+        for name, path in sorted(by_name.items())
+    ]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_bytes("".join(lines).encode("ascii"))
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -278,6 +315,9 @@ def parse_args() -> argparse.Namespace:
     kodi.add_argument("--data-url")
     kodi.add_argument("--provider-archive", type=Path)
     kodi.add_argument("--provider-sha256")
+    checksums = sub.add_parser("checksums")
+    checksums.add_argument("--artifacts", type=Path, required=True)
+    checksums.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -316,6 +356,9 @@ def main() -> None:
                     PROVIDER_SOURCE_SHA256,
                 )
         print(f"Kodi repository written to {args.output}")
+    elif args.command == "checksums":
+        write_release_checksums(args.artifacts, args.output)
+        print(f"Release checksums written to {args.output}")
 
 
 if __name__ == "__main__":
