@@ -37,6 +37,8 @@ PORTABLE_TEXT_SUFFIXES = frozenset({
     ".css", ".html", ".ini", ".js", ".json", ".md", ".po", ".properties",
     ".py", ".txt", ".xml",
 })
+REGULAR_FONT = ROOT / "kodi" / "skin.starlane.movies" / "fonts" / "Regular-new.ttf"
+BOLD_FONT = ROOT / "kodi" / "skin.starlane.movies" / "fonts" / "Bold-new.ttf"
 
 
 @dataclass(frozen=True)
@@ -116,8 +118,10 @@ UMBRELLA_PYTHON_VISIBLE_REPLACEMENTS = {
 
 
 def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    candidate = Path("C:/Windows/Fonts") / ("segoeuib.ttf" if bold else "segoeui.ttf")
-    return ImageFont.truetype(str(candidate), size) if candidate.is_file() else ImageFont.load_default()
+    candidate = BOLD_FONT if bold else REGULAR_FONT
+    if not candidate.is_file():
+        raise FileNotFoundError(f"Required bundled brand font is missing: {candidate}")
+    return ImageFont.truetype(str(candidate), size)
 
 
 def contain(image: Image.Image, size: tuple[int, int]) -> Image.Image:

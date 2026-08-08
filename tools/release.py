@@ -115,13 +115,14 @@ def verify_manifest(path: Path, public_path: Path) -> None:
 
 PORTABLE_TEXT_SUFFIXES = {
     ".css", ".html", ".ini", ".js", ".json", ".md", ".po", ".properties",
-    ".py", ".txt", ".xml",
+    ".py", ".txt", ".xml", ".xsp",
 }
+PORTABLE_TEXT_NAMES = {"COPYING", "LICENSE", "NOTICE"}
 
 
 def portable_zip_bytes(file: Path) -> bytes:
     value = file.read_bytes()
-    if file.suffix.lower() in PORTABLE_TEXT_SUFFIXES:
+    if file.suffix.lower() in PORTABLE_TEXT_SUFFIXES or file.name.upper() in PORTABLE_TEXT_NAMES:
         return value.replace(b"\r\n", b"\n")
     return value
 

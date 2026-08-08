@@ -134,6 +134,10 @@ class ReleaseTests(unittest.TestCase):
             windows.mkdir(); linux.mkdir()
             windows.joinpath("service.py").write_bytes(b"first\r\nsecond\r\n")
             linux.joinpath("service.py").write_bytes(b"first\nsecond\n")
+            windows.joinpath("category.xsp").write_bytes(b"<smartplaylist>\r\n</smartplaylist>\r\n")
+            linux.joinpath("category.xsp").write_bytes(b"<smartplaylist>\n</smartplaylist>\n")
+            windows.joinpath("LICENSE").write_bytes(b"terms\r\n")
+            linux.joinpath("LICENSE").write_bytes(b"terms\n")
             windows.joinpath("Z-last-on-Windows.py").write_bytes(b"same\r\n")
             linux.joinpath("Z-last-on-Windows.py").write_bytes(b"same\n")
             windows.joinpath("a-first-on-Windows.py").write_bytes(b"same\r\n")
@@ -152,6 +156,8 @@ class ReleaseTests(unittest.TestCase):
                     archive.namelist().index("addon.id/a-first-on-Windows.py"),
                 )
                 self.assertEqual(archive.read("addon.id/service.py"), b"first\nsecond\n")
+                self.assertEqual(archive.read("addon.id/category.xsp"), b"<smartplaylist>\n</smartplaylist>\n")
+                self.assertEqual(archive.read("addon.id/LICENSE"), b"terms\n")
                 self.assertEqual(archive.read("addon.id/icon.png"), b"binary\r\nbytes")
 
     def test_latest_skin_artifact_is_selected_semantically(self):
