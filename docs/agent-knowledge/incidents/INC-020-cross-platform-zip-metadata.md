@@ -45,3 +45,10 @@ adds only those missing text classes and switches both artwork generators to the
 bundled Starlane fonts. The resulting local skin byte count and digest exactly match the
 Linux run; the provider and Bootstrap locks were regenerated and manifest `2026.08.40`
 was signed. Cross-host proof still requires one fresh Linux draft run.
+
+Run `31272444959` proved the text fix by accepting the skin, but Pillow still emitted
+different provider image bytes on Linux. Commit `5a41f22` therefore treats the four
+approved Starlane provider images as release inputs, removes runtime provider-art rendering,
+and removes the unrelated Android brand-asset generation step from the signed-release job.
+This keeps the locked provider hash unchanged while eliminating image-library and font
+rasterization from that package's build boundary.

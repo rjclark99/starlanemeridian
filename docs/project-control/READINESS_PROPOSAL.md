@@ -50,6 +50,9 @@
   those inputs, updates the skin/provider locks, and signs manifest `2026.08.40`.
   Local lock, signature, and corrected Bootstrap checks pass; one fresh Linux draft is
   the remaining cross-host proof.
+- Run `31272444959` accepted the skin but stopped on host-dependent provider image bytes.
+  Commit `5a41f22` replaces runtime rendering with four checked-in, visually reviewed
+  Starlane provider assets; focused tests and the unchanged package lock pass locally.
 
 ## Remaining gated acceptance
 

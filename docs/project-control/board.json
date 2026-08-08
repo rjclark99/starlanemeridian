@@ -130,7 +130,7 @@
       "packet": "docs/project-control/active/acceptance.content-release-readiness-v1-task.json",
       "writer_paths": [],
       "history": ["proposed", "ready", "active", "blocked", "ready", "active", "blocked", "ready", "active"],
-      "summary": "Three unpublished runs were safely stopped before publication. Run 31271814880 exposed the final unnormalized .xsp/LICENSE bytes and host-font selection. Commit 2843f00 fixes those bounded inputs, signs configuration 2026.08.40, and passes local lock/signature/regression checks; one fresh Linux draft, publication approval, and device acceptance remain gated."
+      "summary": "Unpublished runs safely stopped before upload exposed the remaining host variables. Commit 2843f00 fixed .xsp/LICENSE inputs; run 31272444959 then isolated provider image encoding. Commit 5a41f22 uses four checked-in Starlane provider assets and passes focused lock/signature checks. One fresh Linux draft, publication approval, and device acceptance remain gated."
     },
     {
       "id": "ux.widget-image-audit-v1",

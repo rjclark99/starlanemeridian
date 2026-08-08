@@ -72,6 +72,14 @@ The local package gate, signature verification, 90 unaffected tests, and the cor
 Bootstrap regression pass. A new Linux draft remains required; no existing draft is safe
 to publish or use.
 
+Run `31272444959` confirmed the skin and Bootstrap portability fixes but stopped on the
+provider alone: Pillow's binary image encoding still differed across operating systems.
+Commit `5a41f22` removes provider artwork rendering from the release job and copies four
+visually reviewed, checked-in Starlane assets instead. Focused overlay/release tests,
+manifest verification, and the unchanged provider package-lock hash pass locally. No
+Umbrella logo or background is present in those canonical assets. One fresh Linux draft
+remains the required proof.
+
 The clean local source state includes the project-control rollout, bounded Home
 **Show more** terminal navigation, complete ordered provider/network discovery, local
 artwork fallbacks, Android one-run scope-bound consent and verified resume, and
