@@ -28,6 +28,19 @@
   runtime configuration.
 - The release workflow is forced to produce a draft and rejects owner-panel artifacts.
 
+## First draft verification
+
+- Signed-release run `31270299401` created an unpublished `v0.5.9-test` draft from
+  GitHub main `c9fe233` behind the required `rjclark99` environment approval.
+- The downloaded 14-asset draft contained no owner panel, vault, or private runtime
+  file, but its checksum inventory failed completeness: it listed two unuploaded build
+  inputs and omitted the uploaded manifest.
+- Publication and device use are stopped. Local correction `0acb758` generates an
+  LF-only inventory for exactly the flattened uploaded assets, rejects duplicate
+  names, and passes 15 focused plus 88 full Python/Kodi tests.
+- The correction requires a separately approved main push, green CI, and a newly
+  approved draft rebuild before independent verification resumes.
+
 ## Remaining gated acceptance
 
 The content/device pass is ready but blocked until the owner approves mutation of named
@@ -36,6 +49,6 @@ focused/unfocused terminal cards, provider/network order, failed art, exact dire
 opening, consent cancellation, installer denial, Stop, process restart, Kodi warnings,
 Bootstrap decline/revoke/scope change, observed completion, and skin rollback.
 
-The candidate manifest is offline-signed, the source is committed on local `main`, and
-the candidate branch is pushed. GitHub `main`, release draft creation, publication,
-deployment, and fresh-device acceptance remain separately gated.
+The candidate manifest is offline-signed and the product source is on GitHub `main`.
+The checksum correction remains local; draft replacement, publication, deployment,
+and fresh-device acceptance remain separately gated.
