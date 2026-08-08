@@ -32,23 +32,34 @@ coupling and adds a regression that forbids owner-tooling release assets. Existi
 public releases remain separate public-release state and may still contain a legacy
 panel ZIP until an explicitly authorised publication mutation removes it.
 
-The product source candidate was committed at `fcbec9c` and incorporated into GitHub
-`main` at documentation reconciliation commit `c9fe233`. GitHub Actions run
-`31270064666` passed configuration/Kodi, control-service, and Android jobs for that
+The product source candidate was committed at `fcbec9c`; checksum-inventory correction
+and evidence commit `7d56f57` is the current verified GitHub `main`. GitHub Actions run
+`31270686136` passed configuration/Kodi, control-service, and Android jobs for that
 exact main commit. The candidate
 versions are Android `0.5.9`/code 10, Bootstrap `1.1.16`, private skin `2.2.22`,
-branded provider `6.7.81.3`, and offline-signed test manifest `2026.08.38`. No draft
+branded provider `6.7.81.3`, and offline-signed test manifest `2026.08.39`. No draft
 publication, deployment, or new device acceptance has occurred.
 
 The owner-approved signed-release run `31270299401` created an unpublished
 `v0.5.9-test` draft from `c9fe233` after the GitHub `release` environment was changed
 to require reviewer `rjclark99`. Independent download verification rejected that
 draft because `SHA256SUMS` named two build-only files that were not uploaded and
-omitted the uploaded manifest. Local commit `0acb758` replaces the broad artifact scan
+omitted the uploaded manifest. Commit `0acb758` replaces the broad artifact scan
 with an exact flattened release-asset inventory, stages the manifest with the other
 published files, rejects name collisions, and passes 15 focused release tests plus the
-complete 88-test Python/Kodi suite. That correction is not yet on GitHub `main`; the
-existing draft must not be published or used for device acceptance.
+complete 88-test Python/Kodi suite.
+
+Corrective signed-release run `31270754516` rebuilt the same unpublished draft from
+`7d56f57`. Its 13 downloadable non-inventory assets matched the LF-only checksum file,
+all GitHub-reported digests matched the downloaded bytes, and the exact GitHub manifest
+blob passed its Ed25519 signature. Verification nevertheless rejected the draft because
+the Linux-built private skin and provider archives did not match their Windows-built
+signed package-lock hashes. Local commit `b3fed5f` uses stored entries and canonical LF
+text for those locked archives, adds a workflow pre-upload package-lock gate, updates
+their hashes, and re-signs configuration `2026.08.39` for deterministic Bootstrap hash
+`728fd821b0cfffe2c47601ce6b90d3af242b1a68798c563c9fcb0efa85384d51`.
+Two independent local builds matched byte-for-byte; all 90 Python/Kodi tests passed.
+This correction is not yet on GitHub `main`; the draft must not be published or used.
 
 The clean local source state includes the project-control rollout, bounded Home
 **Show more** terminal navigation, complete ordered provider/network discovery, local

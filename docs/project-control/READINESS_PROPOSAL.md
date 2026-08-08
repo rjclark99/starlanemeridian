@@ -18,9 +18,9 @@
 
 ## Validation completed
 
-- The exact candidate at `fcbec9c` passed GitHub Actions run `31265192787` across
+- GitHub main `7d56f57` passed GitHub Actions run `31270686136` across
   configuration/Kodi, control-service, and Android jobs.
-- The offline signature on manifest `2026.08.38` verifies against the checked-in
+- The offline signature on local manifest `2026.08.39` verifies against the checked-in
   public key, and its Bootstrap digest matches deterministic Bootstrap 1.1.16 bytes.
 - Project-control schemas, authority gates, release regressions, package-lock checks,
   Python compilation, Kodi tooling, Android unit tests, and Android lint pass.
@@ -38,8 +38,13 @@
 - Publication and device use are stopped. Local correction `0acb758` generates an
   LF-only inventory for exactly the flattened uploaded assets, rejects duplicate
   names, and passes 15 focused plus 88 full Python/Kodi tests.
-- The correction requires a separately approved main push, green CI, and a newly
-  approved draft rebuild before independent verification resumes.
+- Corrective run `31270754516` then passed exact inventory, GitHub digest, and signed
+  manifest checks but failed because Linux-built skin/provider archives differed from
+  their Windows-built signed package-lock hashes.
+- Local commit `b3fed5f` uses stored entries plus canonical LF text for the two locked
+  packages, adds a mandatory pre-upload lock check, updates the signed hashes, and
+  re-signs configuration `2026.08.39`. Two builds matched byte-for-byte and all 90
+  Python/Kodi tests passed.
 
 ## Remaining gated acceptance
 
@@ -49,6 +54,6 @@ focused/unfocused terminal cards, provider/network order, failed art, exact dire
 opening, consent cancellation, installer denial, Stop, process restart, Kodi warnings,
 Bootstrap decline/revoke/scope change, observed completion, and skin rollback.
 
-The candidate manifest is offline-signed and the product source is on GitHub `main`.
-The checksum correction remains local; draft replacement, publication, deployment,
-and fresh-device acceptance remain separately gated.
+The candidate manifest is offline-signed and the reproducibility correction is local.
+GitHub main update, draft replacement, publication, deployment, and fresh-device
+acceptance remain separately gated.

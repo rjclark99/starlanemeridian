@@ -130,7 +130,7 @@
       "packet": "docs/project-control/active/acceptance.content-release-readiness-v1-task.json",
       "writer_paths": [],
       "history": ["proposed", "ready", "active", "blocked", "ready", "active", "blocked", "ready", "active"],
-      "summary": "The first unpublished v0.5.9-test draft was correctly stopped after independent verification found an incomplete checksum inventory. Local fix 0acb758 passes focused and full tests; main push, draft rebuild, publication, and device acceptance remain gated."
+      "summary": "Two unpublished drafts were correctly stopped: the first for an incomplete checksum inventory and the second for cross-host package-lock mismatch. Local b3fed5f makes both locked packages deterministic, adds a pre-upload gate, signs configuration 2026.08.39, and passes 90 tests; push, rebuild, publication, and device acceptance remain gated."
     },
     {
       "id": "ux.widget-image-audit-v1",

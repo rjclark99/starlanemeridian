@@ -6,12 +6,12 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: The validated v0.5.9 source candidate aligns Android 0.5.9, Bootstrap 1.1.16, private skin 2.2.22, provider 6.7.81.3, and signed manifest 2026.08.38; external release and device states remain separate.
+    summary: The validated v0.5.9 source candidate aligns Android 0.5.9, Bootstrap 1.1.16, private skin 2.2.22, provider 6.7.81.3, and signed manifest 2026.08.39; external release and device states remain separate.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
     authority: [git, config/manifest.json, kodi/skin.starlane.movies/addon.xml]
-    verified_at: 2026-08-01
+    verified_at: 2026-08-08
     supersedes: []
     related: [current.deployed-state, current.public-release-state]
     size_hint: small
@@ -456,10 +456,10 @@ records:
     path: docs/agent-knowledge/incidents/INC-020-cross-platform-zip-metadata.md
     summary: Windows and Linux produced different signed-release ZIP hashes until all archive bytes and metadata were pinned.
     tags: [kodi, release, checksums, windows, github-actions]
-    path_globs: [tools/release.py, tools/test_release.py, config/manifest.json]
+    path_globs: [tools/release.py, tools/build_kodi_branding_overlays.py, tools/test_release.py, tools/test_kodi_branding_overlays.py, config/manifest.json]
     read_when: [release ZIP hash differs between local signing and CI]
     authority: [tools/release.py, tools/test_release.py, github-actions]
-    verified_at: 2026-08-01
+    verified_at: 2026-08-08
     supersedes: []
     related: [incident.checksum-crlf, incident.empty-release-secrets, subsystem.signed-config-release]
     size_hint: small
