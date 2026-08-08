@@ -52,8 +52,12 @@ class KodiBootstrapTests(unittest.TestCase):
                     (addon_id, request["params"]["enabled"])
                 )
                 if request["params"]["enabled"]:
+                    # Kodi starts a service add-on in response to an enable
+                    # event, so re-enabling an already-enabled package starts
+                    # nothing. Only a real transition announces readiness.
+                    transitioned = addon_id not in self.installed
                     self.installed.add(addon_id)
-                    if addon_id == "plugin.video.umbrella":
+                    if addon_id == "plugin.video.umbrella" and transitioned:
                         self.window_properties["starlane.umbrella.ready"] = "true"
                 else:
                     self.installed.discard(addon_id)
@@ -921,6 +925,216 @@ class KodiBootstrapTests(unittest.TestCase):
 
         self.assertEqual([], configured)
         self.assertEqual([], self.dialog_calls)
+
+    def _install_only_run(self, document, packages):
+        """Drive run() with installation stubbed but readiness left realistic."""
+        self.settings.update(
+            {
+                "manifest_url": "https://example.invalid/manifest.json",
+                "public_key": "test-key",
+            }
+        )
+        self.service.fetch_and_verify = lambda _url, _key: document
+        self.service.load_package_lock_with_digest = lambda: (packages, "a" * 64)
+        self.service.validate_lock_for_manifest = lambda _packages, _document: None
+        self.service.install_locked_packages = (
+            lambda items, _progress: self.installed.update(item["id"] for item in items)
+        )
+        self.service.configure_kodi_quality_of_life = lambda: None
+        self.dialog_answers = [True]
+
+    def test_absent_provider_readiness_defers_instead_of_reporting_failure(self):
+        # A launch that installs the provider cannot have started its service,
+        # so readiness is legitimately absent and must not become an error.
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        self.window_properties.clear()
+        self.service.wait_for_provider_ready = (
+            lambda addon_id, attempts=1, interval=0: (_ for _ in ()).throw(
+                ValueError("Starlane on-demand provider did not finish initialising")
+            )
+            if addon_id == "plugin.video.umbrella"
+            else None
+        )
+        activated = []
+        self.service.activate_skin_and_generate_shortcuts = activated.append
+
+        self.service.run()
+
+        self.assertEqual([], activated)
+        self.assertNotIn("applied_version", self.settings)
+        self.assertEqual("", self.service.internal_setting("applied_scope"))
+        self.assertEqual("1", self.service.internal_setting("activation_attempts"))
+        self.assertIn(("Quit", False), self.commands)
+
+    def test_cycling_the_provider_starts_its_service_and_avoids_a_restart(self):
+        # An already-enabled package raises no enable event, so its service never
+        # starts. Cycling it produces that event and setup finishes in one launch.
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        self.window_properties.clear()
+        # The extracted package is already enabled, so configuring it raises no
+        # enable event and its service stays down: the real device situation.
+        self.installed.add("plugin.video.umbrella")
+        activated = []
+        self.service.activate_skin_and_generate_shortcuts = activated.append
+
+        self.service.run()
+
+        self.assertEqual(["skin.starlane.movies"], activated)
+        self.assertEqual("2026.07.34", self.settings["applied_version"])
+        self.assertIn(("plugin.video.umbrella", False), self.addon_enable_events)
+        self.assertNotIn(("Quit", False), self.commands)
+
+    def test_deferred_activation_completes_on_the_next_launch(self):
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        # Kodi has restarted: the provider's own service is running and has
+        # announced readiness before Bootstrap's second run begins.
+        self.window_properties["starlane.umbrella.ready"] = "true"
+        self.settings["activation_attempts"] = "1"
+        activated = []
+        self.service.activate_skin_and_generate_shortcuts = activated.append
+
+        self.service.run()
+
+        self.assertEqual(["skin.starlane.movies"], activated)
+        self.assertEqual("2026.07.34", self.settings["applied_version"])
+        self.assertEqual("", self.service.internal_setting("activation_attempts"))
+
+    def test_deferral_is_bounded_and_finally_reports_a_real_failure(self):
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        self.window_properties.clear()
+        self.settings["activation_attempts"] = "3"
+        self.service.wait_for_provider_ready = (
+            lambda addon_id, attempts=1, interval=0: (_ for _ in ()).throw(
+                ValueError("Starlane on-demand provider did not finish initialising")
+            )
+            if addon_id == "plugin.video.umbrella"
+            else None
+        )
+        activated = []
+        self.service.activate_skin_and_generate_shortcuts = activated.append
+
+        self.service.run()
+
+        self.assertEqual([], activated)
+        self.assertNotIn("applied_version", self.settings)
+        self.assertNotIn(("Quit", False), self.commands)
+
+    def test_self_healing_retry_does_not_ask_for_consent_again(self):
+        # Withdrawing the applied scope must not withdraw consent: recovering
+        # from a frozen skin activation has to be silent.
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        activated = []
+
+        def activate(skin_id):
+            activated.append(skin_id)
+            self.skin = skin_id
+
+        self.service.activate_skin_and_generate_shortcuts = activate
+
+        self.service.run()
+        consent_heading = "Complete Starlane Movies setup"
+        consents = [call for call in self.dialog_calls if call[0] == consent_heading]
+        self.assertEqual(1, len(consents))
+        self.assertEqual(["skin.starlane.movies"], activated)
+
+        # Kodi is killed at its keep-skin dialog, so the change never persisted.
+        self.skin = "skin.estuary"
+        self.settings["pending_skin"] = "skin.starlane.movies"
+        self.settings["previous_skin"] = "skin.estuary"
+
+        self.service.run()
+
+        # The retry re-activates Home without asking for installation consent
+        # a second time, because consent is bound to the unchanged scope digest.
+        self.assertEqual(
+            1, len([call for call in self.dialog_calls if call[0] == consent_heading])
+        )
+        self.assertEqual(
+            ["skin.starlane.movies", "skin.starlane.movies"], activated
+        )
+        self.assertEqual("2026.07.34", self.settings["applied_version"])
+
+    def test_unconfirmed_skin_withdraws_applied_scope_and_retries(self):
+        # Kodi killed at its own keep-skin dialog must not strand the television
+        # on Estuary with the configuration still marked as applied.
+        self.settings.update(
+            {
+                "pending_skin": "skin.starlane.movies",
+                "previous_skin": "skin.estuary",
+                "applied_version": "2026.07.34",
+                "applied_scope": "b" * 64,
+            }
+        )
+        self.skin = "skin.estuary"
+
+        self.service.recover_pending_skin()
+
+        self.assertEqual("", self.service.internal_setting("applied_scope"))
+        self.assertEqual("1", self.service.internal_setting("activation_attempts"))
+        self.assertEqual("", self.service.internal_setting("pending_skin"))
+        self.assertEqual("skin.estuary", self.skin)
+
+    def test_confirmed_skin_keeps_applied_scope_and_clears_retries(self):
+        self.settings.update(
+            {
+                "pending_skin": "skin.starlane.movies",
+                "previous_skin": "skin.estuary",
+                "applied_scope": "b" * 64,
+                "activation_attempts": "2",
+            }
+        )
+        self.skin = "skin.starlane.movies"
+
+        self.service.recover_pending_skin()
+
+        self.assertEqual("b" * 64, self.settings["applied_scope"])
+        self.assertEqual("", self.service.internal_setting("activation_attempts"))
+
+    def test_repeated_activation_failure_stops_withdrawing_applied_scope(self):
+        self.settings.update(
+            {
+                "pending_skin": "skin.starlane.movies",
+                "previous_skin": "skin.estuary",
+                "applied_scope": "b" * 64,
+                "activation_attempts": "3",
+            }
+        )
+        self.skin = "skin.estuary"
+
+        self.service.recover_pending_skin()
+
+        self.assertEqual("b" * 64, self.settings["applied_scope"])
+        self.assertEqual("3", self.settings["activation_attempts"])
 
     def test_run_does_not_activate_skin_when_provider_never_becomes_ready(self):
         document = self.manifest()

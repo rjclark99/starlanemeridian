@@ -251,7 +251,7 @@ class ReleaseTests(unittest.TestCase):
             provider = (
                 output
                 / "plugin.video.umbrella"
-                / "plugin.video.umbrella-6.7.81.3.zip"
+                / "plugin.video.umbrella-6.7.81.4.zip"
             )
             self.assertTrue(provider.is_file())
             self.assertEqual(

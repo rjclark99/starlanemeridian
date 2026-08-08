@@ -6,7 +6,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: The validated v0.5.9 source candidate aligns Android 0.5.9, Bootstrap 1.1.16, private skin 2.2.22, provider 6.7.81.3, and signed manifest 2026.08.39; external release and device states remain separate.
+    summary: An uncommitted post-acceptance candidate targets Android 0.5.10/code 11, Bootstrap 1.1.17, provider 6.7.81.4, and unchanged private skin 2.2.22; it is unsigned, unpublished, and unverified on any device.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
@@ -34,12 +34,12 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/public-release-state.md
-    summary: Owner-approved v0.5.8-test public bytes, signatures, sidecars, and latest routes were verified on 1 August.
+    summary: v0.5.9-test is the promoted GitHub Latest release; its 8 August fresh-device acceptance attempt failed and the four causes are fixed in source but unreleased.
     tags: [release, manifest, github]
     path_globs: [.github/workflows/**, config/**, tools/release.py]
     read_when: [publishing, release comparison, public route checks]
     authority: [github-release, downloaded-bytes, config/manifest.json]
-    verified_at: 2026-08-01
+    verified_at: 2026-08-08
     supersedes: []
     related: [subsystem.signed-config-release, runbook.release-rollback]
     size_hint: small
@@ -588,6 +588,48 @@ records:
     verified_at: 2026-08-08
     supersedes: []
     related: [subsystem.signed-config-release, incident.checksum-crlf]
+    size_hint: small
+  - id: incident.provider-service-readiness
+    title: Provider service readiness could never be announced
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-022-provider-service-readiness.md
+    summary: Installing a package by directory replacement raised no enable event, so the provider's service never started and every first run reported two issues.
+    tags: [kodi, bootstrap, umbrella, services, jsonrpc]
+    path_globs: [kodi/repository.kodisetup/**, tools/test_kodi_bootstrap.py]
+    read_when: [setup reports Setup finished with issues, provider readiness times out]
+    authority: [kodi/repository.kodisetup/service.py, tools/test_kodi_bootstrap.py]
+    verified_at: 2026-08-08
+    supersedes: []
+    related: [incident.provider-overlay-bootstrap-order, incident.unconfirmed-skin-activation, subsystem.kodi-bootstrap]
+    size_hint: small
+  - id: incident.unconfirmed-skin-activation
+    title: An unconfirmed skin activation stranded the television
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-023-unconfirmed-skin-activation.md
+    summary: Completion was committed before the two-launch skin confirmation, so a freeze at Kodi's keep-skin dialog left configuration applied with the skin rolled back and no retry.
+    tags: [kodi, bootstrap, skin, recovery, state]
+    path_globs: [kodi/repository.kodisetup/**]
+    read_when: [skin reverts to Estuary after setup, Bootstrap never retries activation]
+    authority: [kodi/repository.kodisetup/service.py, tools/test_kodi_bootstrap.py]
+    verified_at: 2026-08-08
+    supersedes: []
+    related: [incident.provider-service-readiness, subsystem.kodi-bootstrap]
+    size_hint: small
+  - id: incident.region-blocked-logo-hosts
+    title: Network and provider logos came from region-blocked hosts
+    kind: incident
+    status: active
+    path: docs/agent-knowledge/incidents/INC-024-region-blocked-logo-hosts.md
+    summary: All 115 pinned logos were remote imgur/postimg URLs; imgur is region-blocked in the UK and returns a notice image that Kodi renders as the logo.
+    tags: [kodi, provider, branding, artwork, privacy, region]
+    path_globs: [tools/build_kodi_branding_overlays.py, tools/test_kodi_branding_overlays.py]
+    read_when: [provider or network artwork is missing or shows unexpected text]
+    authority: [downloaded provider bytes, tools/build_kodi_branding_overlays.py]
+    verified_at: 2026-08-08
+    supersedes: []
+    related: [incident.stale-provider-artwork-cache, decision.schema-allowlists, subsystem.private-skin]
     size_hint: small
   - id: research.kodi-animations
     title: Kodi animation behavior

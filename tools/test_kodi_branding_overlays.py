@@ -12,11 +12,16 @@ from PIL import Image
 from tools.build_kodi_branding_overlays import (
     ADDONS,
     CANONICAL_PROVIDER_ARTWORK,
+    DIRECTORY_LOGO_HOSTS,
+    DIRECTORY_LOGO_MINIMUM,
+    DIRECTORY_LOGO_RESOURCE,
     build,
     build_from_archive,
+    localise_directory_logo_artwork,
     package,
     replace_human_brand,
     rewrite_discovery_previews,
+    rewrite_user_facing_python,
 )
 from tools.kodi_texture_cache import matching_rows
 
@@ -103,6 +108,99 @@ class KodiBrandingOverlayTests(unittest.TestCase):
             ):
                 self.assertIn(f"('{provider}',", updated)
             self.assertIn("item for item in networks if item[0] not in preferred", updated)
+
+    def _provider_service_fixture(self, addon_root: Path, *, account_sync: bool) -> Path:
+        """Write the upstream service.py landmarks the overlay expects to find."""
+        service = addon_root / "service.py"
+        addon_root.mkdir(parents=True, exist_ok=True)
+        body = (
+            "\tif len(str(control.getUmbrellaVersion())) > 6:\n"
+            "\t\trepoVersion = control.addon('repository.umbrellakodi').getAddonInfo('version')\n"
+            "\t\trepoName = 'repository.umbrellakodi'\n"
+            "\t\ttestUmbrella = True\n"
+            "\telse:\n"
+            "\t\ttry:\n"
+            "\t\t\trepoVersion = control.addon('repository.umbrella').getAddonInfo('version')\n"
+            "\t\t\trepoName = 'repository.umbrella'\n"
+            "\t\texcept Exception:\n"
+            "\t\t\trepoVersion = 'unknown'\n"
+            "\t\t\trepoName = 'Unknown Repo'\n"
+            "\t\tif control.setting('general.checkAddonUpdates') == 'true':\n"
+            "\t\t\tAddonCheckUpdate().run()\n"
+            "def main():\n\twhile not control.monitor.abortRequested():\n"
+        )
+        if account_sync:
+            body += "\t\tSyncMyAccounts().run()\n\t\tPremAccntNotification().run()\n"
+        else:
+            body += "\t\tSyncMyAccounts().run()\n\t\tsomethingElse().run()\n"
+        service.write_text(body, encoding="utf-8")
+        return service
+
+    def test_provider_readiness_injection_is_guarded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            addon_root = Path(temp) / "plugin.video.umbrella"
+            service = self._provider_service_fixture(addon_root, account_sync=True)
+            rewrite_user_facing_python(addon_root, ADDONS[0])
+            updated = service.read_text(encoding="utf-8")
+            self.assertIn("window.clearProperty('starlane.umbrella.ready')", updated)
+            self.assertIn("window.setProperty('starlane.umbrella.ready', 'true')", updated)
+
+    def test_missing_readiness_landmark_fails_the_build(self):
+        with tempfile.TemporaryDirectory() as temp:
+            addon_root = Path(temp) / "plugin.video.umbrella"
+            self._provider_service_fixture(addon_root, account_sync=False)
+            with self.assertRaisesRegex(ValueError, "account sync sequence"):
+                rewrite_user_facing_python(addon_root, ADDONS[0])
+
+    def _directory_logo_fixture(self, addon_root: Path, entries: int) -> Path:
+        """Write a pinned network directory that mirrors upstream's host split."""
+        tmdb = addon_root / "resources/lib/indexers/tmdb.py"
+        tmdb.parent.mkdir(parents=True, exist_ok=True)
+        rows = [
+            "\t\t\t('A&E', '129', 'https://i.imgur.com/xLDfHjH.png'),",
+            "\t\t\t('History Channel', '65', 'https://i.imgur.com/abc.png'),",
+            "\t\t\t('TruTV', '364', 'https://i.postimg.cc/xyz/trutv.png'),",
+        ]
+        rows += [
+            "\t\t\t('Filler %d', '%d', 'https://i.imgur.com/f%d.png')," % (index, index, index)
+            for index in range(entries - len(rows))
+        ]
+        tmdb.write_text(
+            "\tdef get_networks(self):\n\t\treturn [\n" + "\n".join(rows) + "]\n",
+            encoding="utf-8",
+        )
+        return tmdb
+
+    def test_directory_logos_resolve_locally_without_third_party_hosts(self):
+        with tempfile.TemporaryDirectory() as temp:
+            addon_root = Path(temp) / "plugin.video.umbrella"
+            tmdb = self._directory_logo_fixture(addon_root, DIRECTORY_LOGO_MINIMUM)
+            localise_directory_logo_artwork(addon_root, ADDONS[0])
+            updated = tmdb.read_text(encoding="utf-8")
+            for host in DIRECTORY_LOGO_HOSTS:
+                self.assertNotIn(host, updated)
+            self.assertNotIn("http", updated)
+            # An exact bundle name, an aliased name, and a name with no bundled
+            # logo all resolve to the locked local resource add-on.
+            self.assertIn(
+                "('A&E', '129', 'resource://%s/A&E.png')" % DIRECTORY_LOGO_RESOURCE, updated
+            )
+            self.assertIn(
+                "('History Channel', '65', 'resource://%s/History.png')"
+                % DIRECTORY_LOGO_RESOURCE,
+                updated,
+            )
+            self.assertIn(
+                "('TruTV', '364', 'resource://%s/TruTV.png')" % DIRECTORY_LOGO_RESOURCE,
+                updated,
+            )
+
+    def test_directory_logo_localisation_rejects_upstream_drift(self):
+        with tempfile.TemporaryDirectory() as temp:
+            addon_root = Path(temp) / "plugin.video.umbrella"
+            self._directory_logo_fixture(addon_root, DIRECTORY_LOGO_MINIMUM - 1)
+            with self.assertRaisesRegex(ValueError, "pinned directory logos"):
+                localise_directory_logo_artwork(addon_root, ADDONS[0])
 
     def test_texture_cache_match_is_limited_to_provider_brand_art(self):
         connection = sqlite3.connect(":memory:")

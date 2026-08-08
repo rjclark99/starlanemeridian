@@ -50,6 +50,7 @@ SKIN_PREREQUISITES = {
 SETUP_APP_PACKAGE = "app.kodisetup.tv"
 BOOTSTRAP_ADDON_ID = "repository.kodisetup"
 CONSENT_SCOPE_VERSION = 1
+MAX_ACTIVATION_ATTEMPTS = 3
 CONSENT_SCOPE_FIELDS = (
     "schemaVersion",
     "configVersion",
@@ -298,6 +299,7 @@ def recover_pending_skin():
     if current == target:
         set_internal_setting("pending_skin", "")
         set_internal_setting("previous_skin", "")
+        record_activation_attempt(0)
         log("Skin activation confirmed: " + target)
         return
     previous = internal_setting("previous_skin") or "skin.estuary"
@@ -305,7 +307,19 @@ def recover_pending_skin():
     set_skin(previous)
     set_internal_setting("pending_skin", "")
     set_internal_setting("previous_skin", "")
-    notify("Skin load failed; the previous Kodi skin was restored")
+    # Completion was recorded optimistically so the setup app could observe it.
+    # An unconfirmed skin means the run did not really finish, so withdraw the
+    # applied scope and let this launch activate the Home menu again. Kodi being
+    # killed at its own keep-skin dialog must not strand the television on
+    # Estuary with the configuration marked as applied.
+    attempts = activation_attempts() + 1
+    if attempts > MAX_ACTIVATION_ATTEMPTS:
+        log("Home activation exhausted its retries; leaving the skin unchanged", xbmc.LOGWARNING)
+        notify("Starlane Movies could not load; choose it in Settings, Interface, Skin")
+        return
+    record_activation_attempt(attempts)
+    set_internal_setting("applied_scope", "")
+    notify("Starlane Movies did not load; retrying its Home menu now")
 
 
 def download(url, destination, expected_hash, allowed_prefixes):
@@ -592,7 +606,26 @@ def configure_addon(item):
             target.setSettingString(key, str(value))
 
 
-def wait_for_provider_ready(addon_id, attempts=960, interval=0.25):
+def activation_attempts():
+    try:
+        return int(internal_setting("activation_attempts") or 0)
+    except ValueError:
+        return 0
+
+
+def record_activation_attempt(count):
+    set_internal_setting("activation_attempts", str(count) if count else "")
+
+
+def wait_for_provider_ready(addon_id, attempts=120, interval=0.25):
+    """Wait briefly for the provider's own service to announce readiness.
+
+    Kodi starts ``xbmc.service`` entry points at launch. A locked package is
+    installed by replacing its directory and enabling it over JSON-RPC, which
+    never spawns that service, so on the installing launch this property cannot
+    appear at all. Callers treat the timeout as a reason to finish after Kodi
+    restarts rather than as a failure.
+    """
     if addon_id != "plugin.video.umbrella":
         return
     window = xbmcgui.Window(10000)
@@ -603,6 +636,24 @@ def wait_for_provider_ready(addon_id, attempts=960, interval=0.25):
         if monitor.waitForAbort(interval):
             raise ValueError("Kodi stopped while waiting for the provider")
     raise ValueError("Starlane on-demand provider did not finish initialising")
+
+
+def restart_provider_service(addon_id):
+    """Ask Kodi to start a service add-on by cycling its enabled state.
+
+    Kodi starts ``xbmc.service`` entry points in response to an enable event. A
+    locked package installed by directory replacement can already be enabled, so
+    re-enabling it is a no-op that fires no event and its service never starts.
+    Cycling the state produces that event using the same JSON-RPC method already
+    in use, without adding any new capability.
+    """
+    if addon_id != "plugin.video.umbrella":
+        return False
+    xbmcgui.Window(10000).clearProperty("starlane.umbrella.ready")
+    set_addon_enabled(addon_id, False)
+    set_addon_enabled(addon_id, True)
+    log("Cycled %s to start its service" % addon_id)
+    return True
 
 
 def activate_skin_and_generate_shortcuts(skin_id):
@@ -706,6 +757,7 @@ def run():
     progress = xbmcgui.DialogProgressBG()
     progress.create("Starlane Movies", "Preparing the approved Kodi package")
     failures = []
+    deferred = ""
     try:
         prepare_provider_replacement(packages, document["skin"]["addonId"])
         enabled_repositories = [item for item in document["repositories"] if item["enabled"]]
@@ -743,35 +795,64 @@ def run():
             try:
                 wait_for_provider_ready(item["id"])
             except Exception as error:
+                # Most often the freshly installed package was already enabled,
+                # so Kodi never raised the enable event that starts its service.
+                # Cycle it once and wait again before giving up on this launch.
+                try:
+                    cycled = restart_provider_service(item["id"])
+                except Exception:
+                    cycled = False
+                if cycled:
+                    try:
+                        wait_for_provider_ready(item["id"])
+                        continue
+                    except Exception as retry_error:
+                        error = retry_error
+                # Readiness can still be legitimately absent on the launch that
+                # installed the provider, so finish after Kodi restarts rather
+                # than reporting a false failure.
+                if activation_attempts() < MAX_ACTIVATION_ATTEMPTS:
+                    deferred = item["id"] + ": " + str(error)
+                    log("Deferring Home activation until Kodi restarts: " + deferred)
+                    break
                 failures.append(item["id"] + ": " + str(error))
                 log(failures[-1], xbmc.LOGERROR)
-        configured_ids = {item["id"] for item in enabled_addons}
-        if not package_install_failed:
-            for package in packages:
-                if package["id"] not in configured_ids:
-                    try:
-                        set_addon_enabled(package["id"], True)
-                    except Exception as error:
-                        failures.append(package["id"] + ": " + str(error))
-                        log(failures[-1], xbmc.LOGERROR)
-        progress.update(85, "Starlane Movies", "Installing and activating the Starlane Movies skin")
-        try:
-            if failures:
-                raise ValueError("verified package or provider readiness failed")
-            skin_id = document["skin"]["addonId"]
-            if not xbmc.getCondVisibility("System.HasAddon(%s)" % skin_id):
-                raise ValueError("skin was not registered by Kodi")
-            activate_skin_and_generate_shortcuts(skin_id)
-        except Exception as error:
-            failures.append("skin: " + str(error))
+        if not deferred:
+            configured_ids = {item["id"] for item in enabled_addons}
+            if not package_install_failed:
+                for package in packages:
+                    if package["id"] not in configured_ids:
+                        try:
+                            set_addon_enabled(package["id"], True)
+                        except Exception as error:
+                            failures.append(package["id"] + ": " + str(error))
+                            log(failures[-1], xbmc.LOGERROR)
+            progress.update(
+                85, "Starlane Movies", "Installing and activating the Starlane Movies skin"
+            )
+            try:
+                if failures:
+                    raise ValueError("verified package or provider readiness failed")
+                skin_id = document["skin"]["addonId"]
+                if not xbmc.getCondVisibility("System.HasAddon(%s)" % skin_id):
+                    raise ValueError("skin was not registered by Kodi")
+                activate_skin_and_generate_shortcuts(skin_id)
+            except Exception as error:
+                failures.append("skin: " + str(error))
         progress.update(100, "Starlane Movies", "Kodi package installation complete")
     finally:
         progress.close()
+    if deferred:
+        record_activation_attempt(activation_attempts() + 1)
+        notify("Starlane Movies will finish setting up when Kodi restarts")
+        xbmc.executebuiltin("Quit")
+        return
     if failures:
         notify("Setup finished with %d issue(s)" % len(failures))
         return
     set_internal_setting("applied_scope", scope_digest)
     ADDON.setSettingString("applied_version", document["configVersion"])
+    record_activation_attempt(0)
     notify("Configuration %s applied" % document["configVersion"])
     offer_real_debrid_authorization(document)
 

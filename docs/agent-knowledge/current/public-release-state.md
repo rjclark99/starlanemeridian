@@ -10,9 +10,13 @@ supersedes: []
 
 # Public release state
 
-Owner-approved `v0.5.9-test` is the newest public **pre-release** and was built by
-successful signed-release run `31273093709` from source `da26ba0`; it was deliberately
-not promoted to GitHub's stable/latest label. All 14 public files were downloaded after
+Owner-approved `v0.5.9-test` is the current GitHub **Latest** full release and was built
+by successful signed-release run `31273093709` from source `da26ba0`. It was first
+published as a pre-release and then promoted to Latest on 8 August 2026 with the owner's
+explicit approval; no rebuild or release-asset replacement occurred during promotion, and
+the `latest/download` routes for `manifest.json`, `setup.apk`, and
+`repository.kodisetup-1.1.16.zip` were re-checked afterwards and resolve to it.
+All 14 public files were downloaded after
 publication. The LF-only `SHA256SUMS` names all 13 other assets exactly once and every
 digest matches. Manifest `2026.08.41` is test-stage, verifies against
 `config/manifest.pub`, and selects Bootstrap 1.1.16 digest
@@ -28,12 +32,22 @@ no owner-panel, vault, or private-runtime paths. Setup APK digest
 verifies with Android signature scheme v2, package `app.kodisetup.tv`, version `0.5.9`,
 code 10, and production signer
 `e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
-No fresh-device acceptance has yet been performed against these public bytes.
+A fresh-device acceptance attempt against these public bytes ran on 8 August 2026 and did
+not pass. Configuration `2026.08.41` was applied and the Home menu was generated, but
+four defects were found and are fixed in source for the next release: Bootstrap reported
+`Setup finished with 2 issue(s)` on every first run because provider readiness could not
+appear on the installing launch; a freeze at Kodi's keep-skin dialog left configuration
+marked applied with the skin rolled back and no retry path; the setup app could not read
+Kodi's JSON-RPC at all; and network/provider logos resolved to region-blocked
+third-party hosts. Acceptance steps 4 to 7 remain unverified. See
+`incident.provider-service-readiness`, `incident.unconfirmed-skin-activation`, and
+`incident.region-blocked-logo-hosts`.
 Downloader code `7499455` was generated for the acceptance pass and independently
 verified to resolve directly to the public tagged `v0.5.9-test/setup.apk` asset. Stable
-code `3467018` remains bound to the unchanged `latest` route for `v0.5.8-test`.
+code `3467018` is bound to the `latest` route, which now resolves to `v0.5.9-test`.
 
-Owner-approved `v0.5.8-test` is the latest public release and targets source commit
+Owner-approved `v0.5.8-test` was the latest public release until the 8 August promotion
+and targets source commit
 `3c99980`. Its signed manifest is `2026.07.37`, SHA-256
 `810298f27d1550cc3fe54e91bdf9f714edac1390f123537a1126e8bf41ef3fec`.
 Bootstrap 1.1.13 is

@@ -59,7 +59,9 @@
 - Signed-release run `31273093709` succeeded from `da26ba0`. Owner-approved
   `v0.5.9-test` was published as a pre-release, and all 14 public assets passed exact
   inventory, digest, manifest-signature, Kodi identity, SBOM exclusion, APK identity,
-  Android v2 signature, and production-signer verification.
+  Android v2 signature, and production-signer verification. On 8 August 2026 the owner
+  approved promoting it to GitHub **Latest**; no rebuild or asset replacement occurred and
+  the `latest/download` routes were re-verified afterwards.
 
 ## Remaining gated acceptance
 
@@ -69,6 +71,18 @@ focused/unfocused terminal cards, provider/network order, failed art, exact dire
 opening, consent cancellation, installer denial, Stop, process restart, Kodi warnings,
 Bootstrap decline/revoke/scope change, observed completion, and skin rollback.
 
-The candidate manifest is offline-signed and the public pre-release is verified.
-Fresh-device acceptance, any service deployment, and stable/latest promotion remain
-separately gated.
+The candidate manifest is offline-signed and the published `v0.5.9-test` bytes are
+verified. Latest promotion is complete; any service deployment remains separately gated.
+
+Fresh-device acceptance was attempted against those published bytes on 8 August 2026 and
+**did not pass**. Configuration `2026.08.41` applied and the Home menu was generated, but
+four defects were found: Bootstrap reported two issues on every first run because provider
+readiness could not appear on the installing launch; a freeze at Kodi's keep-skin dialog
+left configuration marked applied with the skin rolled back and no retry path; the setup
+app could not read Kodi's JSON-RPC at all; and network/provider logos resolved to
+region-blocked third-party hosts. Acceptance areas 4 to 7 remain unverified.
+
+All four are fixed in an uncommitted source candidate targeting Android `0.5.10`/code 11,
+Bootstrap `1.1.17`, and provider `6.7.81.4`, validated by 37 Kodi Bootstrap tests, 11
+overlay tests, and 51 Android unit tests with lint clean. Acceptance cannot resume until
+that candidate is signed and published, which remains owner-gated.

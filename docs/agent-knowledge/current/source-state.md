@@ -32,7 +32,19 @@ coupling and adds a regression that forbids owner-tooling release assets. Existi
 public releases remain separate public-release state and may still contain a legacy
 panel ZIP until an explicitly authorised publication mutation removes it.
 
-The product source candidate was committed at `fcbec9c`; GitHub `main` advanced through
+A newer uncommitted source candidate follows the 8 August 2026 fresh-device acceptance
+attempt and targets Android `0.5.10`/code 11, Bootstrap `1.1.17`, and branded provider
+`6.7.81.4`; the private skin stays at `2.2.22` because no skin change was required. It
+fixes four defects: Kodi's JSON-RPC framing in the setup app's Bootstrap activator;
+provider service readiness, which now cycles the enabled state to raise the enable event
+Kodi needs and otherwise finishes after a restart instead of reporting a false failure;
+withdrawal of the applied scope when a skin activation is never confirmed, so a freeze at
+Kodi's keep-skin dialog self-heals within a bounded three attempts; and network/provider
+logos, which now resolve from the locked local `resource.images.studios.coloured` bundle
+rather than region-blocked third-party hosts. This candidate is source and local-candidate
+state only: it is unsigned, unpublished, and unverified on any device.
+
+The previous product source candidate was committed at `fcbec9c`; GitHub `main` advanced through
 reproducibility evidence commit `5691da3`. GitHub Actions run `31271671055` passed
 configuration/Kodi, control-service, and Android jobs for that exact main commit. The candidate
 versions are Android `0.5.9`/code 10, Bootstrap `1.1.16`, private skin `2.2.22`,

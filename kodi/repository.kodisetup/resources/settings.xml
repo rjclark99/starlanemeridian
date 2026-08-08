@@ -37,6 +37,9 @@
         <setting id="previous_skin" type="string" label="Previous skin" help="Internal recovery state">
           <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
+        <setting id="activation_attempts" type="string" label="Home activation attempts" help="Internal bounded retry state">
+          <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
+        </setting>
       </group>
     </category>
   </section>

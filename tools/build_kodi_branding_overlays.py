@@ -29,6 +29,32 @@ VISIBLE_BRAND = re.compile(r"(?<![A-Za-z0-9_])(?:Umbrella|UMBRELLA)(?![A-Za-z0-9
 PROVIDER_ARTWORK_THEME = "starlane movies"
 UPSTREAM_ARTWORK_THEME = "umbrella"
 GLOBAL_PROVIDER_ARTWORK = frozenset({"banner.png", "fanart.jpg", "icon.png"})
+DIRECTORY_LOGO_RESOURCE = "resource.images.studios.coloured"
+DIRECTORY_LOGO_TUPLE = re.compile(
+    r"\('(?P<name>[^']+)', ?'(?P<tmdb_id>\d+)', ?'https?://[^']+'\)"
+)
+DIRECTORY_LOGO_MINIMUM = 100
+DIRECTORY_LOGO_HOSTS = ("i.imgur.com", "i.postimg.cc")
+# Display names whose logo ships under a different texture name in the locked
+# resource.images.studios.coloured 0.0.24 bundle.
+DIRECTORY_LOGO_ALIASES = {
+    "BET+": "BET",
+    "City (CA)": "City",
+    "CW Seed": "CW",
+    "Fearnet": "Fear Net",
+    "Hallmark Movies & Mysteries": "Hallmark",
+    "History Channel": "History",
+    "Reelz": "ReelzChannel",
+    "Showcase (AU)": "Showcase",
+    "Smithsonian": "Smithsonian Channel",
+}
+# Display names with no logo in that bundle. They deliberately resolve to a
+# missing texture so the skin's own card fallback renders, which keeps every
+# directory logo local instead of reaching a third-party host for these ten.
+DIRECTORY_LOGO_UNAVAILABLE = frozenset({
+    "Brat", "CuriosityStream", "Discovery ID", "Disney Junior", "Fusion",
+    "H2", "Motor Trend", "OWN", "TruTV", "TV One",
+})
 PORTABLE_TEXT_SUFFIXES = frozenset({
     ".css", ".html", ".ini", ".js", ".json", ".md", ".po", ".properties",
     ".py", ".txt", ".xml",
@@ -53,7 +79,7 @@ ADDONS = (
     AddonBrand(
         addon_id="plugin.video.umbrella",
         source_version="6.7.81",
-        branded_version="6.7.81.3",
+        branded_version="6.7.81.4",
         display_name="Starlane Movies: On Demand",
         subtitle="ON DEMAND",
         summary="Starlane Movies on-demand discovery and playback.",
@@ -197,14 +223,22 @@ def rewrite_user_facing_python(addon_root: Path, addon: AddonBrand) -> None:
             upstream_update_check,
             "\t\t# The signed Starlane package lock exclusively owns provider updates.",
         )
+        # Bootstrap defers Home activation until this property appears, so a silently
+        # missed injection would strand every install. Fail the build instead.
+        upstream_service_entry = "def main():\n\twhile not control.monitor.abortRequested():"
+        if upstream_service_entry not in text:
+            raise ValueError(f"{service}: expected upstream service entry point")
         text = text.replace(
-            "def main():\n\twhile not control.monitor.abortRequested():",
+            upstream_service_entry,
             "def main():\n"
             "\twindow.clearProperty('starlane.umbrella.ready')\n"
             "\twhile not control.monitor.abortRequested():",
         )
+        upstream_account_sync = "\t\tSyncMyAccounts().run()\n\t\tPremAccntNotification().run()"
+        if upstream_account_sync not in text:
+            raise ValueError(f"{service}: expected upstream account sync sequence")
         text = text.replace(
-            "\t\tSyncMyAccounts().run()\n\t\tPremAccntNotification().run()",
+            upstream_account_sync,
             "\t\tSyncMyAccounts().run()\n"
             "\t\twindow.setProperty('starlane.umbrella.ready', 'true')\n"
             "\t\tPremAccntNotification().run()",
@@ -258,6 +292,55 @@ def rewrite_discovery_previews(addon_root: Path, addon: AddonBrand) -> None:
         "\t\t\t('Peacock', '3353', 'https://i.postimg.cc/76m4v7VW/NBCUniversal-Peacock-Logo.png')]\n"
     )
     text = text[:originals_start] + originals + text[originals_end:]
+    tmdb.write_text(text, encoding="utf-8", newline="")
+
+
+def directory_logo_texture(name: str) -> str:
+    """Return the local resource path that renders ``name``'s logo."""
+    return "resource://%s/%s.png" % (
+        DIRECTORY_LOGO_RESOURCE,
+        DIRECTORY_LOGO_ALIASES.get(name, name),
+    )
+
+
+def localise_directory_logo_artwork(addon_root: Path, addon: AddonBrand) -> None:
+    """Serve network and provider logos from the locked local resource add-on.
+
+    Upstream pins every logo to ``i.imgur.com`` or ``i.postimg.cc``. Imgur is
+    region-blocked in the United Kingdom and answers with a notice image, which
+    Kodi then renders in place of the logo; both hosts also disclose the
+    television's address on every card render and break the row whenever their
+    policy or availability changes. ``resource.images.studios.coloured`` is
+    already in the signed package lock, so the same artwork resolves from local
+    storage with no network access at all.
+    """
+    if addon.addon_id != "plugin.video.umbrella":
+        return
+    tmdb = addon_root / "resources/lib/indexers/tmdb.py"
+    if not tmdb.is_file():
+        return
+    text = tmdb.read_text(encoding="utf-8-sig")
+    rewritten = 0
+
+    def localise(match: re.Match[str]) -> str:
+        nonlocal rewritten
+        rewritten += 1
+        name = match.group("name")
+        return "('%s', '%s', '%s')" % (
+            name,
+            match.group("tmdb_id"),
+            directory_logo_texture(name),
+        )
+
+    text = DIRECTORY_LOGO_TUPLE.sub(localise, text)
+    if rewritten < DIRECTORY_LOGO_MINIMUM:
+        raise ValueError(
+            f"{tmdb}: expected at least {DIRECTORY_LOGO_MINIMUM} pinned directory "
+            f"logos, localised {rewritten}"
+        )
+    remaining = sorted(host for host in DIRECTORY_LOGO_HOSTS if host in text)
+    if remaining:
+        raise ValueError(f"{tmdb}: third-party logo hosts remain: {', '.join(remaining)}")
     tmdb.write_text(text, encoding="utf-8", newline="")
 
 
@@ -495,6 +578,7 @@ def build(source_root: Path, output_root: Path) -> list[Path]:
         rewrite_user_facing_text(target, addon)
         rewrite_user_facing_python(target, addon)
         rewrite_discovery_previews(target, addon)
+        localise_directory_logo_artwork(target, addon)
         update_metadata(target, addon)
         prepare_artwork_theme(target, addon)
         replace_artwork(target, addon)
