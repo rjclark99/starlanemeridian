@@ -45,8 +45,8 @@ Android TV, and Google TV. A household downloads the setup APK using a permanent
 Downloader code, pairs it to the control plane, and is guided through official Kodi
 and Proton VPN installation. The setup app should automate everything Android permits
 while leaving unavoidable Android/Kodi permission and package-install confirmations to
-the TV user. A Windows portal provides household management, observability, pairing,
-safe remote commands, and an ADB fallback for exceptional support cases.
+the TV user. Owner administration is performed by a separate PC-local tool that is
+not sourced, built, or published by this client repository.
 
 The owner prefers the agent to do as much as safely possible and request input only
 when an external confirmation, secret, legal allowlist, design choice, or other
@@ -56,7 +56,8 @@ Standing constraints from the owner and product design:
 
 - Do not shut down the computer, sign the owner out, or close their running dashboard
   unless the owner explicitly changes that instruction.
-- Keep the administration portal password protected and bound only to localhost.
+- Keep owner administration tooling outside this repository, password protected, and
+  bound only to localhost.
 - Retain ADB support, but do not turn the cloud service into a remote shell or arbitrary
   ADB command channel.
 - Do not automate CAPTCHA, terms acceptance, Proton account farming, account transfer,
@@ -84,7 +85,7 @@ Standing constraints from the owner and product design:
 - AFTVnews Downloader code: `3467018` (`https://aftv.news/3467018`)
 - Control plane: `https://control.starlanemeridian.uk`
 - Health endpoint: `https://control.starlanemeridian.uk/health`
-- Windows portal: `http://127.0.0.1:54731`
+- Owner device manager: separate PC-local project, not a release asset
 - Cloudflare Worker: `starlane-meridian-control`
 - D1 database: `kodi-setup-control`
 - D1 ID: `7ffe748f-2434-46cf-b561-b5cfd904d085`
@@ -116,10 +117,9 @@ Reference device:
 - Bootstrap recovery settings are clear: `pending_skin` and `previous_skin` are unset
 - Real-Debrid device OAuth completed; only premium-expiry status is reported to cloud
 
-The portal process was running and responsive as `KodiSetup.Admin`, PID 3752, at the
-end of the prior task. A PID is ephemeral: check by process name and URL rather than
-assuming 3752 remains valid. Do not replace an existing vault or create a new one when
-one already exists.
+Owner device-manager process, configuration, and vault state are external to this
+client repository. Verify them only in the separate local project when explicitly in
+scope.
 
 Useful device checks:
 
@@ -192,24 +192,12 @@ Primary workflow code:
 - `android-app/app/src/main/java/app/kodisetup/tv/security/ManifestSecurity.kt`
 - `android-app/app/src/main/java/app/kodisetup/tv/security/DeviceIdentity.kt`
 
-### Windows administration portal
+### Owner administration boundary
 
-Locations: `admin-portal/`, `admin-portal.tests/`
-
-- .NET 8 self-contained Windows portal
-- Binds to `127.0.0.1:54731`; rejects non-loopback requests
-- All `/api/*` routes except vault status/create/unlock require an unlocked vault
-- Vault uses Argon2id, AES-256-GCM, and Windows DPAPI; auto-lock is 15 minutes
-- Clipboard clearing is configured for 60 seconds
-- Vault default path: `%LOCALAPPDATA%\KodiSetupAdmin\households.vault`
-- No recovery backdoor and no cross-Windows-profile restore path
-- Supports household records, encrypted export, audit history, pairing, device list,
-  allowlisted commands, deletion, and ADB install/bootstrap fallback
-
-The checked-in `admin-portal/appsettings.json` intentionally contains blank Cloudflare
-Access credentials. The running/published local portal has been configured separately.
-Never overwrite working local configuration with the blank template. Never print the
-service-token values into a terminal, response, log, or handoff.
+The PC-local device manager is maintained in a separate local-only repository and is
+not a release asset. This repository retains only the authenticated control-service
+endpoints required for pairing, device state, and closed-enum commands. Never add a
+runnable administration UI, vault, or private service-token configuration here.
 
 ### Cloudflare Worker / D1 control plane
 
@@ -315,14 +303,6 @@ Set-Location android-app
 Set-Location ..
 ```
 
-Windows portal:
-
-```powershell
-dotnet restore admin-portal\KodiSetup.Admin.csproj
-dotnet build admin-portal\KodiSetup.Admin.csproj -c Release --no-restore
-dotnet run --project admin-portal.tests\KodiSetup.Admin.Tests.csproj -c Release
-```
-
 Skin and repository build:
 
 ```powershell
@@ -339,7 +319,7 @@ python tools\release.py verify config\manifest.json --public-key config\manifest
 
 GitHub Actions workflows:
 
-- `.github/workflows/ci.yml`: control API, configuration/Kodi, Android, and portal
+- `.github/workflows/ci.yml`: control API, configuration/Kodi, and Android
 - `.github/workflows/release.yml`: signed release workflow
 - `.github/workflows/vendor-monitor.yml`: review-only vendor update PRs
 
@@ -359,8 +339,8 @@ Do not publish directly from an unverified local artifact.
 6. Commit and push source, then wait for the entire GitHub CI matrix to pass.
 7. Assemble a new `build/release-vX.Y.Z-test/publish` directory. Retain all prior skin
    ZIPs and sidecars needed for rollback/history. Replace current manifest, repository
-   metadata, and new skin assets. Keep `setup.apk` and portal ZIP unchanged unless those
-   products actually changed.
+   metadata, and new skin assets. The client release must never include owner
+   administration tooling.
 8. Generate exact SHA-256 checksums. Package sidecars must contain LF-only bytes because
    Kodi previously exposed a Windows CRLF parsing defect.
 9. Create a draft GitHub release. Do not mark it prerelease if `/releases/latest/` must
@@ -510,15 +490,13 @@ rollback/revocation plan. Do not call the present release production-stable.
 1. Read the five source-of-truth documents named at the top of this handoff.
 2. Run `git status --short` and `git log -5 --oneline`; preserve a clean `main` at or
    after `79650c2`.
-3. Check `http://127.0.0.1:54731` and the `KodiSetup.Admin` process without restarting or
-   replacing the vault.
-4. Check the public health endpoint and latest GitHub release without mutating them.
-5. If the Fire TV is needed, confirm with ADB and read the current skin/config state
+3. Check the public health endpoint and latest GitHub release without mutating them.
+4. If the Fire TV is needed, confirm with ADB and read the current skin/config state
    before pushing anything. Do not assume it is powered on.
-6. Ask the owner what they want to inspect next in the skin, unless a new concrete issue
+5. Ask the owner what they want to inspect next in the skin, unless a new concrete issue
    is already included in the new task. Reproduce on hardware, fix the generator, add a
    test, build a candidate, inspect screenshots/logs, and only then release.
-7. Keep `docs/CURRENT_STATUS.md` and this handoff synchronized after material milestones.
+6. Keep `docs/CURRENT_STATUS.md` and this handoff synchronized after material milestones.
 
 ## 12. Security stop conditions
 
@@ -527,7 +505,7 @@ Stop and ask the owner rather than guessing if work would require:
 - revealing, rotating, deleting, or replacing a private/signing/access/vault secret
 - deleting a household/device/vault or uninstalling an app with user data
 - making the repository private or changing permanent release/domain URLs
-- exposing ADB, the localhost portal, or admin APIs beyond their current trust boundary
+- exposing ADB or admin APIs beyond their current trust boundary
 - adding a third-party repository/add-on without a documented allowlist and permission
 - accepting provider terms, submitting registration, bypassing verification, or handling
   payment data for another person

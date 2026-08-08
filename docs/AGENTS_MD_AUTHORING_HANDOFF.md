@@ -9,7 +9,7 @@ supporting knowledge scaffold.
 
 Use this document to create an in-depth, project-wide `AGENTS.md` for Starlane Movies.
 The result must help future agents work safely and efficiently across the Android setup
-app, Windows administration portal, Cloudflare control plane, signed configuration,
+app, Cloudflare control plane, signed configuration,
 Kodi bootstrap/repository, production skin, and private experimental skin.
 
 The root `AGENTS.md` must be a living operational contract, but it must not grow into a
@@ -61,7 +61,7 @@ Use this precedence model:
 
 1. Security and privacy invariants in `SECURITY.md` and enforced schemas/code.
 2. Checked-in source, configuration, and regression tests for intended source state.
-3. Fresh read-only inspection for current device, cloud, portal, or release state.
+3. Fresh read-only inspection for current device, cloud, or release state.
 4. The newest explicitly dated and verified status entry.
 5. Older handoffs and incident narratives as historical evidence only.
 
@@ -81,16 +81,14 @@ live state, and update or supersede the stale fact. Do not silently propagate bo
 
 Starlane Movies is a remote-friendly provisioning platform for Fire TV, Fire OS,
 Android TV, and Google TV. It installs and configures official Kodi and Proton VPN,
-provides a signed and allowlisted Kodi bootstrap path, supports a local Windows
-administration portal, and uses a constrained Cloudflare control plane.
+provides a signed and allowlisted Kodi bootstrap path, and uses a constrained
+Cloudflare control plane. Owner administration tooling is maintained separately.
 
 Top-level source map:
 
 | Area | Location | Primary technology | Responsibility |
 | --- | --- | --- | --- |
 | Setup application | `android-app/` | Kotlin 2.3.21, Jetpack Compose, Java 17, Gradle | D-pad-first setup, signed manifest consumption, verified downloads, pairing, bounded telemetry, official OAuth |
-| Administration portal | `admin-portal/` | .NET 8, ASP.NET Core, Windows x64 | Localhost UI, encrypted household vault, pairing, support workflows, allowlisted commands, ADB fallback |
-| Portal tests | `admin-portal.tests/` | .NET 8 | Vault, ADB, bootstrap, and portal regression coverage |
 | Control plane | `control-api/` | TypeScript 5.8, Cloudflare Workers, D1, Wrangler, Vitest | Pairing, signed device requests, replay defense, bounded status/events, allowlisted commands, safe public Kodi redirects |
 | Signed configuration | `config/` | JSON Schema, canonical JSON, Ed25519 | Versioned staged manifest, vendor/artifact pins, repositories, add-ons, skin, telemetry |
 | Kodi bootstrap/repository | `kodi/repository.kodisetup/` | Kodi Python 3 add-on | Manifest verification, idempotent configuration, repository/add-on installation, skin activation and rollback |
@@ -161,7 +159,7 @@ The generated `AGENTS.md` must state these prominently and tersely:
 - Never print, commit, or copy private keys, Android keystores, vault contents,
   Cloudflare Access secrets, OAuth tokens, pairing codes, provider credentials, or
   full sensitive settings files.
-- The Windows portal remains password protected and loopback-only.
+- Owner administration tooling remains outside this repository and loopback-only.
 - Cloud commands remain a closed enum. Never add arbitrary shell, ADB, URL, Python,
   Kodi built-in, or remote-desktop capability.
 - Never expose ADB port 5555 to the internet.
@@ -172,8 +170,8 @@ The generated `AGENTS.md` must state these prominently and tersely:
   allowlist before publication.
 - Android developer options, ADB approval, unknown-source permission, and package
   install confirmations remain user actions.
-- Never overwrite a working local portal configuration or vault with checked-in blank
-  templates.
+- Never add owner-tool configuration, vault data, or runnable administration tooling
+  to the client repository.
 - Back up exact device/profile/database state before a risky hardware mutation.
 - Do not delete user data, progress databases, add-on settings, rollback skins, or
   backups unless the owner explicitly requests the exact destructive action.
@@ -612,13 +610,6 @@ Before delivery:
   hash verification, and user-visible installer permissions;
 - physical Fire TV and Android TV/Google TV are separate acceptance targets.
 
-### Windows portal
-
-- restore, build Release, and run `admin-portal.tests`;
-- preserve loopback binding, vault access rules, encryption, auto-lock, and clipboard
-  clearing;
-- never replace a live vault or reveal local service-token configuration.
-
 ### Public release
 
 - require explicit release authority;
@@ -671,7 +662,6 @@ docs/agent-knowledge/
     public-release-state.md
   subsystems/
     android-app.md
-    admin-portal.md
     control-api.md
     signed-config-release.md
     kodi-bootstrap.md
@@ -809,7 +799,7 @@ undo, including:
 - schema-driven allowlists;
 - local-only progress using Umbrella’s existing database;
 - offline manifest signing;
-- loopback-only portal and closed command enum.
+- external owner-tool separation and a closed command enum.
 
 Each decision must contain context, decision, alternatives rejected, consequences,
 revisit conditions, and verification.

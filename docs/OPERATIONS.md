@@ -28,9 +28,8 @@ Widget providers are compiled from a closed allowlist. The selected section alon
 
 1. On Fire TV, reveal Developer Options if necessary by selecting **Settings → My Fire TV → About → device name** seven times.
 2. Enable **ADB debugging** and approve the Windows computer when prompted.
-3. In the Windows portal, enter the Fire TV IP, connect, and confirm the fingerprint on the TV.
-4. Use **Install setup APK**, complete Kodi installation, then select the built `repository.kodisetup` ZIP and use **Deploy bootstrap**.
-5. The portal probes Kodi's external add-on directory and deploys directly when writable. If scoped storage blocks it, the ZIP is copied to Downloads and the TV app shows the guided Kodi steps.
+3. Use the signed setup APK and complete Kodi installation on the TV.
+4. Follow the setup app's verified Bootstrap preparation and guided Kodi steps.
 
 No component attempts to enable Developer Options or approve ADB on the user's behalf.
 
@@ -46,8 +45,8 @@ AFTVnews codes and target URLs are public. Do not encode credentials or private 
 
 ## Hosted API
 
-Create a D1 database, apply `control-api/migrations/0001_initial.sql`, replace the placeholder ID in `wrangler.toml`, and configure Cloudflare Access to protect `/v1/admin/*` before exposing the Worker. Put a Cloudflare Access service-token ID and secret in the Windows portal's local `appsettings.json`; never commit them. Device endpoints remain public but require pairing codes or signed requests.
+Create a D1 database, apply `control-api/migrations/0001_initial.sql`, replace the placeholder ID in `wrangler.toml`, and configure Cloudflare Access to protect `/v1/admin/*` before exposing the Worker. Device endpoints remain public but require pairing codes or signed requests.
 
-## Credential vault
-
-The Windows portal binds to loopback only. Create a strong master password and store an encrypted backup separately. There is no password-recovery bypass. Payment data must never be typed into or pasted into the portal.
+Owner administration tooling is maintained outside this client repository. The shared
+control service keeps `/v1/admin/*` behind Cloudflare Access; no administration UI,
+credential vault, or runnable management package is built or published here.

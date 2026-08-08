@@ -1,14 +1,20 @@
 ---
 id: current.deployed-state
 kind: current
-status: active
+status: needs-verification
 verified_at: 2026-07-29
-tags: [device, kodi, fire-tv, portal, control-api, real-debrid]
-authority: [adb, wrangler, local-portal, docs/CURRENT_STATUS.md]
+tags: [device, kodi, fire-tv, control-api, real-debrid]
+authority: [adb, wrangler, docs/CURRENT_STATUS.md]
 supersedes: []
 ---
 
 # Reference device state
+
+This record contains bounded device and service observations last verified on
+29 July 2026. No live device or production-service inspection was performed
+during the 1 August project-control rollout. Treat installed versions, reachability,
+and rollback locations below as historical evidence until they are re-established by
+the matching read-only runbook.
 
 The newest bounded Fire TV acceptance on 29 July preserved the active skin,
 Bootstrap, generated menus, skin settings, `guisettings.xml`, and Kodi log under
@@ -129,18 +135,16 @@ remained running as 21.3 during the setup-app upgrade.
 Production service state at Worker version
 `0d4c80cc-0fc5-455b-b594-ceb7c918265d` includes applied D1 migration
 `0004_real_debrid_authorization.sql`. Public health returned 200, unauthenticated
-`/v1/admin/*` traffic was redirected to Cloudflare Access, and the portal's existing
-service-token configuration reached the admin devices endpoint without exposing its
+`/v1/admin/*` traffic was redirected to Cloudflare Access, and the separately
+maintained owner tool reached the admin devices endpoint without exposing its
 credentials. The exact public provider 6.7.81.2 route returned the public release
-bytes while the superseded 6.7.81.1 route returned 404. The updated loopback portal
-returned 200 at `127.0.0.1:54731`, exposed
-the Real-Debrid control, and retained its configured `appsettings.json` byte-for-byte.
-Its vault is locked after restart and requires the owner to unlock it before use.
+bytes while the superseded 6.7.81.1 route returned 404. Owner-tool runtime and vault
+state are external to this repository and require separate live verification.
 
 Local ignored rollback evidence is under
 `build/device-backups/kodi-active-pre-real-debrid-deploy-20260729/`,
-`build/device-backups/real-debrid-remote-auth-pre-0.5.0-20260729/`, and
-`build/device-backups/portal-pre-real-debrid-20260729/`. The Kodi backup contains
+and `build/device-backups/real-debrid-remote-auth-pre-0.5.0-20260729/`.
+The Kodi backup contains
 the installed 21.3 APK plus a verified full `.kodi` archive; treat it as sensitive
 because it contains provider settings and viewing databases.
 

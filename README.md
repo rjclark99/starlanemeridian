@@ -3,7 +3,6 @@
 A remote-friendly Android TV / Fire TV provisioning platform:
 
 - `android-app/` - the sideloaded setup APK.
-- `admin-portal/` - a Windows-local administration portal and encrypted credential vault.
 - `control-api/` - a Cloudflare Worker + D1 device control plane.
 - `kodi/` - the Kodi bootstrap/repository service, production skin builder inputs, and
   GPL-2.0 experimental `skin.starlane.movies` source.
@@ -33,8 +32,7 @@ enforced in code and documented in [SECURITY.md](SECURITY.md).
 
 3. Build the Android app with the production manifest URL, public key, control URL,
    and signing keystore.
-4. Run the Windows portal with `dotnet run --project admin-portal/KodiSetup.Admin.csproj`.
-5. Deploy the control API from `control-api/` with `pnpm deploy`.
+4. Deploy the control API from `control-api/` with `pnpm deploy`.
 
 Use [docs/OWNER_SETUP_GUIDE.md](docs/OWNER_SETUP_GUIDE.md) for the full checklist,
 [docs/OPERATIONS.md](docs/OPERATIONS.md) for routine operations, and

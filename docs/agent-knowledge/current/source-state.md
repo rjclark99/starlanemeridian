@@ -2,7 +2,7 @@
 id: current.source-state
 kind: current
 status: active
-verified_at: 2026-08-01
+verified_at: 2026-08-08
 tags: [git, source, versions]
 authority: [git, config/manifest.json]
 supersedes: []
@@ -10,21 +10,41 @@ supersedes: []
 
 # Repository source state
 
-`main` and `origin/main` are at `3c99980`. The source contains Android setup
+Read-only inspection on 1 August 2026 found a clean `main` and `origin/main` at
+`cefca90`. The source contains Android setup
 0.5.3/code 8, Bootstrap 1.1.13, production skin 1.3.0, private skin 2.2.20,
 branded provider 6.7.81.2, and signed test manifest `2026.07.37`. Commit `0609e30`
 links command-correlated remote Real-Debrid authorization to the local Kodi provider;
 the token remains on the television. Commits `c8ae9f1`, `0c536ce`, and `3c99980`
 make Kodi archives portable across Windows and Linux and add a CI assertion that the
-generated Bootstrap archive equals the signed-manifest digest. Public-release and
+generated Bootstrap archive equals the signed-manifest digest. Commit `cefca90`
+records the separately verified `v0.5.8-test` release state; it does not change the
+product versions or release bytes from `3c99980`. Public-release, device, and
 production-service evidence remain recorded separately.
 
-On Android 9/Fire OS, Android setup 0.5.3/code 8 locally enables Kodi's single required
-`addons.unknownsources` preference during Bootstrap preparation after visible storage
-permission; newer scoped-storage Android versions retain the manual step. Kodi's
-Install from ZIP confirmation remains explicit. On the
-first Bootstrap service launch, a separate one-time modal approval gates every
-configuration change and authorizes the exact signed-manifest package. The candidate
+On 8 August the owner administration panel was migrated byte-for-byte into the
+separate local-only `Starlane Device Manager` Git repository, which has no remote.
+Its private configuration now lives under the Windows user's LocalAppData, its
+existing vault was preserved and unlocked successfully, and the standalone Release
+build/tests plus loopback-only launch and restart checks passed. This client candidate
+removes the panel source, tests, launcher, CI job, release artifact, and documentation
+coupling and adds a regression that forbids owner-tooling release assets. Existing
+public releases remain separate public-release state and may still contain a legacy
+panel ZIP until an explicitly authorised publication mutation removes it.
+
+The working tree now contains the owner-requested, uncommitted project-control rollout
+and a product source candidate. The candidate adds bounded Home **Show more** terminal
+navigation, complete ordered provider/network discovery, local artwork fallbacks,
+Android one-run scope-bound consent and verified resume, and Bootstrap 1.1.14
+scope-bound authorization/revocation. Treat all of these as local source state only;
+no device, signed-manifest, public-release, or production-service transition occurred.
+
+The strict Android candidate no longer edits Kodi's `addons.unknownsources` preference.
+Kodi's Unknown Sources warning, Install from ZIP selection, and Bootstrap approval all
+remain explicit platform confirmations. One Cancel-first Android consent authorizes a
+single verified run for at most 24 hours and is bound to the Android-relevant signed
+manifest payload. On Bootstrap launch, a separate local approval is bound to the exact
+Bootstrap version, scoped manifest content, and package-lock digest. The candidate
 installs a 38-package, hash-locked, complete transitive closure containing the pinned
 Umbrella/CocoScrapers stack, private-skin dependencies, and private skin. It has no
 Kodi modal `InstallAddon`/`EnableAddon` calls: packages are verified, extracted in
@@ -39,3 +59,13 @@ detects disabled installed versions through JSON-RPC, and enables the provider b
 settings access. The deterministic overlay removes its incompatible upstream
 repository-version probe. Artifact hashes and device evidence are recorded in
 `incident.provider-overlay-bootstrap-order`.
+
+Private-skin candidate 2.2.22 refines the bounded Home terminal-navigation
+prototype. Thirty-two configured Umbrella directory-widget instances retain their
+full configured preview limit and append one `Show more` card that opens the exact
+source directory. The two local Continue Watching queues and custom/non-Umbrella
+widgets keep their former content behavior. A comparison against the 2.2.21 local
+skin package found the same 560 entries with changes limited to `addon.xml` and
+`IncludesHomeWidgets.xml`. This is local-candidate evidence only; installer,
+Bootstrap, provider, package-lock, device, signed-manifest, and public-release states
+are unchanged.

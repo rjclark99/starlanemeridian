@@ -47,8 +47,6 @@ Run the baseline checks:
 ```powershell
 python tools\release.py validate config\manifest.example.json
 python -m unittest discover -s tools -p 'test_*.py'
-dotnet build admin-portal\KodiSetup.Admin.csproj -c Release
-dotnet run --project admin-portal.tests\KodiSetup.Admin.Tests.csproj -c Release
 Set-Location control-api
 pnpm check
 pnpm test
@@ -460,7 +458,6 @@ In GitHub:
 The workflow builds and publishes:
 
 - `setup.apk`
-- `KodiSetup.Admin-win-x64.zip`
 - `repository.kodisetup-1.1.0.zip`
 - branded skin and Kodi repository artifacts
 - signed `manifest.json`
@@ -479,57 +476,7 @@ Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest
 
 GitHub's `/releases/latest/download/<asset>` URL follows the latest non-prerelease release. If you mark the release as a prerelease, it will not become the `/latest` target.
 
-## 13. Configure the Windows administration portal
-
-Download and extract `KodiSetup.Admin-win-x64.zip` to a directory writable only by your Windows user.
-
-Edit the extracted `appsettings.json`:
-
-```json
-{
-  "Urls": "http://127.0.0.1:54731",
-  "AdbPath": "C:\\Users\\YOUR_NAME\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.exe",
-  "ControlApi": {
-    "BaseUrl": "https://kodi-control.example.com",
-    "AccessClientId": "YOUR_CLOUDFLARE_ACCESS_CLIENT_ID",
-    "AccessClientSecret": "YOUR_CLOUDFLARE_ACCESS_CLIENT_SECRET"
-  },
-  "Vault": {
-    "AutoLockMinutes": 15,
-    "ClipboardClearSeconds": 60
-  },
-  "AllowedHosts": "127.0.0.1;localhost"
-}
-```
-
-Protect this folder because the Access service token is stored in this local file. Restrict its Windows ACL to your account.
-
-Start `KodiSetup.Admin.exe`, then open:
-
-```text
-http://127.0.0.1:54731
-```
-
-Create a vault with a unique master password of at least 14 characters. Export an encrypted backup and test that you can unlock it before recording real household data. There is no recovery backdoor.
-
-The current backup remains bound to the same Windows user profile through DPAPI. To restore it on that profile, stop the portal and place the exported file at:
-
-```text
-%LOCALAPPDATA%\KodiSetupAdmin\households.vault
-```
-
-There is currently no cross-machine or cross-profile restore path. Keep an additional offline record of essential household account ownership information rather than treating the vault as the only record.
-
-For each household:
-
-1. Let the household user open the official provider site.
-2. Let them accept terms, CAPTCHA, verification, and ownership prompts.
-3. Enter payment only on the provider's official page.
-4. If they explicitly consent, save credentials in the local vault.
-5. Record consent and account handoff.
-6. Never share a Real-Debrid account between households.
-
-## 14. Create the Downloader code
+## 13. Create the Downloader code
 
 Use this exact public URL:
 
@@ -543,7 +490,7 @@ Test the code on a clean Fire TV. Treat the code as public; it must never resolv
 
 Regenerate the code only if the permanent URL changes. Normal releases keep the filename `setup.apk`, so the same code should continue to resolve to the newest release.
 
-## 15. Test the Downloader/guided installation path
+## 14. Test the Downloader/guided installation path
 
 On a clean Fire TV:
 
@@ -552,7 +499,7 @@ On a clean Fire TV:
 3. Enter the Downloader code.
 4. Confirm the URL is your GitHub repository before downloading.
 5. Install `setup.apk` through the Android system dialog.
-6. Open Kodi Setup and enter the one-time code created in the Windows portal.
+6. Open Kodi Setup and enter the owner-provided one-time pairing code.
 7. Allow Kodi Setup to install unknown apps when prompted.
 8. Install Kodi and confirm the Android installer result.
 9. Install Proton VPN from Amazon Appstore; sign in using Proton's official TV code/QR flow.
@@ -561,34 +508,17 @@ On a clean Fire TV:
 12. Use **Install from ZIP file**, open Downloads, and select `repository.kodisetup.zip`.
 13. Wait for the service bootstrap to install the configured skin and allowed add-ons.
 14. Complete Real-Debrid's official device-code flow if desired.
-15. Confirm the portal receives only setup state, versions, errors, last-seen time, and subscription expiry.
+15. Confirm the control service receives only setup state, versions, errors, last-seen time, and subscription expiry.
 
 Android and Kodi confirmations are mandatory and should not be bypassed.
 
-## 16. Test the managed ADB path
-
-On Fire TV, manually reveal Developer Options by selecting the device name under **Settings → My Fire TV → About** seven times. Enable ADB debugging and approve the Windows computer on the TV.
-
-In the Windows portal:
-
-1. Open **Devices & ADB**.
-2. Enter the TV IP address.
-3. Select **Connect** and accept the fingerprint on the TV.
-4. Select the downloaded `setup.apk` and choose **Install setup APK**.
-5. Install Kodi through the TV workflow.
-6. Select the verified `repository.kodisetup-1.1.0.zip` and choose **Deploy bootstrap**.
-
-The portal probes Kodi's external add-on directory. When it is writable, the repository/service is pushed directly. Otherwise, the ZIP is copied to Downloads and you must complete the guided Kodi installation.
-
-Disable ADB debugging after setup if ongoing managed access is unnecessary.
-
-## 17. Acceptance checklist
+## 15. Acceptance checklist
 
 Do not call the release stable until all applicable items pass:
 
 - [ ] CI passes on the release commit.
 - [ ] GitHub Pages serves `addons.xml`, checksum, skin, and bootstrap ZIP over HTTPS.
-- [ ] The release contains `setup.apk`, signed manifest, Windows portal, checksums, and SBOM.
+- [ ] The release contains `setup.apk`, signed manifest, Kodi artifacts, checksums, and SBOM.
 - [ ] APK and manifest URLs work through `/releases/latest/download/...`.
 - [ ] `setup.apk` is signed with the backed-up production keystore.
 - [ ] Manifest signature validation succeeds.
@@ -600,16 +530,14 @@ Do not call the release stable until all applicable items pass:
 - [ ] Cloudflare Access rejects unauthenticated administrator requests.
 - [ ] Device status and commands work after pairing.
 - [ ] Guided Downloader setup works using only remote control input.
-- [ ] ADB direct deployment and Downloads fallback both work.
 - [ ] Kodi bootstrap is idempotent when Kodi restarts.
-- [ ] Required add-on failures appear in the TV and portal workflows.
+- [ ] Required add-on failures appear in the TV workflow.
 - [ ] Skin failure leaves a usable route back to Kodi's default skin.
 - [ ] Real-Debrid authorization succeeds without transmitting the token to the cloud.
 - [ ] No credentials, OAuth tokens, payment data, or Kodi viewing history appear in logs.
-- [ ] Vault auto-lock, failed-attempt throttling, clipboard clearing, export, and same-profile restore are tested.
 - [ ] Each household has explicitly accepted provider terms and owns its accounts.
 
-## 18. Routine updates
+## 16. Routine updates
 
 The weekly vendor monitor creates a review PR containing discovery data only. It does not update the signed manifest. In **Settings → Actions → General → Workflow permissions**, enable **Allow GitHub Actions to create and approve pull requests**; without it, candidate discovery succeeds but the final PR step is rejected by GitHub.
 
@@ -630,7 +558,7 @@ For every Kodi or Proton update:
 
 Never replace the Android keystore for an update. Rotate the manifest key only through a setup-app update that embeds the new public key.
 
-## 19. Revocation and incident response
+## 17. Revocation and incident response
 
 If a configuration is unsafe but the manifest key remains secure:
 
@@ -649,7 +577,7 @@ If the manifest private key is compromised:
 
 If the Android keystore is lost, existing installations cannot accept a normally signed update from a replacement key. Restore it from the offline backup or require uninstall/reinstall under a new application identity.
 
-If a Cloudflare service token is exposed, revoke it, create a replacement, and update the Windows portal's `appsettings.json` immediately.
+If a Cloudflare service token is exposed, revoke it and update the separately maintained owner-administration configuration immediately.
 
 ## Official references
 

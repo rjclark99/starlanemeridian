@@ -16,19 +16,10 @@ jobs:
       - run: pip install -r tools/requirements.txt
       - run: python tools/release.py validate config/manifest.example.json
       - run: python tools/release.py verify config/manifest.json --public-key config/manifest.pub
+      - run: python tools/validate_project_control.py
       - run: python -m unittest discover -s tools -p "test_*.py"
       - run: python -m compileall -q kodi tools
       - run: python tools/release.py kodi --output artifacts/kodi --base-url https://example.invalid/kodi
-
-  admin-portal:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: "8.0.x" }
-      - run: dotnet restore admin-portal/KodiSetup.Admin.csproj
-      - run: dotnet build admin-portal/KodiSetup.Admin.csproj -c Release --no-restore
-      - run: dotnet run --project admin-portal.tests/KodiSetup.Admin.Tests.csproj -c Release
 
   control-api:
     runs-on: ubuntu-latest

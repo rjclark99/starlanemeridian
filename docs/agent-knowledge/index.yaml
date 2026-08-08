@@ -1,45 +1,45 @@
 schema_version: 1
-updated_at: 2026-07-29
+updated_at: 2026-08-01
 records:
   - id: current.source-state
     title: Repository source state
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: Pushed Bootstrap 1.1.10 branch plus uncommitted Android 0.5.2 Kodi-profile candidate.
+    summary: Main is at cefca90 with an uncommitted project-control rollout; product versions and verified v0.5.8-test bytes are unchanged.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
     authority: [git, config/manifest.json, kodi/skin.starlane.movies/addon.xml]
-    verified_at: 2026-07-28
+    verified_at: 2026-08-01
     supersedes: []
     related: [current.deployed-state, current.public-release-state]
     size_hint: small
   - id: current.deployed-state
     title: Reference device state
     kind: current
-    status: active
+    status: needs-verification
     path: docs/agent-knowledge/current/deployed-state.md
-    summary: Reference Fire TV runs private skin 2.2.19 and branded provider overlays.
+    summary: Historical 29 July Fire TV and service observations; recheck live state before use.
     tags: [device, kodi, fire-tv]
     path_globs: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
     read_when: [changing reference device, comparing source and installed state]
     authority: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
-    verified_at: 2026-07-28
+    verified_at: 2026-07-29
     supersedes: []
     related: [current.source-state, runbook.safe-adb-diagnostics]
     size_hint: small
   - id: current.public-release-state
     title: Public release state
     kind: current
-    status: needs-verification
+    status: active
     path: docs/agent-knowledge/current/public-release-state.md
-    summary: Documented public test release; recheck remote bytes before relying on it.
+    summary: Owner-approved v0.5.8-test public bytes, signatures, sidecars, and latest routes were verified on 1 August.
     tags: [release, manifest, github]
     path_globs: [.github/workflows/**, config/**, tools/release.py]
     read_when: [publishing, release comparison, public route checks]
-    authority: [config/manifest.json, docs/CURRENT_STATUS.md]
-    verified_at: 2026-07-28
+    authority: [github-release, downloaded-bytes, config/manifest.json]
+    verified_at: 2026-08-01
     supersedes: []
     related: [subsystem.signed-config-release, runbook.release-rollback]
     size_hint: small
@@ -56,20 +56,6 @@ records:
     verified_at: 2026-07-28
     supersedes: []
     related: [decision.trust-boundaries, subsystem.signed-config-release]
-    size_hint: medium
-  - id: subsystem.admin-portal
-    title: Windows administration portal
-    kind: subsystem
-    status: active
-    path: docs/agent-knowledge/subsystems/admin-portal.md
-    summary: Loopback .NET portal, encrypted vault, and safe ADB support.
-    tags: [dotnet, windows, vault, adb]
-    path_globs: [admin-portal/**, admin-portal.tests/**]
-    read_when: [editing portal, vault, household, or ADB features]
-    authority: [admin-portal/KodiSetup.Admin.csproj, admin-portal/Program.cs]
-    verified_at: 2026-07-28
-    supersedes: []
-    related: [decision.trust-boundaries, runbook.safe-adb-diagnostics]
     size_hint: medium
   - id: subsystem.control-api
     title: Cloudflare control API
@@ -204,7 +190,7 @@ records:
     path: docs/agent-knowledge/runbooks/safe-adb-diagnostics.md
     summary: Bounded, reversible reference-device inspection and mutation rules.
     tags: [adb, device, diagnostics, security]
-    path_globs: [admin-portal/Services/AdbService.cs, build/android-sdk/**]
+    path_globs: [build/android-sdk/**, docs/OPERATIONS.md]
     read_when: [connecting to or modifying a reference device]
     authority: [docs/OPERATIONS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
     verified_at: 2026-07-28
@@ -218,12 +204,12 @@ records:
     path: docs/agent-knowledge/decisions/ADR-001-trust-boundaries.md
     summary: Secrets remain local and remote commands stay closed and signed.
     tags: [security, privacy, architecture]
-    path_globs: [SECURITY.md, control-api/**, admin-portal/**, android-app/**]
+    path_globs: [SECURITY.md, control-api/**, android-app/**]
     read_when: [changing authentication, telemetry, commands, secrets]
     authority: [SECURITY.md]
     verified_at: 2026-07-28
     supersedes: []
-    related: [subsystem.control-api, subsystem.admin-portal]
+    related: [subsystem.control-api]
     size_hint: small
   - id: decision.compatibility-identifiers
     title: Retain compatibility identifiers
@@ -540,7 +526,7 @@ records:
     path: docs/agent-knowledge/incidents/INC-016-real-debrid-direct-url.md
     summary: The app preferred an optional broader direct URL and then correctly rejected it against the relay allowlist.
     tags: [android, real-debrid, oauth, security]
-    path_globs: [android-app/**, control-api/**, admin-portal/**]
+    path_globs: [android-app/**, control-api/**]
     read_when: [Real-Debrid reports an unexpected direct authorization URL]
     authority: [official Real-Debrid device-code response, android-app/app/src/main/java/app/kodisetup/tv/net/RealDebridAuthorization.kt]
     verified_at: 2026-07-29

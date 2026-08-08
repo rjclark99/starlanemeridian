@@ -52,12 +52,8 @@ def main() -> None:
     draw.text((133, 121), "YOUR MEDIA. ON COURSE.", font=font(8), fill="#91A8C0")
     banner.convert("RGB").save(android / "starlane_movies_tv_banner.jpg", quality=93, optimize=True)
 
-    web_mark = contain(emblem, (128, 128))
-    web_mark.save(ROOT / "admin-portal" / "wwwroot" / "starlane-movies-emblem.png", optimize=True)
-
     print(android / "starlane_movies_icon.png")
     print(android / "starlane_movies_tv_banner.jpg")
-    print(ROOT / "admin-portal" / "wwwroot" / "starlane-movies-emblem.png")
 
 
 if __name__ == "__main__":

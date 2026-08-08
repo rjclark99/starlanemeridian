@@ -53,6 +53,11 @@ and its signer SHA-256 remains
 The portal ZIP SHA-256 is
 `a9a49217a52341cf26adc77d9ff916f0be1de183eaee44639a6eed0715f2e686`.
 
+This is legacy public-release evidence only. The 8 August source candidate removes
+owner administration tooling from the client tree and future release workflow, but it
+does not retroactively delete assets from existing GitHub releases. Removing a legacy
+public asset is a separate owner-authorised publication mutation and remains pending.
+
 All 27 draft assets were downloaded and matched the candidate byte-for-byte before
 publication. All 27 public tag assets were downloaded again after promotion and
 matched. The permanent setup APK, manifest, Bootstrap 1.1.5, and private-skin routes

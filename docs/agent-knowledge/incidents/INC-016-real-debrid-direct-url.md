@@ -20,7 +20,7 @@ rejected it against the cloud relay allowlist.
 
 Fix: ignore the optional direct URL. Strictly validate the ordinary verification URL
 and device-code shape, then construct only
-`https://real-debrid.com/device?user_code=...`. Do not broaden the Worker or portal
+`https://real-debrid.com/device?user_code=...`. Do not broaden the Worker or owner tool
 allowlist and never relay the direct URL's identifiers.
 
 Regression: `RealDebridAuthorizationTest` covers the current broader direct response,

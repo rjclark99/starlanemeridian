@@ -79,8 +79,8 @@ and its signer SHA-256 remains
 
 On 24 July 2026 the user-facing product identity was changed to **Starlane Movies** in
 source. The local candidates are setup app `0.4.0` (version code 4), Estuary-derived
-skin `1.3.0`, and Bootstrap `1.1.4`. Android unit tests/lint, the Windows portal Release
-build/tests, all Python/Kodi tests, manifest validation/signature verification, and the
+skin `1.3.0`, and Bootstrap `1.1.4`. Android unit tests/lint, all Python/Kodi tests,
+manifest validation/signature verification, and the
 source skin build pass.
 
 The Android package name, Kodi add-on ID `skin.starlanemeridian`, GitHub repository,
@@ -131,7 +131,7 @@ unchanged. Umbrella's external provider is enabled with provider name
 
 - Public repository: `rjclark99/starlanemeridian`.
 - Control plane: `https://control.starlanemeridian.uk` (healthy).
-- Windows administration portal: localhost-only with an encrypted local vault.
+- Owner administration tooling: maintained separately from this client repository.
 - Downloader code: `3467018`.
 - Test device: Amazon AFTKAUK001, Fire OS / Android 9.
 - Kodi 21.3 and Proton VPN are installed.
@@ -232,7 +232,7 @@ revisions; these are maintenance warnings, not product or release failures.
 - Python release/profile/Kodi-settings/Kodi-manifest/skin/vendor-monitor tests: 29 passed, including expanded menu-order, XML, typography-width, startup, provider-allowlist, performance-bound, search-fallback, single-focus ownership, utility-rail, power-dialog, safe advanced-settings merge, and semantic-artifact-selection coverage.
 - Control API tests: 10 passed in Cloudflare's isolated Workers/D1 runtime; TypeScript check passed.
 - Android unit tests, release compilation, lint-vital, and packaging passed.
-- Windows ADB/bootstrap/vault tests passed; portal Release build and self-contained publish passed with no warnings.
+- Historical owner-tool tests passed before that tooling moved to its separate local-only repository.
 - Production Worker deployment and `/health` passed.
 - Production Fire TV device record and safe command round-trip passed.
 - Physical Fire TV 0.2.0 upgrade regression passed: the setup screen remained on `COMPLETE`, no Android crash was logged, and the cloud record reported app version 2, configuration `2026.07.2`, no error, and the preserved Real-Debrid expiry.
