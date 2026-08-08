@@ -1,0 +1,35 @@
+{
+  "task_id": "security.full-automation-review-v1",
+  "goal": "Define the maximum safe and technically supported Android-to-Kodi automation flow after a second explicit owner consent, without bypassing operating-system or Kodi trust confirmations.",
+  "success_criteria": [
+    "Map every current manual step from setup APK through Bootstrap activation and classify it as safely automatable, platform-confirmed, or prohibited.",
+    "Verify Android PackageInstaller, scoped-storage, Fire OS/Android 9, modern Android, Kodi add-on installation, and Kodi JSON-RPC constraints from source and primary documentation.",
+    "Specify the second-consent text, scope, persistence, revocation, resume behavior, failure recovery, telemetry boundary, and tests needed for implementation.",
+    "Reject arbitrary file/settings access, silent APK confirmation, remote shell/ADB, accessibility automation, database tampering, and consent that purports to override system confirmations."
+  ],
+  "task_class": "diagnose",
+  "affected_state": "source",
+  "specialist_role": "security_reviewer",
+  "allowed_paths": ["SECURITY.md", "AGENTS.md", "android-app", "kodi/repository.kodisetup", "config", "tools/test_kodi_bootstrap.py"],
+  "allowed_tools": ["repository search", "static source inspection", "official Android documentation", "official Kodi documentation", "bounded web research"],
+  "prohibited_actions": ["source edits", "secret inspection", "device mutation", "deployment", "release", "publication", "trust-boundary expansion", "third-party automation framework"],
+  "knowledge_references": ["decision.trust-boundaries", "subsystem.android-app", "subsystem.kodi-bootstrap"],
+  "primary_hypothesis": "The app can safely automate verified download, export, platform launch, state detection, and resume around explicit confirmations, but cannot silently approve Android packages or Kodi's initial add-on trust boundary.",
+  "discriminating_check": "For each manual step, identify the exact current enforcement API and determine whether an official bounded API exists that preserves visible user confirmation.",
+  "required_outputs": ["step-by-step boundary matrix", "decision-complete implementation specification", "security findings", "required regression and hardware tests", "explicitly prohibited approaches"],
+  "validation_rung": 2,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": [
+    "The analysis requires a secret, sensitive full settings file, or device mutation.",
+    "Primary documentation cannot establish a material platform capability.",
+    "The requested behavior is possible only through shell, ADB, accessibility, root, or direct Kodi database manipulation."
+  ]
+}

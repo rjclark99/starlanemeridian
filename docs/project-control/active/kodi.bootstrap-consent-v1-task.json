@@ -1,0 +1,36 @@
+{
+  "task_id": "kodi.bootstrap-consent-v1",
+  "goal": "Bind Kodi Bootstrap authorization to the exact verified installation scope, add revocation and truthful completion semantics, and preserve its existing bounded idempotent package workflow.",
+  "success_criteria": [
+    "Bootstrap consent is independent of Android consent and bound to a canonical scope covering Bootstrap version, security-relevant manifest fields, and exact package-lock digest.",
+    "Bootstrap re-prompts after a scope change and provides a visible revoke action that blocks future application without deleting installed content.",
+    "Decline or revoked consent performs no package, configuration, add-on-enable, or skin mutation; failure never records applied_version; successful completion records it only after all required work succeeds.",
+    "All downloads, archive roots, IDs, versions, traversal, symlink, ABI, fixed settings, and fixed JSON-RPC operations remain allowlisted and tested.",
+    "Focused Kodi tests cover grant, decline, revoke, scope change, retry/idempotency, failure, and prohibited database, remote JSON-RPC, arbitrary built-in, and automated InstallFromZip approaches."
+  ],
+  "task_class": "implement",
+  "affected_state": "source",
+  "specialist_role": "feature_implementer",
+  "allowed_paths": ["kodi/repository.kodisetup", "tools/test_kodi_bootstrap.py"],
+  "allowed_tools": ["repository search", "apply_patch", "focused Python tests", "XML parsing", "Python compilation"],
+  "prohibited_actions": ["device mutation", "deployment", "release", "publication", "secret inspection", "ADB", "shell or accessibility automation", "Kodi database edits", "remote consent", "arbitrary paths, URLs, settings, built-ins, or JSON-RPC"],
+  "knowledge_references": ["decision.trust-boundaries", "subsystem.kodi-bootstrap", "subsystem.signed-config-release"],
+  "primary_hypothesis": "Replacing the indefinite installation_authorized boolean with a canonical scope-bound grant can preserve the existing Bootstrap workflow while forcing re-consent whenever its security-sensitive payload changes.",
+  "discriminating_check": "Change one security-relevant scope input and verify Bootstrap blocks all mutation until fresh local consent, while an unchanged verified scope resumes idempotently and only records completion after success.",
+  "required_outputs": ["bounded Bootstrap implementation", "focused regression tests", "scope canonicalization description", "validation evidence", "remaining compatibility risks"],
+  "validation_rung": 4,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": [
+    "The change would broaden Bootstrap beyond fixed verified packages, settings, IDs, or local in-process APIs.",
+    "A required behavior needs database access, remote JSON-RPC, arbitrary built-ins, InstallFromZip automation, or destructive rollback.",
+    "Implementation requires a secret, device mutation, deployment, release, or publication."
+  ]
+}

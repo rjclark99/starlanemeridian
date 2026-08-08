@@ -1,0 +1,22 @@
+{
+  "measured_at": "2026-08-01",
+  "metric": "repository file bytes loaded at startup",
+  "legacy_workflow": {
+    "root_agents_bytes_at_cefca90": 28515,
+    "seven_mandatory_document_bytes": 99066,
+    "total_bytes": 127581
+  },
+  "new_sample_workflow": {
+    "base_contract_index_and_control_guide_bytes": 50316,
+    "sample_routed_record_bytes": 5844,
+    "total_bytes": 56160,
+    "sample_route": [
+      "current.source-state",
+      "subsystem.private-skin",
+      "decision.single-home-renderer",
+      "runbook.focused-validation"
+    ]
+  },
+  "reduction_percent": 56.0,
+  "limitations": "This is a deterministic file-byte proxy, not platform token billing. Real pilots must also record tool calls, turns, retries, agents spawned, and platform token usage when available."
+}

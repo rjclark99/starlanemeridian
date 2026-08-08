@@ -1,0 +1,31 @@
+{
+  "task_id": "ux.widget-image-audit-v1",
+  "goal": "Audit existing Starlane Home captures and packaged widget artwork for missing, blank, misleading, or fragile provider/network card imagery.",
+  "success_criteria": [
+    "Inspect only relevant existing screenshots/captures and the exact Home widget artwork/fallback definitions.",
+    "Identify each observed or source-proven missing-art class and separate provider-data absence from renderer or cache faults.",
+    "Recommend a bounded fallback hierarchy and Show more card treatment consistent with the brand and D-pad focus rules.",
+    "Return exact evidence paths and implementation guidance without editing assets or source."
+  ],
+  "task_class": "diagnose",
+  "affected_state": "local-candidate",
+  "specialist_role": "image_analyst",
+  "allowed_paths": ["build/skin-screenshots", "assets/branding", "kodi/skin.starlane.movies/media", "kodi/skin.starlane.movies/xml", "kodi/skin.starlane.movies/shortcuts"],
+  "allowed_tools": ["bounded file search", "local image inspection", "static XML inspection"],
+  "prohibited_actions": ["source edits", "image generation", "asset edits", "device mutation", "web image scraping", "release", "publication"],
+  "knowledge_references": ["subsystem.private-skin", "research.dynamic-content-artwork", "incident.stale-provider-artwork-cache"],
+  "primary_hypothesis": "Some apparent missing provider/network cards are remote-art or directory-data gaps rather than Home renderer faults, so a local fallback hierarchy and explicit terminal-card art will stabilize presentation.",
+  "discriminating_check": "Compare visible blank/missing cards in the newest relevant captures with the texture expressions and available packaged fallbacks for the same row type.",
+  "required_outputs": ["visual findings", "evidence paths", "fallback hierarchy", "Show more card recommendation", "remaining device-capture needs"],
+  "validation_rung": 2,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": ["No relevant capture exists and the finding cannot be established from source.", "The audit would require new device capture or image generation."]
+}

@@ -1,0 +1,27 @@
+{
+  "task_id": "android.fixed-bootstrap-autoinstall-v1",
+  "goal": "Implement the owner-approved API-25–28 one-run transaction that enables Kodi Unknown Sources and atomically installs only the verified repository.kodisetup archive before launching Kodi.",
+  "success_criteria": [
+    "The operation requires a current TV-local STRICT_SETUP consent, visible storage permission, API 25–28, installed org.xbmc.kodi, a canonical profile, and conservative proof Kodi is not active.",
+    "The app revalidates the signed manifest and immutable downloaded archive, enforcing the exact manifest URL/hash, repository.kodisetup root/ID/version, bounded entry/expanded sizes and ratio, and rejection of traversal, absolute/backslash/drive/NUL/overlong/duplicate/case-colliding paths, encryption, links, devices, and extra roots.",
+    "One journaled same-filesystem transaction stages and verifies all bytes, atomically merges only addons.unknownsources=true and installs only repository.kodisetup, preserves conflicting existing state and refuses overwrite, and rolls back exact prior bytes on failure or interrupted recovery.",
+    "Every async callback rechecks consent epoch, security-scope digest, platform, Kodi identity/state, and transaction state immediately before writing or launching; Stop/revoke invalidates future work.",
+    "After commit the app launches only org.xbmc.kodi, where Bootstrap's separate scope-bound consent remains visible. API 29+ retains export and guided manual Kodi installation.",
+    "Focused tests cover consent/permission denial, profile absence, Kodi-active refusal, idempotency/conflict, archive attacks, fault injection/recovery, stale callbacks, scope change, launch failure, and modern-Android fallback."
+  ],
+  "task_class": "implement",
+  "affected_state": "source",
+  "specialist_role": "feature_implementer",
+  "allowed_paths": ["android-app", "SECURITY.md", "docs/agent-knowledge/decisions/ADR-001-trust-boundaries.md"],
+  "allowed_tools": ["repository search", "apply_patch", "Gradle unit tests", "Android lint", "local APK build"],
+  "prohibited_actions": ["device access", "deployment", "secret inspection", "signing", "publication", "commit", "push", "arbitrary ZIP/path/URL/package/add-on/setting/command capability", "Kodi database edits", "shell", "ADB", "accessibility", "silent APK installation"],
+  "knowledge_references": ["decision.trust-boundaries", "subsystem.android-app", "subsystem.kodi-bootstrap"],
+  "primary_hypothesis": "A manifest-bound, fixed-target, journaled transaction can safely place the Bootstrap add-on on owner-approved Android 9 without creating a general cross-app installer.",
+  "discriminating_check": "Inject a failure at each stage/swap/restore boundary and prove the exact prior profile is restored, while any caller-controlled archive/path/ID or ambiguous Kodi state is rejected before mutation.",
+  "required_outputs": ["bounded Android implementation", "archive and transaction tests", "state-machine and fallback tests", "focused/full validation", "remaining hardware risks"],
+  "validation_rung": 5,
+  "owner_approval_required": true,
+  "owner_approval": {"status": "approved", "scope": "Fixed repository.kodisetup auto-install on API25-28 under one local consent; no arbitrary installer or modern-Android bypass.", "evidence": "Owner explicitly requested automatic Unknown Sources and repository.kodisetup installation on 2026-08-01."},
+  "context_budget": {"max_packet_words": 1200, "max_topic_records": 3, "max_search_concepts": 5, "max_log_context_lines": 20, "max_retries": 2},
+  "stop_conditions": ["The implementation needs caller-controlled input, Kodi database changes, force-stop/kill, shell/ADB/accessibility, MANAGE_EXTERNAL_STORAGE, or unattended Android APK installation.", "Exact rollback cannot be proven for a fault-injected phase.", "Kodi-not-running state or the canonical profile cannot be established conservatively."]
+}

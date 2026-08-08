@@ -1,0 +1,29 @@
+{
+  "task_id": "pilot.isolated-feature",
+  "goal": "Simulate a bounded private-skin implementation packet without changing product source.",
+  "success_criteria": [
+    "The packet selects one writer and one subsystem.",
+    "The packet remains within the context and authority budgets."
+  ],
+  "task_class": "implement",
+  "affected_state": "source",
+  "specialist_role": "feature_implementer",
+  "allowed_paths": ["kodi/skin.starlane.movies", "tools/test_experimental_skin.py"],
+  "allowed_tools": ["repository search", "apply patch", "focused tests"],
+  "prohibited_actions": ["device mutation", "release", "publication", "provider policy change"],
+  "knowledge_references": ["subsystem.private-skin", "decision.single-home-renderer"],
+  "primary_hypothesis": "A single private-skin source concern can be implemented and validated without cross-subsystem context.",
+  "discriminating_check": "Confirm that all intended paths route to the private-skin subsystem and share one writer.",
+  "required_outputs": ["bounded diff summary", "focused validation", "unresolved risks"],
+  "validation_rung": 3,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": ["The required change crosses a trust boundary.", "Another active writer owns an allowed path."]
+}

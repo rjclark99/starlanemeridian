@@ -1,0 +1,12 @@
+{
+  "task_id": "ui.widget-discovery-v1",
+  "outcome": "complete",
+  "finding_or_change": "The single Home renderer now reserves 19 source items plus a terminal Show more card for every non-progress row, while Continue Watching stays terminal-free. Major networks and eight major streaming providers are ordered first without removing the remaining directory, and Home now has TV-poster and local missing-art fallbacks with terminal hero suppression.",
+  "evidence": ["IncludesHomeWidgets.xml keeps the exact widgetPath for preview and terminal navigation.", "The pinned Umbrella overlay preserves the complete network list and expands provider originals.", "PosterThumbList now includes tvshow.poster and an unconditional DefaultVideo fallback."],
+  "changed_paths": ["kodi/skin.starlane.movies/xml/IncludesFunctions.xml", "kodi/skin.starlane.movies/xml/IncludesHomeWidgets.xml", "kodi/skin.starlane.movies/xml/IncludesViewsLayoutPoster.xml", "tools/build_kodi_branding_overlays.py", "tools/test_experimental_skin.py", "tools/test_kodi_branding_overlays.py"],
+  "focused_validation": ["Changed XML parsed, changed Python compiled, structural assertions passed, and git diff --check passed."],
+  "full_validation": ["Affected suites passed 14 tests; the pinned Umbrella 6.7.81 overlay built successfully as local package 6.7.81.2."],
+  "unresolved_risks": ["Device capture and D-pad validation remain required for terminal focus, exact directory opening, remote-art failure, and hero suppression."],
+  "authority_or_approval_used": "Local source implementation and validation authority only; no device, release, publication, commit, or push.",
+  "recommended_next_action": "Run rollback-safe populated-device visual and navigation acceptance before release work."
+}

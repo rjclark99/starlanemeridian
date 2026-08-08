@@ -1,0 +1,41 @@
+{
+  "task_id": "ui.widget-discovery-v1",
+  "goal": "Add deterministic Show more navigation to bounded Starlane Home widgets and make provider/network previews complete, recognisable, and artwork-safe.",
+  "success_criteria": [
+    "Movie, TV, discovery, genre, network, and provider preview rows end with a selectable Show more card that opens the same full source directory without creating a second Home renderer.",
+    "Continue Watching rows remain local-progress driven and do not display a misleading Show more card when the local queue is complete.",
+    "Provider previews include the major current streaming services and network previews include major channels before Show more; the full source list remains reachable.",
+    "Cards with missing remote artwork use a bounded local or existing Kodi fallback and remain visually/focus accessible.",
+    "Focused regression tests protect route identity, Show more placement/action, provider/network coverage, artwork fallback, one-renderer ownership, and resource bounds."
+  ],
+  "task_class": "implement",
+  "affected_state": "source",
+  "specialist_role": "feature_implementer",
+  "allowed_paths": [
+    "kodi/skin.starlane.movies",
+    "tools/test_experimental_skin.py",
+    "tools/build_kodi_branding_overlays.py",
+    "tools/test_kodi_branding_overlays.py"
+  ],
+  "allowed_tools": ["repository search", "static XML/Python inspection", "apply patch", "focused tests", "Python compilation"],
+  "prohibited_actions": ["device mutation", "provider upgrade", "new provider or add-on", "network access except primary documentation", "release", "publication", "manifest change", "parallel Home renderer"],
+  "knowledge_references": ["subsystem.private-skin", "decision.single-home-renderer", "research.provider-routes"],
+  "primary_hypothesis": "Current rows expose raw provider directories whose pagination/folder entries are not rendered as a deliberate terminal action, while Providers uses Umbrella's three-item tvOriginals list rather than a complete ordered provider preview.",
+  "discriminating_check": "Trace the generated widget content and provider directory output to identify whether truncation occurs in Skin Shortcuts, the Home list, or Umbrella, then prove the selected source-level terminal card opens the unchanged underlying directory.",
+  "required_outputs": ["source implementation", "focused regression tests", "route and artwork evidence", "changed-path summary", "remaining device-test risks"],
+  "validation_rung": 4,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": [
+    "The implementation requires changing provider credentials, provider policy, or adding a third-party add-on.",
+    "The only feasible design creates parallel Home renderers or unbounded Home enumeration.",
+    "A required target route cannot be verified from staged provider source or existing regression evidence."
+  ]
+}

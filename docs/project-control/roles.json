@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "maximum_specialists": 3,
+  "default_specialists": 1,
+  "communication_model": "hub-and-spoke",
+  "roles": [
+    {
+      "id": "feature_implementer",
+      "title": "Feature implementer",
+      "model_policy": "balanced",
+      "mutation_policy": "assigned-paths",
+      "task_classes": ["implement"],
+      "purpose": "Implement one bounded source change and run focused validation.",
+      "prohibited": ["scope expansion", "external mutation", "publication", "unassigned path edits"]
+    },
+    {
+      "id": "security_reviewer",
+      "title": "Security reviewer",
+      "model_policy": "frontier",
+      "mutation_policy": "read-only",
+      "task_classes": ["answer", "diagnose", "release"],
+      "purpose": "Independently review trust boundaries, secrets, authentication, telemetry, commands, and destructive risks.",
+      "prohibited": ["secret inspection", "remediation edits", "external mutation", "publication"]
+    },
+    {
+      "id": "test_qa_specialist",
+      "title": "Test and QA specialist",
+      "model_policy": "balanced",
+      "mutation_policy": "assigned-paths",
+      "task_classes": ["diagnose", "implement", "release"],
+      "purpose": "Design focused regressions, exercise failure modes, and verify acceptance criteria.",
+      "prohibited": ["product behavior changes", "external mutation", "publication"]
+    },
+    {
+      "id": "ux_specialist",
+      "title": "UX specialist",
+      "model_policy": "balanced",
+      "mutation_policy": "read-only",
+      "task_classes": ["answer", "diagnose", "release"],
+      "purpose": "Review D-pad navigation, focus, overscan, geometry, motion, loading, empty, error, and accessibility states.",
+      "prohibited": ["source edits", "device mutation", "asset generation", "publication"]
+    },
+    {
+      "id": "image_analyst",
+      "title": "Image analyst",
+      "model_policy": "balanced",
+      "mutation_policy": "read-only",
+      "task_classes": ["answer", "diagnose", "release"],
+      "purpose": "Inspect screenshots and captures and return structured visual evidence.",
+      "prohibited": ["image generation", "asset edits", "device mutation", "publication"]
+    },
+    {
+      "id": "search_retrieval_specialist",
+      "title": "Search and retrieval specialist",
+      "model_policy": "balanced",
+      "mutation_policy": "read-only",
+      "task_classes": ["answer", "diagnose", "implement", "release"],
+      "purpose": "Retrieve bounded repository evidence and primary external sources with citations.",
+      "prohibited": ["broad context dumps", "source edits", "external mutation", "publication"]
+    },
+    {
+      "id": "device_diagnostics_specialist",
+      "title": "Device diagnostics specialist",
+      "model_policy": "balanced",
+      "mutation_policy": "read-only",
+      "task_classes": ["diagnose", "monitor", "release"],
+      "purpose": "Perform bounded read-only Fire TV and Kodi inspection under the safe ADB runbook.",
+      "prohibited": ["device mutation", "VPN changes", "secret extraction", "publication"]
+    },
+    {
+      "id": "release_steward",
+      "title": "Release steward",
+      "model_policy": "frontier",
+      "mutation_policy": "assigned-paths",
+      "task_classes": ["release"],
+      "purpose": "Verify versions, manifests, signatures, artifacts, rollback, CI, and draft readiness.",
+      "prohibited": ["publication", "promotion", "deployment", "secret inspection"]
+    },
+    {
+      "id": "publication_executor",
+      "title": "Publication executor",
+      "model_policy": "frontier",
+      "mutation_policy": "owner-approved-external",
+      "task_classes": ["publish", "deploy"],
+      "purpose": "Execute the exact owner-approved publication or deployment packet after all gates pass.",
+      "prohibited": ["scope expansion", "unstated assets", "implicit approval", "secret output"]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "task_id": "pilot.security-review",
+  "goal": "Simulate an independent cross-subsystem trust-boundary review without remediation or external mutation.",
+  "success_criteria": [
+    "The security specialist remains read-only.",
+    "The packet stops before secret inspection, remediation, or trust-boundary expansion."
+  ],
+  "task_class": "diagnose",
+  "affected_state": "source",
+  "specialist_role": "security_reviewer",
+  "allowed_paths": ["SECURITY.md", "android-app", "control-api"],
+  "allowed_tools": ["repository search", "static inspection", "focused tests"],
+  "prohibited_actions": ["secret inspection", "source edits", "external mutation", "remediation"],
+  "knowledge_references": ["decision.trust-boundaries", "subsystem.android-app", "subsystem.control-api"],
+  "primary_hypothesis": "A read-only reviewer can assess a cross-subsystem boundary from the security contract and exact enforcement points.",
+  "discriminating_check": "Verify that the selected role is read-only and the packet contains no mutation-capable deliverable.",
+  "required_outputs": ["ranked findings", "source evidence", "separate remediation recommendation"],
+  "validation_rung": 3,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": ["A secret or sensitive full file is required.", "The review requires remediation edits."]
+}

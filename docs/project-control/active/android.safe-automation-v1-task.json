@@ -1,0 +1,37 @@
+{
+  "task_id": "android.safe-automation-v1",
+  "goal": "Implement a locally consented, resumable verified-setup workflow in the Android app while preserving every Android and Kodi confirmation and reporting completion only from observed Bootstrap state.",
+  "success_criteria": [
+    "A second TV-local consent screen has Cancel focused first, accurately lists automated and manual steps, and exposes a Stop automated setup action while a run is live.",
+    "Consent is one-run, schema-versioned, scope-bound, expires within 24 hours, survives process restart safely, and is invalidated by cancellation, revocation, expiry, completion, clock rollback, app/config scope change, or stale callbacks.",
+    "Every remote mutating command requests local consent and performs zero download, install, export, profile-write, or launch side effects before local grant.",
+    "The strict flow never invokes KodiProfileConfigurator and never bypasses Android PackageInstaller, Kodi Unknown Sources, ZIP selection, or Bootstrap approval.",
+    "PackageInstaller explicitly requires user action where supported; preparation/export is idempotent; denial or failure pauses without prompt loops; Android waits for observed Bootstrap applied-version evidence rather than a user assertion.",
+    "Focused Android tests cover consent, command gating, expiry/revocation, resume, stale callbacks, visible confirmations, no duplicate commits, and the strict no-profile-writer boundary."
+  ],
+  "task_class": "implement",
+  "affected_state": "source",
+  "specialist_role": "feature_implementer",
+  "allowed_paths": ["android-app"],
+  "allowed_tools": ["repository search", "apply_patch", "Gradle focused tests", "static source inspection"],
+  "prohibited_actions": ["device mutation", "deployment", "release", "publication", "secret inspection", "ADB", "shell or accessibility automation", "silent installation", "Kodi profile or database mutation", "new remote command capability"],
+  "knowledge_references": ["decision.trust-boundaries", "subsystem.android-app", "subsystem.kodi-bootstrap"],
+  "primary_hypothesis": "A typed, scope-bound local consent state machine can safely automate verified preparation and resume around platform confirmations without expanding the command or installation trust boundaries.",
+  "discriminating_check": "Exercise every remote mutating entry point before and after local consent and prove that all side effects are blocked before grant while required Android and Kodi confirmations remain visible.",
+  "required_outputs": ["bounded Android implementation", "focused regression tests", "consent and state-machine summary", "validation evidence", "remaining device-test risks"],
+  "validation_rung": 4,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": [
+    "A required behavior needs silent install, ADB, shell, accessibility, root, database edits, arbitrary paths or commands, or remote consent.",
+    "Implementation requires a secret, external mutation, or expansion of the existing trust boundary.",
+    "The existing architecture cannot observe Bootstrap applied-version without adding a new external service or broad telemetry surface."
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "task_id": "ux.widget-image-audit-v1",
+  "outcome": "complete",
+  "finding_or_change": "The Home artwork gap was a renderer-variable mismatch: PosterThumbList omitted general tvshow.poster and a terminal local fallback. Existing captures did not prove a current cache fault. A dedicated local terminal card was recommended over a generic remote or skin icon.",
+  "evidence": ["IncludesViewsLayoutPoster.xml binds Home to PosterThumbList.", "Existing populated capture proves supplied poster/hero art renders.", "Historical blank provider rows show directory-data failure rather than a proven renderer cache defect."],
+  "changed_paths": [],
+  "focused_validation": ["Bounded captures were visually inspected and relevant XML parsed."],
+  "full_validation": [],
+  "unresolved_risks": ["The new local candidate has no current device capture; exact cache invalidation should be attempted only after same-URL stale-byte evidence."],
+  "authority_or_approval_used": "Read-only image-analysis authority; no artwork, device, cache, source, or external mutation.",
+  "recommended_next_action": "Capture normal, TV-only, missing-art, provider/network, failed-texture, and focused/unfocused terminal cases on the candidate."
+}

@@ -1,0 +1,12 @@
+{
+  "task_id": "pilot.security-review",
+  "outcome": "complete",
+  "finding_or_change": "Governance simulation confirmed that security review is read-only and remediation must be routed into a separate implementation task.",
+  "evidence": ["security_reviewer mutation policy", "task prohibited-actions gate"],
+  "changed_paths": [],
+  "focused_validation": ["Validated the example packet and role compatibility."],
+  "full_validation": [],
+  "unresolved_risks": ["A real cross-subsystem pilot remains dependent on a qualifying future owner request."],
+  "authority_or_approval_used": "Repository-governance implementation requested by the owner; no secret or external authority used.",
+  "recommended_next_action": "Apply this review/remediation separation to the next security-sensitive change."
+}

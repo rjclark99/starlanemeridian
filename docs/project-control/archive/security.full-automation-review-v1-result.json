@@ -1,0 +1,12 @@
+{
+  "task_id": "security.full-automation-review-v1",
+  "outcome": "complete",
+  "finding_or_change": "The supported maximum is one locally approved verified setup run that resumes around, but never bypasses, Android installer and Kodi trust confirmations. Remote commands may request consent but cannot grant it. Consent must be scope-bound, expiring, revocable, and completion must be observed from Bootstrap state.",
+  "evidence": ["PackageInstaller requires visible pending-user-action handling.", "Kodi exposes no supported remote API that silently approves its initial ZIP trust boundary.", "The previous Android and Kodi authorization flags were unscoped and completion could advance on a user assertion."],
+  "changed_paths": [],
+  "focused_validation": ["Read-only Android/Kodi source trace and comparison with official Android and Kodi platform documentation."],
+  "full_validation": [],
+  "unresolved_risks": ["Fire OS/OEM behavior requires hardware validation; direct locked add-on extraction is compatibility-tested but not documented as an official Kodi installer API."],
+  "authority_or_approval_used": "Read-only security-review authority; no source or external mutation.",
+  "recommended_next_action": "Keep unavoidable platform confirmations visible and validate the locally consented candidate on supported device classes."
+}

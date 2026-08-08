@@ -1,0 +1,29 @@
+{
+  "task_id": "pilot.release-readiness",
+  "goal": "Simulate verification of a local release candidate while explicitly withholding publication authority.",
+  "success_criteria": [
+    "The release steward can verify candidate evidence.",
+    "The packet cannot publish, deploy, promote, commit, or push."
+  ],
+  "task_class": "release",
+  "affected_state": "local-candidate",
+  "specialist_role": "release_steward",
+  "allowed_paths": ["config", "tools/release.py", ".github/workflows/release.yml"],
+  "allowed_tools": ["repository search", "schema verification", "hash verification", "focused tests"],
+  "prohibited_actions": ["publication", "deployment", "promotion", "commit", "push", "secret inspection"],
+  "knowledge_references": ["subsystem.signed-config-release", "decision.offline-signing", "runbook.release-rollback"],
+  "primary_hypothesis": "Release readiness can be established for a local candidate without mutating public or production state.",
+  "discriminating_check": "Confirm the role and packet permit verification but contain no publication executor or approved external scope.",
+  "required_outputs": ["candidate evidence matrix", "validation gaps", "publication blockers"],
+  "validation_rung": 6,
+  "owner_approval_required": false,
+  "owner_approval": {"status": "not-required", "scope": "", "evidence": ""},
+  "context_budget": {
+    "max_packet_words": 1200,
+    "max_topic_records": 3,
+    "max_search_concepts": 5,
+    "max_log_context_lines": 20,
+    "max_retries": 2
+  },
+  "stop_conditions": ["Any public or production mutation is required.", "A private signing key or keystore must be inspected."]
+}

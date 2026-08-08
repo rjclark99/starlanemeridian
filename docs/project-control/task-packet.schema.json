@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Starlane specialist task packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id", "goal", "success_criteria", "task_class", "affected_state",
+    "specialist_role", "allowed_paths", "allowed_tools", "prohibited_actions",
+    "knowledge_references", "primary_hypothesis", "discriminating_check",
+    "required_outputs", "validation_rung", "owner_approval_required",
+    "owner_approval", "context_budget", "stop_conditions"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"},
+    "goal": {"type": "string", "minLength": 10, "maxLength": 600},
+    "success_criteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 5, "maxLength": 400}},
+    "task_class": {"enum": ["answer", "diagnose", "implement", "deploy", "release", "publish", "monitor"]},
+    "affected_state": {"enum": ["source", "local-candidate", "device", "signed-manifest", "public-release", "production-service", "documentation"]},
+    "specialist_role": {"type": "string", "minLength": 3},
+    "allowed_paths": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "allowed_tools": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "prohibited_actions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}},
+    "knowledge_references": {"type": "array", "maxItems": 3, "uniqueItems": true, "items": {"type": "string", "minLength": 3}},
+    "primary_hypothesis": {"type": "string", "minLength": 10, "maxLength": 600},
+    "discriminating_check": {"type": "string", "minLength": 10, "maxLength": 600},
+    "required_outputs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 3}},
+    "validation_rung": {"type": "integer", "minimum": 1, "maximum": 10},
+    "owner_approval_required": {"type": "boolean"},
+    "owner_approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "scope", "evidence"],
+      "properties": {
+        "status": {"enum": ["not-required", "pending", "approved"]},
+        "scope": {"type": "string", "maxLength": 500},
+        "evidence": {"type": "string", "maxLength": 500}
+      }
+    },
+    "context_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_packet_words", "max_topic_records", "max_search_concepts", "max_log_context_lines", "max_retries"],
+      "properties": {
+        "max_packet_words": {"type": "integer", "minimum": 100, "maximum": 1200},
+        "max_topic_records": {"type": "integer", "minimum": 0, "maximum": 3},
+        "max_search_concepts": {"type": "integer", "minimum": 1, "maximum": 5},
+        "max_log_context_lines": {"type": "integer", "minimum": 0, "maximum": 20},
+        "max_retries": {"type": "integer", "minimum": 0, "maximum": 2}
+      }
+    },
+    "stop_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 5}}
+  }
+}

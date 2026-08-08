@@ -1,0 +1,12 @@
+{
+  "task_id": "kodi.bootstrap-consent-v1",
+  "outcome": "complete",
+  "finding_or_change": "Bootstrap 1.1.14 source now binds authorization and completion to canonical manifest/package-lock/Bootstrap scope, re-prompts on scope change, offers a fixed local revoke action, and records applied_scope plus applied_version only after all required operations succeed.",
+  "evidence": ["service.py computes SHA-256 over canonical scoped manifest fields and the exact package-lock digest.", "settings.xml exposes only a fixed local revoke action and retains the old boolean disabled for compatibility.", "Failure paths do not write applied completion state."],
+  "changed_paths": ["kodi/repository.kodisetup/addon.xml", "kodi/repository.kodisetup/resources/settings.xml", "kodi/repository.kodisetup/service.py", "tools/test_kodi_bootstrap.py"],
+  "focused_validation": ["Bootstrap/manifest suites passed 33 tests; Python compiled; XML parsed; diff check passed."],
+  "full_validation": ["Full tools discovery ran 82 tests: 81 passed and the signed-manifest artifact-equality gate correctly rejected the unapproved 1.1.14 candidate hash; compileall passed."],
+  "unresolved_risks": ["The signed manifest and public release correctly remain on 1.1.13; 1.1.14 packaging/signing needs separate authority.", "Kodi consent/revoke/restart/rollback behavior needs hardware acceptance."],
+  "authority_or_approval_used": "Local source implementation and validation only; no signing, manifest mutation, device work, release, or publication.",
+  "recommended_next_action": "After device acceptance, separately authorize candidate packaging, signing, and manifest work; publication remains an independent gate."
+}

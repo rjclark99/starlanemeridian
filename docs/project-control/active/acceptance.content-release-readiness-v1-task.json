@@ -1,0 +1,20 @@
+{
+  "task_id": "acceptance.content-release-readiness-v1",
+  "goal": "Validate the integrated widget and consented-automation candidate with populated content and the supported device matrix, without publication.",
+  "success_criteria": ["Verify terminal-card composition, D-pad focus, exact full-directory navigation, provider/network order, and missing-art behavior with populated VOD content.", "Verify the guided one-run flow through denial, resume, restart, Stop, visible Android/Kodi confirmations, Bootstrap decline/revoke/scope change, applied-version completion, and rollback.", "Build candidate artifacts, verify structure/hashes, run CI-equivalent checks, and produce a release-readiness decision without signing or publication."],
+  "task_class": "release",
+  "affected_state": "device",
+  "specialist_role": "release_steward",
+  "allowed_paths": ["android-app", "kodi", "tools", "build", "docs/project-control"],
+  "allowed_tools": ["local builds", "focused and full tests", "rollback-safe device runbooks", "bounded screenshots and logs", "artifact inspection"],
+  "prohibited_actions": ["publication", "manifest signing", "secret inspection", "deletion outside the exact Kodi and setup-app clean-install scope", "ADB exposure", "VPN or network-policy change", "commit", "push"],
+  "knowledge_references": ["runbook.private-skin-device-test", "runbook.safe-adb-diagnostics", "runbook.release-rollback"],
+  "primary_hypothesis": "The integrated local candidate is source-valid but needs real Kodi/Fire OS evidence to establish focus, platform-confirmation, completion, and rollback behavior.",
+  "discriminating_check": "Install the rollback-preserved candidate on each approved reference class and exercise populated content plus every required consent, denial, resume, and completion transition while recording bounded evidence.",
+  "required_outputs": ["populated-content evidence", "device matrix results", "artifact verification", "security and rollback findings", "release-readiness decision"],
+  "validation_rung": 9,
+  "owner_approval_required": true,
+  "owner_approval": {"status": "approved", "scope": "Rollback-safe clean-install acceptance on the connected AFTKAUK001: after preserving exact APK/profile rollback evidence, uninstall Kodi and the Starlane setup app, delete only their app-owned state through uninstall, install the candidate setup APK, and validate the Android-9-only fixed verified Bootstrap auto-install boundary. No Proton deletion, publication, signing, VPN/network-policy change, commit, or push.", "evidence": "Owner first stated 'You have approval.' and then explicitly directed: 'clear the local device installs and start with a fresh Kodi install' and automatic Unknown Sources/repository.kodisetup installation on 2026-08-01."},
+  "context_budget": {"max_packet_words": 1200, "max_topic_records": 3, "max_search_concepts": 5, "max_log_context_lines": 20, "max_retries": 2},
+  "stop_conditions": ["No explicit owner approval names the device scope and rollback baseline.", "Required backup or rollback evidence cannot be preserved.", "Validation would require secrets, network-policy changes, publication, signing, or destructive recovery."]
+}
