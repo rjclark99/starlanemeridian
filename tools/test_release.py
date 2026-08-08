@@ -22,6 +22,15 @@ from release import (
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_client_release_excludes_owner_administration_tooling(self):
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+        for forbidden in ("admin-portal", "KodiSetup.Admin", "Admin-win", "households.vault"):
+            self.assertNotIn(forbidden, workflow)
+        self.assertFalse((root / "admin-portal").exists())
+        self.assertFalse((root / "admin-portal.tests").exists())
+        self.assertFalse((root / "tools" / "start_admin_portal.ps1").exists())
+
     def test_canonical_payload_blanks_signature_and_sorts(self):
         value = {"z": 1, "signature": {"value": "secret", "algorithm": "Ed25519"}, "a": 2}
         self.assertEqual(canonical_payload(value), b'{"a":2,"signature":{"algorithm":"Ed25519","value":""},"z":1}')
@@ -131,7 +140,7 @@ class ReleaseTests(unittest.TestCase):
                 addon_xml = archive.read("repository.kodisetup/addon.xml").decode("utf-8")
             self.assertIn('<datadir zip="true">https://control.example.test/v1/public/kodi/</datadir>', addon_xml)
             self.assertNotIn("${REPOSITORY_", addon_xml)
-            private_skin = output / "skin.starlane.movies" / "skin.starlane.movies-2.2.20.zip"
+            private_skin = output / "skin.starlane.movies" / "skin.starlane.movies-2.2.22.zip"
             self.assertTrue(private_skin.is_file())
             self.assertEqual(
                 private_skin.with_name(private_skin.name + ".sha256").read_text(encoding="ascii").strip(),
@@ -158,6 +167,17 @@ class ReleaseTests(unittest.TestCase):
                     '<extension point="xbmc.addon.metadata"><summary>Umbrella</summary>'
                     '<description>Umbrella</description><assets /></extension></addon>',
                 )
+                for artwork_name in (
+                    "icon.png",
+                    "fanart.jpg",
+                    "banner.png",
+                    "genres.png",
+                ):
+                    archive.writestr(
+                        "plugin.video.umbrella/resources/artwork/umbrella/"
+                        + artwork_name,
+                        b"reviewed-upstream-artwork",
+                    )
             digest = hashlib.sha256(upstream.read_bytes()).hexdigest()
             output = root / "kodi"
             build_kodi(
@@ -169,7 +189,7 @@ class ReleaseTests(unittest.TestCase):
             provider = (
                 output
                 / "plugin.video.umbrella"
-                / "plugin.video.umbrella-6.7.81.2.zip"
+                / "plugin.video.umbrella-6.7.81.3.zip"
             )
             self.assertTrue(provider.is_file())
             self.assertEqual(
