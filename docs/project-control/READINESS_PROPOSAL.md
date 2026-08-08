@@ -18,15 +18,15 @@
 
 ## Validation completed
 
-- Project-control schemas and authority gates pass.
-- Widget/provider affected suites: 14 passed; pinned provider package built locally.
-- Bootstrap/manifest focused suites: 33 passed.
-- Android focused final-delta suites: 8 passed. The preceding full Android suite passed
-  22 tests plus lint; the final digest-only delta was rechecked with its focused suite.
-- Full Python/Kodi tooling: 81 of 82 passed. The one rejection is the required release
-  gate proving the signed manifest still identifies published Bootstrap 1.1.13, not
-  unapproved local source candidate 1.1.14.
-- Python compileall and repository diff checks pass.
+- The exact candidate at `fcbec9c` passed GitHub Actions run `31265192787` across
+  configuration/Kodi, control-service, and Android jobs.
+- The offline signature on manifest `2026.08.38` verifies against the checked-in
+  public key, and its Bootstrap digest matches deterministic Bootstrap 1.1.16 bytes.
+- Project-control schemas, authority gates, release regressions, package-lock checks,
+  Python compilation, Kodi tooling, Android unit tests, and Android lint pass.
+- A clean archived checkout built without the removed owner panel or its private
+  runtime configuration.
+- The release workflow is forced to produce a draft and rejects owner-panel artifacts.
 
 ## Remaining gated acceptance
 
@@ -36,4 +36,6 @@ focused/unfocused terminal cards, provider/network order, failed art, exact dire
 opening, consent cancellation, installer denial, Stop, process restart, Kodi warnings,
 Bootstrap decline/revoke/scope change, observed completion, and skin rollback.
 
-No candidate has been signed, deployed, published, committed, or pushed.
+The candidate manifest is offline-signed, the source is committed on local `main`, and
+the candidate branch is pushed. GitHub `main`, release draft creation, publication,
+deployment, and fresh-device acceptance remain separately gated.

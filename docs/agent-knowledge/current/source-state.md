@@ -32,26 +32,31 @@ coupling and adds a regression that forbids owner-tooling release assets. Existi
 public releases remain separate public-release state and may still contain a legacy
 panel ZIP until an explicitly authorised publication mutation removes it.
 
-The source candidate is committed and pushed on `codex/fresh-install-candidate`.
-GitHub Actions run `31264659093` passed configuration/Kodi, control-service, and
-Android jobs. The candidate versions are Android `0.5.9`/code 10, Bootstrap `1.1.16`,
-private skin `2.2.22`, branded provider `6.7.81.3`, and offline-signed test manifest
-`2026.08.38`. No merge, draft release, publication, deployment, or device mutation
-has occurred.
+The product source candidate is committed at `fcbec9c`, is contained in local `main`,
+and is pushed on `codex/fresh-install-candidate`. GitHub Actions run `31265192787` passed
+configuration/Kodi, control-service, and Android jobs for those exact bytes. GitHub
+`main` remains at `cefca90` pending a separate owner-approved push. The candidate
+versions are Android `0.5.9`/code 10, Bootstrap `1.1.16`, private skin `2.2.22`,
+branded provider `6.7.81.3`, and offline-signed test manifest `2026.08.38`. No draft
+release, publication, deployment, or new device acceptance has occurred.
 
-The working tree now contains the owner-requested, uncommitted project-control rollout
-and a product source candidate. The candidate adds bounded Home **Show more** terminal
-navigation, complete ordered provider/network discovery, local artwork fallbacks,
-Android one-run scope-bound consent and verified resume, and Bootstrap 1.1.14
-scope-bound authorization/revocation. Treat all of these as local source state only;
-no device, signed-manifest, public-release, or production-service transition occurred.
+The clean local source state includes the project-control rollout, bounded Home
+**Show more** terminal navigation, complete ordered provider/network discovery, local
+artwork fallbacks, Android one-run scope-bound consent and verified resume, and
+Bootstrap 1.1.16 scope-bound authorization/revocation. Treat these as validated source
+and local-candidate state only; no device, public-release, or production-service
+transition is implied.
 
-The strict Android candidate no longer edits Kodi's `addons.unknownsources` preference.
-Kodi's Unknown Sources warning, Install from ZIP selection, and Bootstrap approval all
-remain explicit platform confirmations. One Cancel-first Android consent authorizes a
-single verified run for at most 24 hours and is bound to the Android-relevant signed
-manifest payload. On Bootstrap launch, a separate local approval is bound to the exact
-Bootstrap version, scoped manifest content, and package-lock digest. The candidate
+On API 25-28, the strict Android candidate may atomically merge only Kodi's fixed
+`addons.unknownsources=true` preference and install only the signed-manifest-selected,
+hash-verified `repository.kodisetup` archive into the canonical Kodi profile. The
+transaction requires current Cancel-first local consent, storage permission,
+conservative proof Kodi is stopped, journaling, exact ownership checks, and rollback;
+API 29+ retains the guided manual route. After launching Kodi, the app enables only
+that fixed add-on through `127.0.0.1:9090`, verifies its identity and enabled state,
+and rechecks consent before each bounded retry. On Bootstrap launch, a separate local
+approval is bound to the exact Bootstrap version, scoped manifest content, and
+package-lock digest. The candidate
 installs a 38-package, hash-locked, complete transitive closure containing the pinned
 Umbrella/CocoScrapers stack, private-skin dependencies, and private skin. It has no
 Kodi modal `InstallAddon`/`EnableAddon` calls: packages are verified, extracted in

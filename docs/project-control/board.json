@@ -104,20 +104,20 @@
       "packet": "docs/project-control/active/kodi.bootstrap-consent-v1-task.json",
       "writer_paths": ["kodi/repository.kodisetup", "tools/test_kodi_bootstrap.py"],
       "history": ["proposed", "ready", "active", "review", "complete"],
-      "summary": "Bootstrap 1.1.14 source binds consent/completion to verified scope and adds local revocation with focused coverage."
+      "summary": "The scope-bound consent, completion, and local-revocation work was completed in Bootstrap 1.1.14 and is incorporated into the validated 1.1.16 candidate."
     },
     {
       "id": "android.fixed-bootstrap-autoinstall-v1",
       "title": "Install the fixed verified Kodi Bootstrap automatically on Android 9",
       "priority": "critical",
-      "status": "active",
+      "status": "review",
       "task_class": "implement",
       "affected_state": "source",
       "role": "feature_implementer",
       "packet": "docs/project-control/active/android.fixed-bootstrap-autoinstall-v1-task.json",
       "writer_paths": ["android-app"],
-      "history": ["proposed", "ready", "active"],
-      "summary": "Implement the owner-approved fixed manifest-bound repository transaction with atomic rollback and modern-Android fallback."
+      "history": ["proposed", "ready", "active", "review"],
+      "summary": "Source implementation and CI validation are complete at fcbec9c: the fixed manifest-bound API25-28 transaction, exact rollback, loopback activation, and API29+ fallback now await clean-device acceptance."
     },
     {
       "id": "acceptance.content-release-readiness-v1",
