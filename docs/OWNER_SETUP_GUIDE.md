@@ -484,11 +484,16 @@ Use this exact public URL:
 https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk
 ```
 
-The current verified public Downloader code is `3467018` (`https://aftv.news/3467018`). It resolves to the permanent URL above.
+The verified Downloader code for the `v0.5.9-test` acceptance install is `7499455`
+(`https://aftv.news/7499455`). It resolves directly to
+`https://github.com/rjclark99/starlanemeridian/releases/download/v0.5.9-test/setup.apk`.
+The earlier code `3467018` remains the stable/latest-channel code and currently resolves
+to `v0.5.8-test`; do not use it for the `v0.5.9-test` acceptance pass.
 
 Test the code on a clean Fire TV. Treat the code as public; it must never resolve to a URL containing credentials or tokens.
 
-Regenerate the code only if the permanent URL changes. Normal releases keep the filename `setup.apk`, so the same code should continue to resolve to the newest release.
+Regenerate a version-pinned test code when the test tag changes. The stable-channel code
+can continue using the permanent `latest/download/setup.apk` route.
 
 ## 14. Test the Downloader/guided installation path
 

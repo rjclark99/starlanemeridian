@@ -29,6 +29,9 @@ verifies with Android signature scheme v2, package `app.kodisetup.tv`, version `
 code 10, and production signer
 `e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
 No fresh-device acceptance has yet been performed against these public bytes.
+Downloader code `7499455` was generated for the acceptance pass and independently
+verified to resolve directly to the public tagged `v0.5.9-test/setup.apk` asset. Stable
+code `3467018` remains bound to the unchanged `latest` route for `v0.5.8-test`.
 
 Owner-approved `v0.5.8-test` is the latest public release and targets source commit
 `3c99980`. Its signed manifest is `2026.07.37`, SHA-256
