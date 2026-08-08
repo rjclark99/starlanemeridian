@@ -12,7 +12,7 @@ class ExperimentalSkinTests(unittest.TestCase):
     def test_metadata_and_attribution(self):
         addon = ET.parse(SKIN / "addon.xml").getroot()
         self.assertEqual(addon.attrib["id"], "skin.starlane.movies")
-        self.assertEqual(addon.attrib["version"], "2.2.20")
+        self.assertEqual(addon.attrib["version"], "2.2.22")
         service = addon.find("extension[@point='xbmc.service']")
         self.assertIsNotNone(service)
         self.assertEqual(service.attrib["library"], "service.py")
@@ -548,6 +548,115 @@ class ExperimentalSkinTests(unittest.TestCase):
         self.assertNotIn("plugin.video.thecrew", shortcut_sources)
         self.assertNotIn("starlane_livetv", shortcut_sources)
         self.assertNotIn("starlane_sports", shortcut_sources)
+
+        widget_path_nodes = [
+            item.text
+            for item in overrides.findall("propertydefault")
+            if item.attrib.get("property", "").startswith("widgetPath")
+            and item.text
+        ]
+        widget_paths = set(widget_path_nodes)
+        managed_paths = {
+            path
+            for path in widget_paths
+            if path.startswith("plugin://plugin.video.umbrella/")
+            and "action=local_finish_watching_" not in path
+        }
+        complete_local_paths = {
+            path
+            for path in widget_paths
+            if "action=local_finish_watching_" in path
+        }
+        self.assertEqual(len(widget_path_nodes), 34)
+        self.assertEqual(len(widget_paths), 21)
+        self.assertEqual(
+            sum(
+                path.startswith("plugin://plugin.video.umbrella/")
+                and "action=local_finish_watching_" not in path
+                for path in widget_path_nodes
+            ),
+            32,
+        )
+        self.assertEqual(len(managed_paths), 19)
+        self.assertEqual(len(complete_local_paths), 2)
+        for representative in (
+            "plugin://plugin.video.umbrella/?action=tmdbmovies&url=tmdb_toprated",
+            "plugin://plugin.video.umbrella/?action=tmdbTvshows&url=tmdb_toprated",
+            "plugin://plugin.video.umbrella/?action=movieGenres&url=tmdb_genre",
+            "plugin://plugin.video.umbrella/?action=tvNetworks",
+            "plugin://plugin.video.umbrella/?action=tvOriginals",
+        ):
+            self.assertIn(representative, managed_paths)
+
+        widgets = (SKIN / "xml/IncludesHomeWidgets.xml").read_text(encoding="utf-8")
+        managed_condition = (
+            "String.StartsWith($PARAM[widgetPath],"
+            "plugin://plugin.video.umbrella/) + "
+            "!String.Contains($PARAM[widgetPath],action=local_finish_watching_)"
+        )
+        self.assertIn('<label>Show more</label>', widgets)
+        self.assertIn('<property name="path">$PARAM[widgetPath]</property>', widgets)
+        self.assertIn(
+            '<property name="starlane.terminal">show_more</property>', widgets
+        )
+        self.assertIn(
+            '<property name="SpecialSort">bottom</property>', widgets
+        )
+        self.assertIn(
+            '<onclick>ActivateWindow(Videos,$PARAM[widgetPath],return)</onclick>',
+            widgets,
+        )
+        self.assertNotIn('limit="19"', widgets)
+        self.assertGreaterEqual(widgets.count('limit="$PARAM[widgetLimit]"'), 3)
+        self.assertEqual(widgets.count('<item id="900001">'), 1)
+        self.assertIn(
+            'condition="String.Contains($PARAM[widgetPath],action=local_finish_watching_)"',
+            widgets,
+        )
+        self.assertIn(
+            f'condition="{managed_condition}"',
+            widgets,
+        )
+        self.assertIn(
+            'condition="!String.StartsWith($PARAM[widgetPath],'
+            'plugin://plugin.video.umbrella/)"',
+            widgets,
+        )
+
+        poster_layout = (
+            SKIN / "xml/IncludesViewsLayoutPoster.xml"
+        ).read_text(encoding="utf-8")
+        poster_variable = poster_layout.split(
+            '<variable name="PosterThumbList">', 1
+        )[1].split("</variable>", 1)[0]
+        self.assertIn("<value>DefaultVideo.png</value>", poster_variable)
+        self.assertIn("ListItem.Art(tvshow.poster)", poster_variable)
+        self.assertIn(
+            'ListItem.IsFolder + !String.IsEmpty(ListItem.Art(poster))',
+            poster_variable,
+        )
+        self.assertIn(
+            'ListItem.IsFolder + !String.IsEmpty(ListItem.Art(thumb))',
+            poster_variable,
+        )
+        self.assertIn(
+            'ListItem.IsFolder + !String.IsEmpty(ListItem.Icon)',
+            poster_variable,
+        )
+        self.assertNotIn("ListItem.Art(fanart)", poster_variable)
+        self.assertIn(
+            "String.IsEqual(ListItem.Property(starlane.terminal),show_more)",
+            poster_layout,
+        )
+        self.assertIn("colors/color_white.png", poster_layout)
+
+        functions = (SKIN / "xml/IncludesFunctions.xml").read_text(encoding="utf-8")
+        self.assertIn("SetProperty(StarlaneTerminalAction", functions)
+        self.assertIn("ClearProperty(ListItem.Art.fanart,Home)", functions)
+        self.assertIn(
+            "!String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)",
+            functions,
+        )
 
         template = (SKIN / "shortcuts/template.xml").read_text(encoding="utf-8")
         self.assertEqual(

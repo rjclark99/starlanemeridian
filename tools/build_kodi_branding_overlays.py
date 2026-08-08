@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import posixpath
 import re
 import shutil
@@ -29,6 +30,9 @@ EMBLEM = BRAND / "starlane-movies-emblem-v2.png"
 BACKGROUND = BRAND / "starlane-movies-home-1920x1080.jpg"
 MINT = "ff67e8c4"
 VISIBLE_BRAND = re.compile(r"(?<![A-Za-z0-9_])(?:Umbrella|UMBRELLA)(?![A-Za-z0-9_])")
+PROVIDER_ARTWORK_THEME = "starlane movies"
+UPSTREAM_ARTWORK_THEME = "umbrella"
+GLOBAL_PROVIDER_ARTWORK = frozenset({"banner.png", "fanart.jpg", "icon.png"})
 
 
 @dataclass(frozen=True)
@@ -49,7 +53,7 @@ ADDONS = (
     AddonBrand(
         addon_id="plugin.video.umbrella",
         source_version="6.7.81",
-        branded_version="6.7.81.2",
+        branded_version="6.7.81.3",
         display_name="Starlane Movies: On Demand",
         subtitle="ON DEMAND",
         summary="Starlane Movies on-demand discovery and playback.",
@@ -270,6 +274,55 @@ def rewrite_user_facing_python(addon_root: Path, addon: AddonBrand) -> None:
         service.write_text(text, encoding="utf-8", newline="")
 
 
+def rewrite_discovery_previews(addon_root: Path, addon: AddonBrand) -> None:
+    """Keep Umbrella routes intact while making bounded Home previews useful."""
+    if addon.addon_id != "plugin.video.umbrella":
+        return
+    tmdb = addon_root / "resources/lib/indexers/tmdb.py"
+    if not tmdb.is_file():
+        return
+    text = tmdb.read_text(encoding="utf-8-sig")
+    network_start = "\tdef get_networks(self):\n\t\treturn ["
+    network_end = (
+        "\t\t\t('YouTube Premium', '1436', "
+        "'https://i.postimg.cc/vHtqdhyt/youtube-premium.png')]"
+    )
+    if network_start not in text or network_end not in text:
+        raise ValueError(f"{tmdb}: expected pinned network directory")
+    text = text.replace(network_start, "\tdef get_networks(self):\n\t\tnetworks = [", 1)
+    preferred_networks = (
+        "ABC (US)", "CBS", "NBC", "FOX", "BBC One", "ITV", "Channel 4",
+        "AMC", "HBO", "Discovery Channel", "FX", "Comedy Central",
+        "Cartoon Network",
+    )
+    ordering = (
+        network_end
+        + "\n\t\tpreferred = "
+        + repr(preferred_networks)
+        + "\n\t\tby_name = {item[0]: item for item in networks}"
+        + "\n\t\treturn [by_name[name] for name in preferred] + "
+        + "[item for item in networks if item[0] not in preferred]\n"
+    )
+    text = text.replace(network_end, ordering, 1)
+
+    originals_start = text.index("\tdef get_originals(self):")
+    originals_end = text.index("\n\tdef actorSearch", originals_start)
+    originals = (
+        "\tdef get_originals(self):\n"
+        "\t\treturn [\n"
+        "\t\t\t('Netflix', '213', 'https://i.postimg.cc/c4vHp9wV/netflix.png'),\n"
+        "\t\t\t('Amazon', '1024', 'https://i.imgur.com/ru9DDlL.png'),\n"
+        "\t\t\t('Apple TV+', '2552', 'https://i.imgur.com/fAQMVNp.png'),\n"
+        "\t\t\t('Disney+', '2739', 'https://i.postimg.cc/zBNHHbKZ/disney.png'),\n"
+        "\t\t\t('Max', '3186', 'https://i.postimg.cc/pLdCcdGt/hbo-max.png'),\n"
+        "\t\t\t('Hulu', '453', 'https://i.imgur.com/cLVo7NH.png'),\n"
+        "\t\t\t('Paramount+', '4330', 'https://i.postimg.cc/1zTXGsF6/paramountplus.png'),\n"
+        "\t\t\t('Peacock', '3353', 'https://i.postimg.cc/76m4v7VW/NBCUniversal-Peacock-Logo.png')]\n"
+    )
+    text = text[:originals_start] + originals + text[originals_end:]
+    tmdb.write_text(text, encoding="utf-8", newline="")
+
+
 def update_metadata(addon_root: Path, addon: AddonBrand) -> None:
     addon_xml = addon_root / "addon.xml"
     tree = ET.parse(addon_xml)
@@ -314,6 +367,48 @@ def update_metadata(addon_root: Path, addon: AddonBrand) -> None:
     tree.write(addon_xml, encoding="utf-8", xml_declaration=True)
 
 
+def prepare_artwork_theme(addon_root: Path, addon: AddonBrand) -> None:
+    """Vendor functional artwork under the rebranded theme name.
+
+    Umbrella lower-cases the configured theme name before resolving its directory.
+    User-facing rebranding therefore has to rename the directory as well as the
+    setting value.  The three global brand images are deliberately excluded from
+    the inventory because ``replace_artwork`` replaces them with Starlane assets.
+    """
+    if addon.addon_id != "plugin.video.umbrella":
+        return
+    artwork_root = addon_root / "resources" / "artwork"
+    upstream = artwork_root / UPSTREAM_ARTWORK_THEME
+    branded = artwork_root / PROVIDER_ARTWORK_THEME
+    if not upstream.is_dir():
+        raise FileNotFoundError(upstream)
+    if branded.exists():
+        raise ValueError(f"{branded}: branded artwork theme already exists")
+
+    functional = {
+        path.relative_to(upstream).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(upstream.rglob("*"))
+        if path.is_file() and path.relative_to(upstream).as_posix() not in GLOBAL_PROVIDER_ARTWORK
+    }
+    if not functional:
+        raise ValueError(f"{upstream}: no functional provider artwork found")
+    upstream.rename(branded)
+    inventory = {
+        "schema_version": 1,
+        "upstream_name": addon.upstream_name,
+        "upstream_source": addon.upstream_source,
+        "upstream_version": addon.source_version,
+        "theme": PROVIDER_ARTWORK_THEME,
+        "global_brand_artwork": sorted(GLOBAL_PROVIDER_ARTWORK),
+        "functional_artwork_sha256": functional,
+    }
+    (branded / "ARTWORK_INVENTORY.json").write_text(
+        json.dumps(inventory, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="",
+    )
+
+
 def replace_artwork(addon_root: Path, addon: AddonBrand) -> None:
     icon = make_icon(addon.subtitle)
     fanart = make_fanart(addon.subtitle)
@@ -321,12 +416,12 @@ def replace_artwork(addon_root: Path, addon: AddonBrand) -> None:
     icon_targets = [
         addon_root / "icon.png",
         addon_root / "resources" / "artwork" / "icon.png",
-        addon_root / "resources" / "artwork" / "umbrella" / "icon.png",
+        addon_root / "resources" / "artwork" / PROVIDER_ARTWORK_THEME / "icon.png",
         addon_root / "resources" / "skins" / "Default" / "media" / "common" / "icon.png",
     ]
     fanart_targets = [
         addon_root / "fanart.jpg",
-        addon_root / "resources" / "artwork" / "umbrella" / "fanart.jpg",
+        addon_root / "resources" / "artwork" / PROVIDER_ARTWORK_THEME / "fanart.jpg",
         addon_root / "resources" / "skins" / "Default" / "media" / "common" / "fanart.jpg",
     ]
     for target in icon_targets:
@@ -335,7 +430,7 @@ def replace_artwork(addon_root: Path, addon: AddonBrand) -> None:
     for target in fanart_targets:
         if target.is_file():
             fanart.save(target, quality=92, optimize=True)
-    banner_target = addon_root / "resources" / "artwork" / "umbrella" / "banner.png"
+    banner_target = addon_root / "resources" / "artwork" / PROVIDER_ARTWORK_THEME / "banner.png"
     if banner_target.is_file():
         banner.save(banner_target, optimize=True)
     circle_target = (
@@ -456,7 +551,9 @@ def build(source_root: Path, output_root: Path) -> list[Path]:
         preserve_upstream_records(target, addon)
         rewrite_user_facing_text(target, addon)
         rewrite_user_facing_python(target, addon)
+        rewrite_discovery_previews(target, addon)
         update_metadata(target, addon)
+        prepare_artwork_theme(target, addon)
         replace_artwork(target, addon)
         audit_user_facing(target)
         built.append(package(target, output_root))

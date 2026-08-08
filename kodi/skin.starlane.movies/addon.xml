@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Experimental Starlane Movies skin derived from Titan BINGIE MOD under GPL-2.0. -->
-<addon id="skin.starlane.movies" version="2.2.20" name="Starlane Movies" provider-name="Starlane Movies">
+<addon id="skin.starlane.movies" version="2.2.22" name="Starlane Movies" provider-name="Starlane Movies">
 	<requires>
 		<import version="5.17.0" addon="xbmc.gui"/>
 		<import addon="script.bingie.helper" version="1.1.2"/>
@@ -34,6 +34,6 @@
 			<icon>extras/starlane-movies/emblem.png</icon>
 			<fanart>extras/starlane-movies/horizon.png</fanart>
 		</assets>
-		<news>[B]STARLANE MOVIES 2.2.20[/B][CR]Converts the private build to a focused video-on-demand experience by removing Live TV and Sports menu integrations.</news>
+		<news>[B]STARLANE MOVIES 2.2.22[/B][CR]Adds Show more navigation to every managed bounded widget and preserves complete local queues.</news>
 	</extension>
 </addon>

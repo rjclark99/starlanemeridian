@@ -61,7 +61,7 @@
                     <!-- Resolve the outer widget ID before passing the complete
                          condition into the nested include. Kodi does not recursively
                          expand parameters embedded in a nested parameter default. -->
-                    <param name="guard" value="Window.IsActive(Home) + Control.HasFocus($PARAM[widgetid]) + String.IsEqual(Window(Home).Property(PendingWidgetID),$PARAM[widgetid]) + String.IsEqual(Window(Home).Property(PendingWidgetItem),Container($PARAM[widgetid]).CurrentItem)" />
+                    <param name="guard" value="Window.IsActive(Home) + Control.HasFocus($PARAM[widgetid]) + String.IsEqual(Window(Home).Property(PendingWidgetID),$PARAM[widgetid]) + String.IsEqual(Window(Home).Property(PendingWidgetItem),Container($PARAM[widgetid]).CurrentItem) + !String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)" />
                 </include>
             </control>
         </definition>
@@ -70,6 +70,13 @@
     <include name="StarlaneHomePendingDetails">
         <onfocus>SetProperty(PendingWidgetID,$PARAM[widgetid],Home)</onfocus>
         <onfocus>SetProperty(PendingWidgetItem,$INFO[Container($PARAM[widgetid]).CurrentItem],Home)</onfocus>
+        <onfocus>SetProperty(StarlaneTerminalAction,$INFO[Container($PARAM[widgetid]).ListItem.Property(starlane.terminal)],Home)</onfocus>
+        <onfocus condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)">ClearProperty(ListItem.ClearLogo,Home)</onfocus>
+        <onfocus condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)">ClearProperty(ListItem.Plot,Home)</onfocus>
+        <onfocus condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)">ClearProperty(ListItem.PlotOutline,Home)</onfocus>
+        <onfocus condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)">ClearProperty(ListItem.Title,Home)</onfocus>
+        <onfocus condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)">ClearProperty(ListItem.Art.fanart,Home)</onfocus>
+        <onfocus condition="String.IsEqual(Container($PARAM[widgetid]).ListItem.Property(starlane.terminal),show_more)">ClearProperty(ListItem.Art.Poster,Home)</onfocus>
     </include>
 
     <include name="StarlaneHomeWidgetProperties">

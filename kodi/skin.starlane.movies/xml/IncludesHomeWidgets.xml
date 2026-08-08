@@ -919,7 +919,23 @@
     </include>
     
     <include name="widget_base_content_normal">
-        <content sortby="$PARAM[widgetSortBy]" sortorder="$PARAM[widgetSortOrder]" limit="$PARAM[widgetLimit]" target="$PARAM[widgetTarget]" browse="never">$PARAM[widgetPath]</content>
+        <!-- Managed Umbrella directories keep their complete configured preview
+             count and append one terminal directory action. Continue Watching is
+             already a complete local queue, while custom/non-Umbrella widgets retain
+             their original content contract without an assumed Videos destination. -->
+        <content condition="String.Contains($PARAM[widgetPath],action=local_finish_watching_)" sortby="$PARAM[widgetSortBy]" sortorder="$PARAM[widgetSortOrder]" limit="$PARAM[widgetLimit]" target="$PARAM[widgetTarget]" browse="never">$PARAM[widgetPath]</content>
+        <content condition="String.StartsWith($PARAM[widgetPath],plugin://plugin.video.umbrella/) + !String.Contains($PARAM[widgetPath],action=local_finish_watching_)" sortby="$PARAM[widgetSortBy]" sortorder="$PARAM[widgetSortOrder]" limit="$PARAM[widgetLimit]" target="$PARAM[widgetTarget]" browse="never">$PARAM[widgetPath]</content>
+        <content condition="!String.StartsWith($PARAM[widgetPath],plugin://plugin.video.umbrella/)" sortby="$PARAM[widgetSortBy]" sortorder="$PARAM[widgetSortOrder]" limit="$PARAM[widgetLimit]" target="$PARAM[widgetTarget]" browse="never">$PARAM[widgetPath]</content>
+        <content condition="String.StartsWith($PARAM[widgetPath],plugin://plugin.video.umbrella/) + !String.Contains($PARAM[widgetPath],action=local_finish_watching_)">
+            <item id="900001">
+                <label>Show more</label>
+                <property name="DBTYPE">folder</property>
+                <property name="path">$PARAM[widgetPath]</property>
+                <property name="starlane.terminal">show_more</property>
+                <property name="SpecialSort">bottom</property>
+                <onclick>ActivateWindow(Videos,$PARAM[widgetPath],return)</onclick>
+            </item>
+        </content>
     </include>
     <include name="widget_base_content_refresh">
         <content browse="never" target="$PARAM[widgetTarget]">$VAR[$PARAM[widgetid]-refresh]</content>

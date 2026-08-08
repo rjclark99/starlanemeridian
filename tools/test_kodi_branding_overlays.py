@@ -1,4 +1,5 @@
 import hashlib
+import json
 import sqlite3
 import tempfile
 import unittest
@@ -13,11 +14,53 @@ from tools.build_kodi_branding_overlays import (
     build,
     build_from_archive,
     replace_human_brand,
+    rewrite_discovery_previews,
 )
 from tools.kodi_texture_cache import matching_rows
 
 
 class KodiBrandingOverlayTests(unittest.TestCase):
+    def test_discovery_previews_are_complete_ordered_and_keep_full_lists(self):
+        with tempfile.TemporaryDirectory() as temp:
+            addon_root = Path(temp) / "plugin.video.umbrella"
+            tmdb = addon_root / "resources/lib/indexers/tmdb.py"
+            tmdb.parent.mkdir(parents=True)
+            tmdb.write_text(
+                "\tdef get_networks(self):\n\t\treturn [\n"
+                "\t\t\t('A&E', '129', 'a.png'),\n"
+                "\t\t\t('ABC (US)', '2', 'abc.png'),\n"
+                "\t\t\t('CBS', '16', 'cbs.png'),\n"
+                "\t\t\t('NBC', '6', 'nbc.png'),\n"
+                "\t\t\t('FOX', '19', 'fox.png'),\n"
+                "\t\t\t('BBC One', '4', 'bbc.png'),\n"
+                "\t\t\t('ITV', '9', 'itv.png'),\n"
+                "\t\t\t('Channel 4', '26', 'c4.png'),\n"
+                "\t\t\t('AMC', '174', 'amc.png'),\n"
+                "\t\t\t('HBO', '49', 'hbo.png'),\n"
+                "\t\t\t('Discovery Channel', '64', 'discovery.png'),\n"
+                "\t\t\t('FX', '88', 'fx.png'),\n"
+                "\t\t\t('Comedy Central', '47', 'comedy.png'),\n"
+                "\t\t\t('Cartoon Network', '56', 'cartoon.png'),\n"
+                "\t\t\t('YouTube Premium', '1436', "
+                "'https://i.postimg.cc/vHtqdhyt/youtube-premium.png')]\n\n"
+                "\tdef get_originals(self):\n\t\treturn [\n"
+                "\t\t\t('Amazon', '1024', 'amazon.png'),\n"
+                "\t\t\t('Hulu', '453', 'hulu.png'),\n"
+                "\t\t\t('Netflix', '213', 'netflix.png')]\n\n"
+                "\tdef actorSearch(self, url):\n\t\tpass\n",
+                encoding="utf-8",
+            )
+            rewrite_discovery_previews(addon_root, ADDONS[0])
+            updated = tmdb.read_text(encoding="utf-8")
+            preferred = updated.split("preferred = ", 1)[1].split("\n", 1)[0]
+            self.assertLess(preferred.index("'ABC (US)'"), preferred.index("'CBS'"))
+            for provider in (
+                "Netflix", "Amazon", "Apple TV+", "Disney+", "Max",
+                "Hulu", "Paramount+", "Peacock",
+            ):
+                self.assertIn(f"('{provider}',", updated)
+            self.assertIn("item for item in networks if item[0] not in preferred", updated)
+
     def test_texture_cache_match_is_limited_to_provider_brand_art(self):
         connection = sqlite3.connect(":memory:")
         connection.execute(
@@ -97,6 +140,26 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 if addon.addon_id == "plugin.video.umbrella":
+                    settings = addon_root / "resources/settings.xml"
+                    settings.parent.mkdir(parents=True, exist_ok=True)
+                    settings.write_text(
+                        '<settings><setting id="skinpackicons" type="string">'
+                        '<default>Umbrella</default></setting></settings>',
+                        encoding="utf-8",
+                    )
+                    artwork = addon_root / "resources/artwork/umbrella"
+                    (artwork / "genre_media/icons").mkdir(parents=True)
+                    (artwork / "genre_media/posters").mkdir(parents=True)
+                    Image.new("RGB", (40, 40), "red").save(artwork / "icon.png")
+                    Image.new("RGB", (160, 90), "red").save(artwork / "fanart.jpg")
+                    Image.new("RGB", (120, 30), "red").save(artwork / "banner.png")
+                    Image.new("RGB", (32, 32), "blue").save(artwork / "genres.png")
+                    Image.new("RGB", (32, 32), "green").save(
+                        artwork / "genre_media/icons/action.png"
+                    )
+                    Image.new("RGB", (60, 90), "yellow").save(
+                        artwork / "genre_media/posters/action.jpg"
+                    )
                     control = addon_root / "resources/lib/modules/control.py"
                     control.parent.mkdir(parents=True, exist_ok=True)
                     control.write_text(
@@ -171,6 +234,39 @@ class KodiBrandingOverlayTests(unittest.TestCase):
                 self.assertIn("# " + addon.upstream_name + " upstream credit", entry)
                 self.assertIn(f"'{addon.upstream_name} is ready'", entry)
                 if addon.addon_id == "plugin.video.umbrella":
+                    old_theme = addon_root / "resources/artwork/umbrella"
+                    theme = addon_root / "resources/artwork/starlane movies"
+                    self.assertFalse(old_theme.exists())
+                    self.assertTrue(theme.is_dir())
+                    self.assertIn(
+                        "<default>Starlane Movies</default>",
+                        (addon_root / "resources/settings.xml").read_text(encoding="utf-8"),
+                    )
+                    self.assertEqual(
+                        Image.open(theme / "genres.png").getpixel((0, 0)),
+                        (0, 0, 255),
+                    )
+                    self.assertEqual(
+                        Image.open(theme / "genre_media/icons/action.png").getpixel((0, 0)),
+                        (0, 128, 0),
+                    )
+                    for global_name in ("icon.png", "fanart.jpg", "banner.png"):
+                        self.assertNotEqual(
+                            Image.open(theme / global_name).getpixel((0, 0)),
+                            (255, 0, 0),
+                        )
+                    inventory = json.loads(
+                        (theme / "ARTWORK_INVENTORY.json").read_text(encoding="utf-8")
+                    )
+                    self.assertEqual(inventory["theme"], "starlane movies")
+                    self.assertEqual(
+                        set(inventory["functional_artwork_sha256"]),
+                        {
+                            "genres.png",
+                            "genre_media/icons/action.png",
+                            "genre_media/posters/action.jpg",
+                        },
+                    )
                     control = (
                         addon_root / "resources/lib/modules/control.py"
                     ).read_text(encoding="utf-8")
@@ -216,6 +312,12 @@ class KodiBrandingOverlayTests(unittest.TestCase):
             root = Path(temp)
             source_root = root / "source" / "plugin.video.umbrella"
             source_root.mkdir(parents=True)
+            artwork = source_root / "resources/artwork/umbrella"
+            artwork.mkdir(parents=True)
+            Image.new("RGB", (32, 32), "red").save(artwork / "icon.png")
+            Image.new("RGB", (64, 36), "red").save(artwork / "fanart.jpg")
+            Image.new("RGB", (48, 16), "red").save(artwork / "banner.png")
+            Image.new("RGB", (16, 16), "blue").save(artwork / "genres.png")
             (source_root / "addon.xml").write_text(
                 '<addon id="plugin.video.umbrella" name="Umbrella" '
                 'provider-name="Umbrella" version="6.7.81">'
@@ -225,10 +327,9 @@ class KodiBrandingOverlayTests(unittest.TestCase):
             )
             archive_path = root / "upstream.zip"
             with zipfile.ZipFile(archive_path, "w") as archive:
-                archive.write(
-                    source_root / "addon.xml",
-                    "plugin.video.umbrella/addon.xml",
-                )
+                for path in source_root.rglob("*"):
+                    if path.is_file():
+                        archive.write(path, path.relative_to(source_root.parent).as_posix())
             digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
             first = build_from_archive(archive_path, digest, root / "first")[0]
             second = build_from_archive(archive_path, digest, root / "second")[0]
