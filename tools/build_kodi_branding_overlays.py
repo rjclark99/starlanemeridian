@@ -33,6 +33,10 @@ VISIBLE_BRAND = re.compile(r"(?<![A-Za-z0-9_])(?:Umbrella|UMBRELLA)(?![A-Za-z0-9
 PROVIDER_ARTWORK_THEME = "starlane movies"
 UPSTREAM_ARTWORK_THEME = "umbrella"
 GLOBAL_PROVIDER_ARTWORK = frozenset({"banner.png", "fanart.jpg", "icon.png"})
+PORTABLE_TEXT_SUFFIXES = frozenset({
+    ".css", ".html", ".ini", ".js", ".json", ".md", ".po", ".properties",
+    ".py", ".txt", ".xml",
+})
 
 
 @dataclass(frozen=True)
@@ -520,16 +524,20 @@ def audit_user_facing(addon_root: Path) -> None:
 def package(addon_root: Path, output_root: Path) -> Path:
     version = ET.parse(addon_root / "addon.xml").getroot().attrib["version"]
     zip_path = output_root / f"{addon_root.name}-{version}.zip"
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_STORED) as archive:
         for path in sorted(addon_root.rglob("*")):
             if path.is_file():
                 info = zipfile.ZipInfo(
                     path.relative_to(addon_root.parent).as_posix(),
                     date_time=(2026, 7, 28, 0, 0, 0),
                 )
-                info.compress_type = zipfile.ZIP_DEFLATED
+                info.create_system = 3
+                info.compress_type = zipfile.ZIP_STORED
                 info.external_attr = 0o100644 << 16
-                archive.writestr(info, path.read_bytes(), compresslevel=9)
+                payload = path.read_bytes()
+                if path.suffix.lower() in PORTABLE_TEXT_SUFFIXES:
+                    payload = payload.replace(b"\r\n", b"\n")
+                archive.writestr(info, payload)
     return zip_path
 
 

@@ -130,7 +130,7 @@ def safe_zip_tree(
     source: Path,
     destination: Path,
     root_name: str | None = None,
-    compression: int = zipfile.ZIP_DEFLATED,
+    compression: int = zipfile.ZIP_STORED,
 ) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(destination, "w", compression=compression, compresslevel=9) as archive:

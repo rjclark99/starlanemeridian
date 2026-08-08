@@ -31,6 +31,7 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("draft: true", workflow)
         self.assertIn("cp config/manifest.json artifacts/manifest.json", workflow)
         self.assertIn("release.py checksums", workflow)
+        self.assertIn("verify_kodi_package_lock.py --local-assets", workflow)
         self.assertNotIn("find artifacts -type f", workflow)
         self.assertIn("artifacts/manifest.json", workflow)
         self.assertFalse((root / "admin-portal").exists())
@@ -145,6 +146,7 @@ class ReleaseTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             with zipfile.ZipFile(first) as archive:
                 self.assertTrue(all(info.create_system == 3 for info in archive.infolist()))
+                self.assertTrue(all(info.compress_type == zipfile.ZIP_STORED for info in archive.infolist()))
                 self.assertLess(
                     archive.namelist().index("addon.id/Z-last-on-Windows.py"),
                     archive.namelist().index("addon.id/a-first-on-Windows.py"),

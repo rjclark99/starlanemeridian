@@ -40,6 +40,7 @@ jobs:
           echo "$SOURCE_SHA  artifacts/kodi-source.zip" | sha256sum --check
           python tools/skin_builder.py --upstream-archive artifacts/kodi-source.zip --manifest config/manifest.json --output artifacts/skin
       - run: python tools/release.py kodi --output artifacts/kodi --base-url "https://github.com/rjclark99/starlanemeridian/releases/latest/download" --data-url "https://control.starlanemeridian.uk/v1/public/kodi"
+      - run: python tools/verify_kodi_package_lock.py --local-assets artifacts/kodi --require-id skin.starlane.movies --require-id plugin.video.umbrella
       - name: Build signed Android APK
         working-directory: android-app
         env:

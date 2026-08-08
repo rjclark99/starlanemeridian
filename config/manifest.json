@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "configVersion": "2026.08.38",
+  "configVersion": "2026.08.39",
   "stage": "test",
   "minimumSetupAppVersion": 10,
   "kodi": {
@@ -21,7 +21,7 @@
   },
   "bootstrap": {
     "url": "https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.16.zip",
-    "sha256": "0913b061e6210af40621081b9ee8e57fb79ccfcb648b4f1d3beb01c3e60dbd19"
+    "sha256": "728fd821b0cfffe2c47601ce6b90d3af242b1a68798c563c9fcb0efa85384d51"
   },
   "applications": [
     {
@@ -241,6 +241,6 @@
   "signature": {
     "keyId": "release-1",
     "algorithm": "Ed25519",
-    "value": "coyEnIcB23mkHPypxSMoDXWdLzFG2zlnlfp5MMb_ok1J0yIDkpWlD2SD3HGJ6HyPD1qQ52KPuuYTlh7u1FsYDg"
+    "value": "kG6GcMTJXa6_W1Fr0pLe4mpprHw-jQwmouLYFhfSohTCm3yJ4gSJ2Ool5ZIi9PvpdSMmh1qZNfjWJgm6bpalDQ"
   }
 }

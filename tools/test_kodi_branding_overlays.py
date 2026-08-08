@@ -13,6 +13,7 @@ from tools.build_kodi_branding_overlays import (
     ADDONS,
     build,
     build_from_archive,
+    package,
     replace_human_brand,
     rewrite_discovery_previews,
 )
@@ -20,6 +21,35 @@ from tools.kodi_texture_cache import matching_rows
 
 
 class KodiBrandingOverlayTests(unittest.TestCase):
+    def test_package_is_cross_platform_and_uses_stored_entries(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            outputs = []
+            for host, newline in (("windows", b"\r\n"), ("linux", b"\n")):
+                addon = root / host / "plugin.video.umbrella"
+                addon.mkdir(parents=True)
+                addon.joinpath("addon.xml").write_bytes(
+                    b'<addon id="plugin.video.umbrella" version="6.7.81.3" />' + newline
+                )
+                addon.joinpath("service.py").write_bytes(b"first" + newline + b"second" + newline)
+                addon.joinpath("icon.png").write_bytes(b"binary\r\nbytes")
+                output = root / f"{host}-output"
+                output.mkdir()
+                outputs.append(package(addon, output))
+
+            self.assertEqual(outputs[0].read_bytes(), outputs[1].read_bytes())
+            with zipfile.ZipFile(outputs[0]) as archive:
+                self.assertTrue(all(info.create_system == 3 for info in archive.infolist()))
+                self.assertTrue(all(info.compress_type == zipfile.ZIP_STORED for info in archive.infolist()))
+                self.assertEqual(
+                    archive.read("plugin.video.umbrella/service.py"),
+                    b"first\nsecond\n",
+                )
+                self.assertEqual(
+                    archive.read("plugin.video.umbrella/icon.png"),
+                    b"binary\r\nbytes",
+                )
+
     def test_discovery_previews_are_complete_ordered_and_keep_full_lists(self):
         with tempfile.TemporaryDirectory() as temp:
             addon_root = Path(temp) / "plugin.video.umbrella"

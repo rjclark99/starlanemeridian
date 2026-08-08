@@ -6,10 +6,30 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tools.verify_kodi_package_lock import selected_packages, verify
+from tools.verify_kodi_package_lock import selected_packages, verify, verify_local_assets
 
 
 class VerifyKodiPackageLockTests(unittest.TestCase):
+    def test_local_release_assets_must_match_required_locked_packages(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            artifact = root / "assets" / "plugin.video.example-1.0.zip"
+            artifact.parent.mkdir()
+            artifact.write_bytes(b"package")
+            document = {"packages": [{
+                "id": "plugin.video.example",
+                "version": "1.0",
+                "url": "https://example.test/plugin.video.example-1.0.zip",
+                "sha256": __import__("hashlib").sha256(b"package").hexdigest(),
+            }]}
+            lock = root / "package-lock.json"
+            lock.write_text(json.dumps(document), encoding="utf-8")
+            self.assertEqual([], verify_local_assets(lock, root / "assets", ["plugin.video.example"]))
+            artifact.write_bytes(b"changed")
+            failures = verify_local_assets(lock, root / "assets", ["plugin.video.example"])
+            self.assertEqual(1, len(failures))
+            self.assertIn("expected", failures[0])
+
     def test_selects_fixed_and_matching_abi_packages(self):
         document = {
             "packages": [
