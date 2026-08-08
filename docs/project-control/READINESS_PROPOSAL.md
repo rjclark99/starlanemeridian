@@ -56,6 +56,10 @@
 - Run `31272824941` reduced the provider difference to ZIP member order. Commit
   `1de1fc3` uses explicit POSIX-name ordering and reproduces that Linux digest exactly;
   manifest `2026.08.41` and the resulting Bootstrap digest are signed and verified.
+- Signed-release run `31273093709` succeeded from `da26ba0`. Owner-approved
+  `v0.5.9-test` was published as a pre-release, and all 14 public assets passed exact
+  inventory, digest, manifest-signature, Kodi identity, SBOM exclusion, APK identity,
+  Android v2 signature, and production-signer verification.
 
 ## Remaining gated acceptance
 
@@ -65,6 +69,6 @@ focused/unfocused terminal cards, provider/network order, failed art, exact dire
 opening, consent cancellation, installer denial, Stop, process restart, Kodi warnings,
 Bootstrap decline/revoke/scope change, observed completion, and skin rollback.
 
-The candidate manifest is offline-signed and the final portability correction is local.
-GitHub main update, draft replacement, publication, deployment, and fresh-device
-acceptance remain separately gated.
+The candidate manifest is offline-signed and the public pre-release is verified.
+Fresh-device acceptance, any service deployment, and stable/latest promotion remain
+separately gated.

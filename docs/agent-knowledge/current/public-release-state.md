@@ -2,13 +2,33 @@
 id: current.public-release-state
 kind: current
 status: active
-verified_at: 2026-08-01
+verified_at: 2026-08-08
 tags: [release, manifest, github]
 authority: [github-release, downloaded-bytes, config/manifest.json]
 supersedes: []
 ---
 
 # Public release state
+
+Owner-approved `v0.5.9-test` is the newest public **pre-release** and was built by
+successful signed-release run `31273093709` from source `da26ba0`; it was deliberately
+not promoted to GitHub's stable/latest label. All 14 public files were downloaded after
+publication. The LF-only `SHA256SUMS` names all 13 other assets exactly once and every
+digest matches. Manifest `2026.08.41` is test-stage, verifies against
+`config/manifest.pub`, and selects Bootstrap 1.1.16 digest
+`72270e8c611e4686322f45ac7e9922089346b6d2c21f6812f7ab2d3119beb6bb`.
+The private skin 2.2.22 digest is
+`2342155764da3cbf8ad3d0cafa1df5c01629011f542f138f12ea316bbb798a2c`;
+the branded provider 6.7.81.3 digest is
+`a81eb2bcdb10c97ebf53193753080cc4c917ece7ffcb3e920daac7a19830fb38`.
+All four Kodi roots, IDs, versions, and sidecars pass, and the locked packages use the
+intended stored-entry format. The SBOM is valid SPDX JSON with 185 packages and contains
+no owner-panel, vault, or private-runtime paths. Setup APK digest
+`81188caa8b345fa383ed584ce947f64b0eab65d5889ea5d0cfaf69c608311a18`
+verifies with Android signature scheme v2, package `app.kodisetup.tv`, version `0.5.9`,
+code 10, and production signer
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c`.
+No fresh-device acceptance has yet been performed against these public bytes.
 
 Owner-approved `v0.5.8-test` is the latest public release and targets source commit
 `3c99980`. Its signed manifest is `2026.07.37`, SHA-256

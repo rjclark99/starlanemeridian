@@ -125,12 +125,12 @@
       "priority": "high",
       "status": "active",
       "task_class": "release",
-      "affected_state": "local-candidate",
+      "affected_state": "public-release",
       "role": "release_steward",
       "packet": "docs/project-control/active/acceptance.content-release-readiness-v1-task.json",
       "writer_paths": [],
       "history": ["proposed", "ready", "active", "blocked", "ready", "active", "blocked", "ready", "active"],
-      "summary": "Unpublished runs safely stopped before upload exposed each host variable. Commit 5a41f22 made provider artwork canonical; run 31272824941 then isolated native ZIP entry ordering. Commit 1de1fc3 uses POSIX-name ordering, reproduces the Linux digest exactly, and signs manifest 2026.08.41. One clean GitHub draft, publication approval, and device acceptance remain gated."
+      "summary": "Signed-release run 31273093709 succeeded from da26ba0. Owner-approved v0.5.9-test is published as a pre-release and all 14 public assets pass inventory, signature, package, SBOM, APK identity, and production-signer verification. Clean-device acceptance and stable/latest promotion remain gated."
     },
     {
       "id": "ux.widget-image-audit-v1",
