@@ -51,6 +51,24 @@ Focused regressions cover archive hash/root/path validation, reproducible packag
 automatic-versus-manual changelog behavior, exact add-on registration, configuration
 ordering, Skin Shortcuts generation ordering, and Control API route allowlisting.
 
+## Artwork-theme follow-on
+
+The presentation rewrite changed the provider's configured artwork theme from
+`Umbrella` to `Starlane Movies`, but the packaged directory remained
+`resources/artwork/umbrella`. The provider lower-cases the configured value before
+resolving that directory, so genre, network, provider, and navigation items fell back
+to the generic video image even though all functional files were present.
+
+Provider candidate 6.7.81.3 renames the packaged theme directory to
+`resources/artwork/starlane movies`, records the functional artwork hashes, and
+keeps those 141 files byte-identical to the pinned upstream archive. Its global icon,
+fanart, and banner are excluded from that preservation set and replaced with Starlane
+artwork. The private-skin poster renderer explicitly selects folder poster, thumb, or
+icon artwork and never selects provider fanart for a category card. Local artifact
+inspection found 144 artwork files, zero functional differences, zero surviving old
+theme entries, and all three global images different from upstream. This is local
+candidate evidence only; package-lock, device, and public-release states are unchanged.
+
 The owner-authorized 1.1.11/6.7.81.1 candidate was published as `v0.5.4-test` and its
 allowlisted routes deployed. The first device pass then exposed the hardware findings
 below. Corrected 1.1.12/6.7.81.2 was subsequently published as `v0.5.5-test` from

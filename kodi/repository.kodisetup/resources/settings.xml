@@ -16,9 +16,20 @@
           <default>unapplied</default>
           <control type="edit" format="string"><enabled>false</enabled></control>
         </setting>
-        <setting id="installation_authorized" type="boolean" label="Initial package installation authorized" help="One-time setup consent">
+        <setting id="installation_authorized" type="boolean" label="Legacy package authorization (unused)" help="Retained only for settings compatibility">
           <default>false</default>
           <control type="toggle"><enabled>false</enabled></control>
+        </setting>
+        <setting id="authorized_scope" type="string" label="Authorized package scope" help="Internal scope-bound consent state">
+          <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
+        </setting>
+        <setting id="applied_scope" type="string" label="Applied package scope" help="Internal verified completion state">
+          <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>
+        </setting>
+        <setting id="revoke_installation_authorization" type="action" label="Revoke future package authorization" help="Require fresh local consent before any future package changes">
+          <level>0</level>
+          <data>RunScript(repository.kodisetup,revoke-consent)</data>
+          <control type="button" format="action"><close>true</close></control>
         </setting>
         <setting id="pending_skin" type="string" label="Pending skin activation" help="Internal recovery state">
           <default>__unset__</default><control type="edit" format="string"><enabled>false</enabled></control>

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import platform
@@ -6,6 +7,7 @@ import re
 import shutil
 import stat
 import struct
+import sys
 import tempfile
 import urllib.request
 import zipfile
@@ -28,7 +30,6 @@ SHA256 = re.compile(r"^[a-f0-9]{64}$")
 PACKAGE_URL_PREFIXES = (
     "https://github.com/",
     "https://mirrors.kodi.tv/addons/omega/",
-    "https://control.starlanemeridian.uk/v1/public/kodi/",
 )
 SKIN_PREREQUISITES = {
     "skin.starlane.movies": (
@@ -47,6 +48,18 @@ SKIN_PREREQUISITES = {
     ),
 }
 SETUP_APP_PACKAGE = "app.kodisetup.tv"
+BOOTSTRAP_ADDON_ID = "repository.kodisetup"
+CONSENT_SCOPE_VERSION = 1
+CONSENT_SCOPE_FIELDS = (
+    "schemaVersion",
+    "configVersion",
+    "stage",
+    "bootstrap",
+    "repositories",
+    "addons",
+    "skin",
+)
+REVOKE_CONSENT_ACTION = "revoke-consent"
 REAL_DEBRID_ADDON = "plugin.video.umbrella"
 REAL_DEBRID_HANDOFF = "special://profile/addon_data/repository.kodisetup/real-debrid-handoff.json"
 REAL_DEBRID_FIELDS = {
@@ -88,9 +101,37 @@ def installation_summary(document, package_count):
     )
 
 
-def ensure_installation_authorized(document, package_count):
-    if ADDON.getSettingBool("installation_authorized"):
+def canonical_installation_scope(document, package_lock_sha256):
+    if not isinstance(package_lock_sha256, str) or not SHA256.fullmatch(
+        package_lock_sha256
+    ):
+        raise ValueError("package lock digest is invalid")
+    bootstrap_version = ADDON.getAddonInfo("version")
+    if not isinstance(bootstrap_version, str) or not PACKAGE_VERSION.fullmatch(
+        bootstrap_version
+    ):
+        raise ValueError("Bootstrap version is invalid")
+    scope = {
+        "scopeVersion": CONSENT_SCOPE_VERSION,
+        "bootstrap": {
+            "id": BOOTSTRAP_ADDON_ID,
+            "version": bootstrap_version,
+        },
+        "manifest": {field: document.get(field) for field in CONSENT_SCOPE_FIELDS},
+        "packageLockSha256": package_lock_sha256,
+    }
+    canonical = json.dumps(
+        scope, ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def ensure_installation_authorized(document, package_count, scope_digest):
+    authorized_scope = internal_setting("authorized_scope")
+    if authorized_scope == scope_digest:
         return True
+    if authorized_scope:
+        set_internal_setting("authorized_scope", "")
     approved = xbmcgui.Dialog().yesno(
         "Complete Starlane Movies setup",
         installation_summary(document, package_count),
@@ -101,8 +142,37 @@ def ensure_installation_authorized(document, package_count):
         log("Initial package installation was not authorized")
         notify("Setup was not authorized; Kodi will ask again next launch")
         return False
-    ADDON.setSettingBool("installation_authorized", True)
-    log("Initial package installation authorized")
+    set_internal_setting("authorized_scope", scope_digest)
+    log("Verified package scope authorized")
+    return True
+
+
+def revoke_installation_authorization():
+    if not internal_setting("authorized_scope"):
+        notify("No future package installation is currently authorized")
+        return False
+    approved = xbmcgui.Dialog().yesno(
+        "Revoke package authorization",
+        "Revoke authorization for future Starlane Movies package changes? "
+        "Already installed add-ons, settings, and skins will not be removed.",
+        nolabel="Keep authorization",
+        yeslabel="Revoke",
+    )
+    if not approved:
+        return False
+    set_internal_setting("authorized_scope", "")
+    log("Verified package scope authorization revoked")
+    notify("Future package changes require fresh local authorization")
+    return True
+
+
+def handle_local_action(arguments):
+    if not arguments:
+        return False
+    if arguments == [REVOKE_CONSENT_ACTION]:
+        revoke_installation_authorization()
+    else:
+        log("Unsupported local Bootstrap action rejected", xbmc.LOGWARNING)
     return True
 
 
@@ -113,7 +183,7 @@ def offer_real_debrid_authorization(document):
         "Authorize Real-Debrid",
         "The Kodi package is installed. Open Starlane Movies Setup to start the official "
         "Real-Debrid device authorization now? You can also do this later from the app "
-        "or device management panel.",
+        "or setup provider.",
         nolabel="Later",
         yeslabel="Open setup app",
     )
@@ -307,10 +377,13 @@ def validate_package_item(item):
     }
 
 
-def load_package_lock():
+def load_package_lock_with_digest():
     path = os.path.join(ADDON.getAddonInfo("path"), "resources", "package-lock.json")
-    with open(path, "r", encoding="utf-8") as source:
-        document = json.load(source)
+    with open(path, "rb") as source:
+        raw = source.read(2 * 1024 * 1024 + 1)
+    if len(raw) > 2 * 1024 * 1024:
+        raise ValueError("package lock exceeds size limit")
+    document = json.loads(raw.decode("utf-8"))
     if document.get("schemaVersion") != 1 or not isinstance(
         document.get("packages"), list
     ):
@@ -319,7 +392,11 @@ def load_package_lock():
     ids = [item["id"] for item in packages]
     if len(ids) != len(set(ids)):
         raise ValueError("package lock contains duplicate add-on IDs")
-    return packages
+    return packages, hashlib.sha256(raw).hexdigest()
+
+
+def load_package_lock():
+    return load_package_lock_with_digest()[0]
 
 
 def validate_lock_for_manifest(packages, document):
@@ -389,12 +466,15 @@ def install_locked_package(package):
     archive_path = os.path.join(
         packages_path, "%s-%s.zip" % (package["id"], package["version"])
     )
-    download(
-        package["url"],
-        archive_path,
-        package["sha256"],
-        PACKAGE_URL_PREFIXES,
-    )
+    try:
+        download(
+            package["url"],
+            archive_path,
+            package["sha256"],
+            PACKAGE_URL_PREFIXES,
+        )
+    except (OSError, ValueError) as error:
+        raise ValueError("%s: %s" % (package["id"], error)) from error
     staging = tempfile.mkdtemp(prefix=".starlane-", dir=addons_path)
     backup = os.path.join(addons_path, "." + package["id"] + ".starlane-backup")
     target = os.path.join(addons_path, package["id"])
@@ -499,8 +579,6 @@ def configure_addon(item):
         "System.HasAddon(%s)" % item["id"]
     ):
         raise ValueError("%s is not installed" % item["id"])
-    if item["id"] == "plugin.video.umbrella":
-        xbmcgui.Window(10000).clearProperty("starlane.umbrella.ready")
     set_addon_enabled(item["id"], item["enabled"])
     if not item["enabled"]:
         return
@@ -548,7 +626,7 @@ def activate_skin_and_generate_shortcuts(skin_id):
     xbmc.executebuiltin("ReloadSkin()", True)
 
 
-def wait_for_generated_skin_shortcuts(skin_id, attempts=120, interval=0.25):
+def wait_for_generated_skin_shortcuts(skin_id, attempts=360, interval=0.25):
     includes_path = os.path.join(
         xbmcvfs.translatePath("special://home/addons"),
         skin_id,
@@ -596,6 +674,14 @@ def provider_replacement_required(packages):
     return False
 
 
+def prepare_provider_replacement(packages, skin_id):
+    if not provider_replacement_required(packages):
+        return False
+    xbmcgui.Window(10000).clearProperty("starlane.umbrella.ready")
+    park_active_package_skin(skin_id)
+    return True
+
+
 def run():
     recover_pending_skin()
     manifest_url = ADDON.getSettingString("manifest_url")
@@ -605,20 +691,23 @@ def run():
         notify("Bootstrap requires a release public key")
         return
     document = fetch_and_verify(manifest_url, public_key)
-    if ADDON.getSettingString("applied_version") == document["configVersion"]:
-        log("Configuration is already applied")
-        return
-    packages = load_package_lock()
+    packages, package_lock_digest = load_package_lock_with_digest()
     validate_lock_for_manifest(packages, document)
-    if not ensure_installation_authorized(document, len(packages)):
+    scope_digest = canonical_installation_scope(document, package_lock_digest)
+    if (
+        ADDON.getSettingString("applied_version") == document["configVersion"]
+        and internal_setting("applied_scope") == scope_digest
+    ):
+        log("Verified configuration scope is already applied")
+        return
+    if not ensure_installation_authorized(document, len(packages), scope_digest):
         return
     configure_kodi_quality_of_life()
     progress = xbmcgui.DialogProgressBG()
     progress.create("Starlane Movies", "Preparing the approved Kodi package")
     failures = []
     try:
-        if provider_replacement_required(packages):
-            park_active_package_skin(document["skin"]["addonId"])
+        prepare_provider_replacement(packages, document["skin"]["addonId"])
         enabled_repositories = [item for item in document["repositories"] if item["enabled"]]
         for index, repository in enumerate(enabled_repositories):
             progress.update(
@@ -681,19 +770,21 @@ def run():
     if failures:
         notify("Setup finished with %d issue(s)" % len(failures))
         return
+    set_internal_setting("applied_scope", scope_digest)
     ADDON.setSettingString("applied_version", document["configVersion"])
     notify("Configuration %s applied" % document["configVersion"])
     offer_real_debrid_authorization(document)
 
 
 if __name__ == "__main__":
-    monitor = xbmc.Monitor()
-    if not monitor.waitForAbort(5):
-        try:
-            process_real_debrid_handoff()
-            run()
-            process_real_debrid_handoff()
-        except Exception as error:
-            log(str(error), xbmc.LOGERROR)
-            notify("Setup failed; check kodi.log")
-        monitor_real_debrid_handoff(monitor)
+    if not handle_local_action(sys.argv[1:]):
+        monitor = xbmc.Monitor()
+        if not monitor.waitForAbort(5):
+            try:
+                process_real_debrid_handoff()
+                run()
+                process_real_debrid_handoff()
+            except Exception as error:
+                log(str(error), xbmc.LOGERROR)
+                notify("Setup failed; check kodi.log")
+            monitor_real_debrid_handoff(monitor)

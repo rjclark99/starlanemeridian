@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 import os
@@ -19,7 +20,7 @@ class KodiBootstrapTests(unittest.TestCase):
     def setUp(self):
         self.commands = []
         self.installed = set()
-        self.addon_versions = {}
+        self.addon_versions = {None: "1.1.14"}
         self.addons_path = None
         self.profile_path = None
         self.platform_android = True
@@ -213,7 +214,13 @@ class KodiBootstrapTests(unittest.TestCase):
 
     def manifest(self):
         return {
+            "schemaVersion": 1,
             "configVersion": "2026.07.34",
+            "stage": "test",
+            "bootstrap": {
+                "url": "https://github.com/example/repository.kodisetup.zip",
+                "sha256": "f" * 64,
+            },
             "repositories": [],
             "addons": [
                 {
@@ -244,6 +251,10 @@ class KodiBootstrapTests(unittest.TestCase):
         source = (ADDON_ROOT / "service.py").read_text(encoding="utf-8")
         self.assertNotIn("InstallAddon(", source)
         self.assertNotIn("EnableAddon(", source)
+        self.assertNotIn("InstallFromZip", source)
+        self.assertNotIn("sqlite", source.lower())
+        self.assertNotIn("executeJSONRPC(sys.", source)
+        self.assertNotIn("executebuiltin(sys.", source)
 
     def test_real_debrid_handoff_imports_only_umbrella_settings_and_deletes_source(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -309,8 +320,23 @@ class KodiBootstrapTests(unittest.TestCase):
             self.assertNotIn("plugin.video.umbrella", self.addon_settings)
 
     def test_package_lock_covers_manifest_and_private_skin_requirements(self):
-        packages = self.service.load_package_lock()
+        packages, lock_digest = self.service.load_package_lock_with_digest()
         self.service.validate_lock_for_manifest(packages, self.manifest())
+        self.assertEqual(
+            hashlib.sha256(
+                (ADDON_ROOT / "resources" / "package-lock.json").read_bytes()
+            ).hexdigest(),
+            lock_digest,
+        )
+        managed = {
+            package["id"]: package["url"]
+            for package in packages
+            if package["id"] in {"skin.starlane.movies", "plugin.video.umbrella"}
+        }
+        self.assertEqual({"skin.starlane.movies", "plugin.video.umbrella"}, set(managed))
+        for url in managed.values():
+            self.assertTrue(url.startswith("https://github.com/rjclark99/starlanemeridian/releases/download/"))
+            self.assertNotIn("/latest/", url)
 
         ids = [item["id"] for item in packages]
         self.assertEqual(38, len(ids))
@@ -470,8 +496,28 @@ class KodiBootstrapTests(unittest.TestCase):
             ],
             events,
         )
-        self.assertNotIn("starlane.umbrella.ready", self.window_properties)
+        self.assertEqual(
+            "true", self.window_properties["starlane.umbrella.ready"]
+        )
 
+    def test_locked_package_download_failure_names_package(self):
+        with tempfile.TemporaryDirectory() as name:
+            self.addons_path = os.fspath(Path(name) / "addons")
+            self.service.download = lambda *_args: (_ for _ in ()).throw(
+                ValueError("download hash mismatch")
+            )
+
+            with self.assertRaisesRegex(
+                ValueError, "plugin.video.example: download hash mismatch"
+            ):
+                self.service.install_locked_package(
+                    {
+                        "id": "plugin.video.example",
+                        "version": "1.2.3",
+                        "url": "https://example.test/plugin.video.example.zip",
+                        "sha256": "0" * 64,
+                    }
+                )
     def test_skin_activation_generates_shortcuts_before_reload(self):
         current = {"skin": "skin.estuary"}
 
@@ -548,8 +594,23 @@ class KodiBootstrapTests(unittest.TestCase):
         package = {"id": "plugin.video.umbrella", "version": "6.7.81.2"}
         self.addon_versions["plugin.video.umbrella"] = "6.7.81.1"
         self.assertTrue(self.service.provider_replacement_required([package]))
+        self.assertTrue(
+            self.service.prepare_provider_replacement(
+                [package], "skin.starlane.movies"
+            )
+        )
+        self.assertNotIn("starlane.umbrella.ready", self.window_properties)
         self.addon_versions["plugin.video.umbrella"] = "6.7.81.2"
         self.assertFalse(self.service.provider_replacement_required([package]))
+        self.window_properties["starlane.umbrella.ready"] = "true"
+        self.assertFalse(
+            self.service.prepare_provider_replacement(
+                [package], "skin.starlane.movies"
+            )
+        )
+        self.assertEqual(
+            "true", self.window_properties["starlane.umbrella.ready"]
+        )
 
     def test_provider_readiness_is_bounded_and_required(self):
         self.service.wait_for_provider_ready(
@@ -629,32 +690,113 @@ class KodiBootstrapTests(unittest.TestCase):
             )
             self.assertIn("repository.umbrella", self.installed)
 
-    def test_initial_installation_requires_one_time_explicit_authorization(self):
+    def test_installation_authorization_is_canonical_and_scope_bound(self):
         document = self.manifest()
+        scope = self.service.canonical_installation_scope(document, "a" * 64)
         self.dialog_answers = [True]
 
         self.assertTrue(
-            self.service.ensure_installation_authorized(document, package_count=38)
+            self.service.ensure_installation_authorized(
+                document, package_count=38, scope_digest=scope
+            )
         )
-        self.assertTrue(self.settings["installation_authorized"])
+        self.assertEqual(scope, self.settings["authorized_scope"])
         self.assertIn("Starlane Movies: On Demand", self.dialog_calls[0][1])
         self.assertIn("38 hash-locked packages", self.dialog_calls[0][1])
         self.assertEqual("Install all", self.dialog_calls[0][2]["yeslabel"])
 
         self.dialog_answers = [False]
         self.assertTrue(
-            self.service.ensure_installation_authorized(document, package_count=38)
+            self.service.ensure_installation_authorized(
+                document, package_count=38, scope_digest=scope
+            )
         )
         self.assertEqual(1, len(self.dialog_calls))
 
+        reordered = json.loads(json.dumps(document, sort_keys=True))
+        self.assertEqual(
+            scope,
+            self.service.canonical_installation_scope(reordered, "a" * 64),
+        )
+
+    def test_security_scope_change_clears_old_grant_and_requires_fresh_consent(self):
+        document = self.manifest()
+        original_scope = self.service.canonical_installation_scope(document, "a" * 64)
+        changed = self.manifest()
+        changed["addons"][1]["settings"]["provider.external.enabled"] = False
+        changed_scope = self.service.canonical_installation_scope(changed, "a" * 64)
+        self.assertNotEqual(original_scope, changed_scope)
+        self.settings["authorized_scope"] = original_scope
+        self.dialog_answers = [False]
+
+        self.assertFalse(
+            self.service.ensure_installation_authorized(
+                changed, package_count=38, scope_digest=changed_scope
+            )
+        )
+        self.assertEqual(self.service.INTERNAL_UNSET, self.settings["authorized_scope"])
+
+    def test_package_lock_or_bootstrap_version_change_changes_scope(self):
+        document = self.manifest()
+        original = self.service.canonical_installation_scope(document, "a" * 64)
+        self.assertNotEqual(
+            original,
+            self.service.canonical_installation_scope(document, "b" * 64),
+        )
+        self.addon_versions[None] = "1.1.15"
+        self.assertNotEqual(
+            original,
+            self.service.canonical_installation_scope(document, "a" * 64),
+        )
+
     def test_declined_installation_is_not_persisted_and_will_prompt_again(self):
+        document = self.manifest()
+        scope = self.service.canonical_installation_scope(document, "a" * 64)
         self.dialog_answers = [False]
         self.assertFalse(
             self.service.ensure_installation_authorized(
-                self.manifest(), package_count=38
+                document, package_count=38, scope_digest=scope
             )
         )
-        self.assertNotIn("installation_authorized", self.settings)
+        self.assertNotIn("authorized_scope", self.settings)
+
+    def test_local_revocation_clears_only_future_authorization(self):
+        self.settings.update(
+            {
+                "authorized_scope": "a" * 64,
+                "applied_scope": "b" * 64,
+                "applied_version": "2026.07.34",
+            }
+        )
+        self.installed.add("plugin.video.umbrella")
+        self.dialog_answers = [True]
+
+        self.assertTrue(
+            self.service.handle_local_action([self.service.REVOKE_CONSENT_ACTION])
+        )
+
+        self.assertEqual(self.service.INTERNAL_UNSET, self.settings["authorized_scope"])
+        self.assertEqual("b" * 64, self.settings["applied_scope"])
+        self.assertEqual("2026.07.34", self.settings["applied_version"])
+        self.assertIn("plugin.video.umbrella", self.installed)
+
+    def test_unknown_local_action_is_rejected_without_mutation(self):
+        self.settings["authorized_scope"] = "a" * 64
+        self.assertTrue(self.service.handle_local_action(["arbitrary-command"]))
+        self.assertEqual("a" * 64, self.settings["authorized_scope"])
+        self.assertEqual([], self.commands)
+
+    def test_settings_exposes_only_fixed_local_revoke_action(self):
+        root = ElementTree.parse(ADDON_ROOT / "resources" / "settings.xml").getroot()
+        revoke = root.find(
+            ".//setting[@id='revoke_installation_authorization']"
+        )
+        self.assertIsNotNone(revoke)
+        self.assertEqual("action", revoke.attrib["type"])
+        self.assertEqual(
+            "RunScript(repository.kodisetup,revoke-consent)",
+            revoke.findtext("data"),
+        )
 
     def test_real_debrid_offer_opens_setup_app_only_after_user_accepts(self):
         self.dialog_answers = [True]
@@ -669,14 +811,18 @@ class KodiBootstrapTests(unittest.TestCase):
             {
                 "manifest_url": "https://example.invalid/manifest.json",
                 "public_key": "test-key",
+                "authorized_scope": "b" * 64,
             }
         )
         self.service.fetch_and_verify = lambda _url, _key: document
-        self.service.load_package_lock = lambda: [
-            {"id": "skin.starlane.movies"},
-            {"id": "script.module.cocoscrapers"},
-            {"id": "plugin.video.umbrella"},
-        ]
+        self.service.load_package_lock_with_digest = lambda: (
+            [
+                {"id": "skin.starlane.movies"},
+                {"id": "script.module.cocoscrapers"},
+                {"id": "plugin.video.umbrella"},
+            ],
+            "a" * 64,
+        )
         self.service.validate_lock_for_manifest = lambda _packages, _document: None
         configured = []
         self.service.configure_kodi_quality_of_life = lambda: configured.append(True)
@@ -686,6 +832,7 @@ class KodiBootstrapTests(unittest.TestCase):
 
         self.assertEqual([], configured)
         self.assertNotIn("applied_version", self.settings)
+        self.assertEqual(self.service.INTERNAL_UNSET, self.settings["authorized_scope"])
 
     def test_run_applies_locked_package_after_single_authorization(self):
         document = self.manifest()
@@ -713,7 +860,7 @@ class KodiBootstrapTests(unittest.TestCase):
             {"id": "plugin.video.umbrella"},
             {"id": "skin.starlane.movies"},
         ]
-        self.service.load_package_lock = lambda: packages
+        self.service.load_package_lock_with_digest = lambda: (packages, "a" * 64)
         self.service.validate_lock_for_manifest = lambda _packages, _document: None
         installed_repositories = []
         self.service.install_repository = lambda item: installed_repositories.append(
@@ -742,7 +889,38 @@ class KodiBootstrapTests(unittest.TestCase):
             provider_settings["external_provider.module"],
         )
         self.assertEqual("2026.07.34", self.settings["applied_version"])
+        self.assertEqual(
+            self.service.canonical_installation_scope(document, "a" * 64),
+            self.settings["applied_scope"],
+        )
         self.assertEqual(2, len(self.dialog_calls))
+
+    def test_exact_applied_scope_skips_without_prompt_or_mutation(self):
+        document = self.manifest()
+        packages = [
+            {"id": "skin.starlane.movies"},
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+        ]
+        scope = self.service.canonical_installation_scope(document, "a" * 64)
+        self.settings.update(
+            {
+                "manifest_url": "https://example.invalid/manifest.json",
+                "public_key": "test-key",
+                "applied_version": document["configVersion"],
+                "applied_scope": scope,
+            }
+        )
+        self.service.fetch_and_verify = lambda _url, _key: document
+        self.service.load_package_lock_with_digest = lambda: (packages, "a" * 64)
+        self.service.validate_lock_for_manifest = lambda _packages, _document: None
+        configured = []
+        self.service.configure_kodi_quality_of_life = lambda: configured.append(True)
+
+        self.service.run()
+
+        self.assertEqual([], configured)
+        self.assertEqual([], self.dialog_calls)
 
     def test_run_does_not_activate_skin_when_provider_never_becomes_ready(self):
         document = self.manifest()
@@ -758,7 +936,7 @@ class KodiBootstrapTests(unittest.TestCase):
             {"id": "plugin.video.umbrella"},
             {"id": "skin.starlane.movies"},
         ]
-        self.service.load_package_lock = lambda: packages
+        self.service.load_package_lock_with_digest = lambda: (packages, "a" * 64)
         self.service.validate_lock_for_manifest = lambda _packages, _document: None
         self.service.install_locked_packages = (
             lambda items, _progress: self.installed.update(
@@ -779,6 +957,7 @@ class KodiBootstrapTests(unittest.TestCase):
 
         self.assertEqual([], activated)
         self.assertNotIn("applied_version", self.settings)
+        self.assertNotIn("applied_scope", self.settings)
 
 
 if __name__ == "__main__":
