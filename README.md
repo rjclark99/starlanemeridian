@@ -46,4 +46,4 @@ New agent sessions should begin with [docs/AGENT_HANDOFF.md](docs/AGENT_HANDOFF.
 - Third-party Kodi repositories and add-ons remain empty until legally allowlisted.
 - Telemetry is limited to allowlisted device facts, setup progress, app/configuration versions, and subscription-expiry status.
 - Diagnostics require explicit device consent.
-- The signed manifest packages `skin.starlanemeridian`; Bootstrap 1.1.0 restores the previous skin or Estuary if activation fails.
+- The signed manifest packages `skin.starlanemeridian`; Bootstrap 1.1.16 restores the previous skin or Estuary if activation fails.

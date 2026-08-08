@@ -6,7 +6,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: Main is at cefca90 with an uncommitted project-control rollout; product versions and verified v0.5.8-test bytes are unchanged.
+    summary: The validated v0.5.9 source candidate aligns Android 0.5.9, Bootstrap 1.1.16, private skin 2.2.22, provider 6.7.81.3, and signed manifest 2026.08.38; external release and device states remain separate.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]

@@ -360,13 +360,13 @@ python tools\release.py kodi `
 Verify the generated bootstrap ZIP and calculate its hash:
 
 ```powershell
-$BootstrapZip = 'docs\kodi\repository.kodisetup\repository.kodisetup-1.1.0.zip'
+$BootstrapZip = 'docs\kodi\repository.kodisetup\repository.kodisetup-1.1.16.zip'
 Get-FileHash $BootstrapZip -Algorithm SHA256
 ```
 
 Update `config/manifest.json`:
 
-- Set `bootstrap.url` to `https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.0.zip`.
+- Set `bootstrap.url` to `https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.16.zip`.
 - Set `bootstrap.sha256` to the generated ZIP hash.
 
 Changing the embedded manifest URL, public key, repository base URL, or bootstrap add-on source changes this hash. Rebuild and recalculate it after any such change.
@@ -384,7 +384,7 @@ After GitHub Pages deploys, confirm these return HTTP 200:
 ```text
 https://rjclark99.github.io/starlanemeridian/kodi/addons.xml
 https://rjclark99.github.io/starlanemeridian/kodi/addons.xml.sha256
-https://rjclark99.github.io/starlanemeridian/kodi/repository.kodisetup/repository.kodisetup-1.1.0.zip
+https://rjclark99.github.io/starlanemeridian/kodi/repository.kodisetup/repository.kodisetup-1.1.16.zip
 ```
 
 ## 10. Validate and stage the manifest
@@ -442,7 +442,7 @@ The values remain masked. If a workflow log shows any of these environment varia
 as blank, stop: an empty keystore can produce a misleading Android `KeytoolException`.
 Do not regenerate or replace the established signing key merely to clear that error.
 
-## 12. Run the first signed release
+## 12. Build the first signed release draft
 
 Before starting the workflow, commit and push the final manifest and confirm CI is green.
 
@@ -455,23 +455,23 @@ In GitHub:
 5. Set `kodiSourceSha256` to its verified SHA-256.
 6. Start the workflow and approve the `release` environment deployment.
 
-The workflow builds and publishes:
+The workflow builds and attaches these files to a GitHub draft release:
 
 - `setup.apk`
-- `repository.kodisetup-1.1.0.zip`
+- `repository.kodisetup-1.1.16.zip`
 - branded skin and Kodi repository artifacts
 - signed `manifest.json`
 - `SHA256SUMS`
 - SPDX SBOM
 
-On the GitHub Release page, verify all required assets exist. Download `setup.apk`, the bootstrap ZIP, `manifest.json`, and `SHA256SUMS`; verify their hashes before installing anything.
+On the draft Release page, verify all required assets exist. Download `setup.apk`, the bootstrap ZIP, `manifest.json`, and `SHA256SUMS`; verify their hashes before installing anything. The workflow must not publish the draft; publication requires a separate owner approval.
 
-Confirm the permanent URLs:
+After separately approving and publishing the verified draft, confirm the permanent URLs:
 
 ```powershell
 Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/setup.apk' -Method Head
 Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/manifest.json' -Method Head
-Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.0.zip' -Method Head
+Invoke-WebRequest 'https://github.com/rjclark99/starlanemeridian/releases/latest/download/repository.kodisetup-1.1.16.zip' -Method Head
 ```
 
 GitHub's `/releases/latest/download/<asset>` URL follows the latest non-prerelease release. If you mark the release as a prerelease, it will not become the `/latest` target.

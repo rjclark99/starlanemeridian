@@ -27,9 +27,13 @@ class ReleaseTests(unittest.TestCase):
         workflow = (root / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
         for forbidden in ("admin-portal", "KodiSetup.Admin", "Admin-win", "households.vault"):
             self.assertNotIn(forbidden, workflow)
+        self.assertIn("draft: true", workflow)
         self.assertFalse((root / "admin-portal").exists())
         self.assertFalse((root / "admin-portal.tests").exists())
         self.assertFalse((root / "tools" / "start_admin_portal.ps1").exists())
+        owner_guide = (root / "docs" / "OWNER_SETUP_GUIDE.md").read_text(encoding="utf-8")
+        self.assertNotIn("repository.kodisetup-1.1.0.zip", owner_guide)
+        self.assertIn("repository.kodisetup-1.1.16.zip", owner_guide)
 
     def test_canonical_payload_blanks_signature_and_sorts(self):
         value = {"z": 1, "signature": {"value": "secret", "algorithm": "Ed25519"}, "a": 2}
