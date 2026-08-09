@@ -13,6 +13,12 @@ class FreshInstallReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "Release tag must be v0.5.11-test"):
             validate(ROOT, "v0.5.10-test")
 
+    def test_release_tag_is_pinned_to_the_tested_workflow_commit(self):
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("target_commitish: ${{ github.sha }}", workflow)
+
     def test_release_asset_hash_mismatch_is_rejected(self):
         with tempfile.TemporaryDirectory() as name:
             artifact = Path(name) / "artifact.zip"
