@@ -82,7 +82,38 @@ left configuration marked applied with the skin rolled back and no retry path; t
 app could not read Kodi's JSON-RPC at all; and network/provider logos resolved to
 region-blocked third-party hosts. Acceptance areas 4 to 7 remain unverified.
 
-All four are fixed in an uncommitted source candidate targeting Android `0.5.10`/code 11,
-Bootstrap `1.1.17`, and provider `6.7.81.4`, validated by 37 Kodi Bootstrap tests, 11
-overlay tests, and 51 Android unit tests with lint clean. Acceptance cannot resume until
-that candidate is signed and published, which remains owner-gated.
+All four are fixed in the published `v0.5.10-test` candidate targeting Android
+`0.5.10`/code 11, Bootstrap `1.1.17`, and provider `6.7.81.4`. The signed draft and
+public Latest routes passed verification, and all 38 selected ARMv7 lock entries are
+retrievable with their expected hashes. Acceptance areas 4 to 7 can now resume on the
+device without another rebuild.
+
+## v0.5.11 recovery readiness
+
+The v0.5.10 device evidence was preserved while a temporary provider probe ran one movie
+and one TV directory. Both returned 20 items and the original installed file was restored
+to its exact SHA-256, establishing a first-run Home/provider readiness race. The resulting
+local candidate targets Android `0.5.11`/code 12, Bootstrap `1.1.18`, provider
+`6.7.81.5`, configuration `2026.08.43`, and unchanged private skin `2.2.22`.
+
+Manifest `2026.08.43` is now offline-signed and verified. The consolidated local pass
+covers 114 Python/Kodi/release tests, compilation, project-control validation, exact release-form
+Kodi hashes, 62 Android tests with zero failures and one platform skip, lint, and a
+production-signed APK. A version-tagged manifest fallback is used only while signed
+GitHub Latest targets an older app, allowing prerelease acceptance without premature
+Latest promotion. The existing-device candidate pass also confirmed effective Unknown
+Sources, matched Bootstrap scopes, final skin activation, populated movie/TV routes,
+and clean bounded final logs. A clean install from independently verified prerelease
+bytes remains required. No device wipe or publication is authorised by this readiness
+record.
+
+The GitHub release workflow additionally fixes all public runtime inputs from reviewed
+source and runs the fresh-install contract both before packaging and against the exact
+generated Kodi archives. Wrong tags, stale version mappings, unsigned configuration,
+and mismatched Bootstrap/provider/skin hashes now stop before upload.
+
+The Android consent path now requires a Cancel-first warning followed by a separate final
+confirmation on both initial setup and Resume. Recovery distinguishes API unavailable,
+Bootstrap missing, Bootstrap installed but disabled, Bootstrap enabled and awaiting its
+Kodi approval, Unknown Sources ineffective, and configuration applied. Consent-loss
+records distinguish stopped, expired, app-updated, scope-changed, and clock-rollback cases.

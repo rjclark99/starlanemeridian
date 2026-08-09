@@ -10,12 +10,13 @@ supersedes: []
 
 # Public release state
 
-`v0.5.10-test` exists as an **unpublished draft** created by successful signed-release run
-`31280750978` from `main` at `42a7cb2`. It is not public: `draft=true`,
-`publishedAt=null`, and the `latest/download` routes still serve `v0.5.9-test`.
-Publication remains a separate owner-authorised action.
+`v0.5.10-test` was created by successful signed-release run `31280750978` from `main`
+at `42a7cb2`, independently verified as a draft, and published as the GitHub **Latest**
+full release on 8 August 2026 with explicit owner approval. No asset was rebuilt or
+replaced during publication.
 
-All 14 draft assets were downloaded and independently verified on 8 August 2026. The
+All 14 draft assets were downloaded and independently verified before publication on
+8 August 2026. The
 LF-only `SHA256SUMS` names all 13 other assets exactly once with no duplicates, no
 missing uploads, no unlisted uploads, and every digest matching. All five `.sha256`
 sidecars are LF-only and correct. Manifest `2026.08.42` is test-stage, verifies against
@@ -43,14 +44,16 @@ skin advanced to `skin.starlanemeridian` 1.3.0, built by CI from the reviewed Ko
 ZIP; it is published for rollback only and is deliberately absent from the signed package
 lock, so no hash contract covers it.
 
-Still unverified until publication: the `latest/download` routes, and
-`tools/verify_kodi_package_lock.py`, because the lock's provider URL points at
-`v0.5.10-test` whose assets are not publicly downloadable while the release is a draft.
+After publication, the public `latest/download` manifest reports configuration
+`2026.08.42`, minimum app code 11, and Bootstrap 1.1.17 with the expected digest. The
+public APK and Bootstrap routes return their expected assets, and
+`tools/verify_kodi_package_lock.py` checked all 38 selected ARMv7 packages with zero
+failures.
 The lock's private-skin entry still points at the `v0.5.9-test` tag; those bytes are
 unchanged so it resolves and hashes correctly today, but the new release also carries the
 same archive and pointing at the current tag would remove the cross-release dependency.
 
-Owner-approved `v0.5.9-test` is the current GitHub **Latest** full release and was built
+Owner-approved `v0.5.9-test` is the previous GitHub full release and was built
 by successful signed-release run `31273093709` from source `da26ba0`. It was first
 published as a pre-release and then promoted to Latest on 8 August 2026 with the owner's
 explicit approval; no rebuild or release-asset replacement occurred during promotion, and
@@ -82,9 +85,17 @@ Kodi's JSON-RPC at all; and network/provider logos resolved to region-blocked
 third-party hosts. Acceptance steps 4 to 7 remain unverified. See
 `incident.provider-service-readiness`, `incident.unconfirmed-skin-activation`, and
 `incident.region-blocked-logo-hosts`.
-Downloader code `7499455` was generated for the acceptance pass and independently
-verified to resolve directly to the public tagged `v0.5.9-test/setup.apk` asset. Stable
-code `3467018` is bound to the `latest` route, which now resolves to `v0.5.9-test`.
+Downloader code `7499455` remains pinned to the superseded tagged
+`v0.5.9-test/setup.apk` asset. Code `3467018` is the previously generated reusable
+Latest installer code rather than a new post-7499455 code. Live inspection on 9 August
+confirmed that it follows the current `latest` route and now serves v0.5.10/code 11.
+
+The v0.5.11 acceptance-recovery work on 9 August remains local. Its configuration
+`2026.08.43` is offline-signed and verified, and exact release-form Kodi packages plus a
+production-signed APK pass local validation. A bounded existing-device candidate pass
+succeeded, but no clean installation from prerelease bytes has occurred. `v0.5.10-test`
+remains GitHub Latest; `v0.5.11-test` has not been created or uploaded, and no public
+release or Latest mutation has occurred.
 
 Owner-approved `v0.5.8-test` was the latest public release until the 8 August promotion
 and targets source commit

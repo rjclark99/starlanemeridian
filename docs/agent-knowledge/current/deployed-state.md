@@ -1,14 +1,26 @@
 ---
 id: current.deployed-state
 kind: current
-status: needs-verification
-verified_at: 2026-07-29
+status: active
+verified_at: 2026-08-09
 tags: [device, kodi, fire-tv, control-api, real-debrid]
 authority: [adb, wrangler, docs/CURRENT_STATUS.md]
 supersedes: []
 ---
 
 # Reference device state
+
+On 9 August 2026 an owner-authorised bounded candidate pass preserved the pre-test Kodi
+profile and exercised Android `0.5.11`/code 12, Bootstrap `1.1.18`, provider `6.7.81.5`,
+and private skin `2.2.22` on the reference Fire TV. Kodi reported Unknown Sources
+effective, Bootstrap's authorised and applied scopes matched, the skin recovery markers
+cleared after the expected cold restart, representative movie and TV directories
+populated, and the final bounded log confirmed skin activation and an already-applied
+configuration without recurring functional errors. The device applied the still-public
+configuration `2026.08.42`; signed local configuration `2026.08.43` has not yet been
+served through a prerelease. Evidence and rollback material are ignored under
+`build/device-evidence/v0.5.11-local-pretest-20260809/`. This is not a clean-device or
+public-release acceptance claim.
 
 This record contains bounded device and service observations last verified on
 29 July 2026. No live device or production-service inspection was performed

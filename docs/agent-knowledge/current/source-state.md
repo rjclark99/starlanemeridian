@@ -2,7 +2,7 @@
 id: current.source-state
 kind: current
 status: active
-verified_at: 2026-08-08
+verified_at: 2026-08-09
 tags: [git, source, versions]
 authority: [git, config/manifest.json]
 supersedes: []
@@ -44,9 +44,10 @@ Kodi's keep-skin dialog self-heals within a bounded three attempts; and network/
 logos, which now resolve from the locked local `resource.images.studios.coloured` bundle
 rather than region-blocked third-party hosts. Validated by 103 Python tests, `compileall`,
 51 Android unit tests, `lintDebug`, and `assembleDebug`. Manifest `2026.08.42` is signed
-and verified. Signed-release run `31280750978` produced a fully verified but still
-unpublished `v0.5.10-test` draft; see `current.public-release-state`. No device acceptance
-has been performed against these bytes.
+and verified. Signed-release run `31280750978` produced the fully verified
+`v0.5.10-test` release, which the owner authorised for publication as GitHub Latest on
+8 August 2026; see `current.public-release-state`. Public routes and all 38 selected
+ARMv7 lock entries pass. No device acceptance has been performed against these bytes.
 
 The previous product source candidate was committed at `fcbec9c`; GitHub `main` advanced through
 reproducibility evidence commit `5691da3`. GitHub Actions run `31271671055` passed
@@ -147,3 +148,63 @@ skin package found the same 560 entries with changes limited to `addon.xml` and
 `IncludesHomeWidgets.xml`. This is local-candidate evidence only; installer,
 Bootstrap, provider, package-lock, device, signed-manifest, and public-release states
 are unchanged.
+
+## Uncommitted v0.5.11 acceptance-recovery candidate (9 August 2026)
+
+The current worktree targets Android `0.5.11`/code 12, Bootstrap `1.1.18`, provider
+`6.7.81.5`, configuration `2026.08.43`, and unchanged private skin `2.2.22`. A bounded
+device probe preserved and restored the installed provider byte-for-byte and showed
+that the representative top-rated movie and TV routes each returned 20 items. This
+classifies the v0.5.10 mass Home-widget failure as a first-run lifecycle/readiness race,
+not a provider route, key, network, or parser failure.
+
+The candidate removes Kodi's `default` marker when explicitly enabling the one allowed
+Unknown Sources setting, verifies its effective value read-only, treats an already
+enabled Bootstrap as success, and exposes consent-bound Resume through the same warning
+and secondary confirmation. It records bounded consent-loss reasons and uses explicit
+activation outcomes, including installed-but-disabled. Bootstrap now gates Home activation on one movie and one TV
+directory becoming usable. Provider artwork preserves local `resource://` and
+`special://` URIs, and provider request failures emit bounded diagnostics with no query,
+body, userinfo, content ID, or credential data. TLS certificate verification is never
+disabled. Successful requests log only at debug level.
+
+The existing reference-device profile then exercised the candidate with owner authority.
+The fixed Unknown Sources preference was effective through Kodi JSON-RPC, Bootstrap
+`1.1.18`, provider `6.7.81.5`, and skin `2.2.22` were enabled, the scoped Bootstrap
+approval matched the applied scope, the skin transition markers cleared after one cold
+restart, representative movie and TV directories populated, and the final bounded log
+reported skin activation plus an already-applied configuration with no recurring
+functional error. This is candidate-on-existing-device evidence, not a clean installation
+of public release bytes. Rollback and screenshots remain ignored under
+`build/device-evidence/v0.5.11-local-pretest-20260809/`.
+
+The release path now checks a version-tagged signed prerelease manifest only when the
+signed GitHub Latest manifest requires an older setup-app code. The derived URL is
+restricted to the fixed GitHub repository and exact numeric app version; signature,
+schema, stage, minimum-version, allowlist, rollback-cache, and revocation checks remain
+unchanged. This permits genuine prerelease acceptance without prematurely promoting
+unaccepted bytes to Latest, then automatically returns to the normal Latest manifest
+once it targets the current app.
+
+The consolidated local pass validates 114 Python/Kodi/release tests, Python compilation,
+project control, release-form Kodi packaging, 62 Android unit tests with zero failures
+and one platform skip, Android lint, and a production-signed release build. Final local
+packages are:
+provider SHA-256 `f06266e02c56800716bf7e50eba570f40c33e2637c5abdca55353f8524710996`
+and Bootstrap SHA-256 `977c374f27239888945ddc8865db5d2d87d6c44e1b7489f61d70b8eec4161915`.
+Manifest `2026.08.43` is offline-signed and verifies against `config/manifest.pub`; it
+requires app code 12 and selects the exact Bootstrap digest above. The production-signed
+APK is package `app.kodisetup.tv`, version `0.5.11`/code 12, SHA-256
+`b8b96ae33744d5c6a7dc67876f3f67658d09eba8674b03ddb48acf37cfc30a94`, and retains signer
+`e82233eb034643f9d3e6357a74348c8900d25e28f13b694e9bdee53d9ad2828c` with APK Signature
+Scheme v2. No commit, push, publication, Latest mutation, device wipe, or clean-device
+acceptance against prerelease bytes has occurred.
+
+The signed-release workflow now derives the manifest public key from the checked-in
+public key and pins the two public runtime URLs in source instead of trusting mutable
+GitHub secrets. A pre-upload fresh-install contract rejects the wrong release tag,
+Android/manifest version mismatch, unsigned manifest, mismatched Bootstrap or provider
+tag URL, and any Bootstrap/provider/private-skin archive whose generated hash differs
+from the signed manifest or package lock. The release APK was also inspected directly:
+the expected manifest URL, public key, and control URL are embedded, while owner-panel
+identifiers are absent.

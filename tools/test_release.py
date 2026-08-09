@@ -32,6 +32,14 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn("cp config/manifest.json artifacts/manifest.json", workflow)
         self.assertIn("release.py checksums", workflow)
         self.assertIn("verify_kodi_package_lock.py --local-assets", workflow)
+        self.assertEqual(workflow.count("validate_fresh_install_release.py"), 2)
+        self.assertIn('RELEASE_TAG: ${{ inputs.tag }}', workflow)
+        self.assertNotIn("secrets.PUBLIC_MANIFEST_URL", workflow)
+        self.assertNotIn("secrets.MANIFEST_PUBLIC_KEY", workflow)
+        self.assertNotIn("secrets.CONTROL_API_URL", workflow)
+        self.assertIn("releases/latest/download/manifest.json", workflow)
+        self.assertIn("$(cat ../config/manifest.pub)", workflow)
+        self.assertIn("https://control.starlanemeridian.uk", workflow)
         self.assertNotIn("python tools/build_brand_assets.py", workflow)
         self.assertNotIn("find artifacts -type f", workflow)
         self.assertIn("artifacts/manifest.json", workflow)
@@ -251,7 +259,7 @@ class ReleaseTests(unittest.TestCase):
             provider = (
                 output
                 / "plugin.video.umbrella"
-                / "plugin.video.umbrella-6.7.81.4.zip"
+                / "plugin.video.umbrella-6.7.81.5.zip"
             )
             self.assertTrue(provider.is_file())
             self.assertEqual(

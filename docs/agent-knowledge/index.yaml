@@ -1,31 +1,31 @@
 schema_version: 1
-updated_at: 2026-08-08
+updated_at: 2026-08-09
 records:
   - id: current.source-state
     title: Repository source state
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: An uncommitted post-acceptance candidate targets Android 0.5.10/code 11, Bootstrap 1.1.17, provider 6.7.81.4, and unchanged private skin 2.2.22; it is unsigned, unpublished, and unverified on any device.
+    summary: The uncommitted, offline-signed acceptance-recovery candidate targets Android 0.5.11/code 12, Bootstrap 1.1.18, provider 6.7.81.5, configuration 2026.08.43, and private skin 2.2.22; an existing-device pass succeeded but clean prerelease acceptance remains outstanding.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
     authority: [git, config/manifest.json, kodi/skin.starlane.movies/addon.xml]
-    verified_at: 2026-08-08
+    verified_at: 2026-08-09
     supersedes: []
     related: [current.deployed-state, current.public-release-state]
     size_hint: small
   - id: current.deployed-state
     title: Reference device state
     kind: current
-    status: needs-verification
+    status: active
     path: docs/agent-knowledge/current/deployed-state.md
-    summary: Historical 29 July Fire TV and service observations; recheck live state before use.
+    summary: A bounded 9 August existing-device pass verified the v0.5.11 candidate stack and preserved rollback evidence; clean prerelease acceptance remains outstanding.
     tags: [device, kodi, fire-tv]
     path_globs: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
     read_when: [changing reference device, comparing source and installed state]
     authority: [docs/CURRENT_STATUS.md, docs/TECHNICAL_HANDOFF_2026-07-26.md]
-    verified_at: 2026-07-29
+    verified_at: 2026-08-09
     supersedes: []
     related: [current.source-state, runbook.safe-adb-diagnostics]
     size_hint: small
@@ -34,12 +34,12 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/public-release-state.md
-    summary: v0.5.9-test remains the public Latest release; a fully verified v0.5.10-test draft exists but is unpublished, so the latest routes and the network lock check are still outstanding.
+    summary: v0.5.10-test remains the verified public Latest release; v0.5.11 exists only as an unsigned local candidate and no rollback or publication mutation has occurred.
     tags: [release, manifest, github]
     path_globs: [.github/workflows/**, config/**, tools/release.py]
     read_when: [publishing, release comparison, public route checks]
     authority: [github-release, downloaded-bytes, config/manifest.json]
-    verified_at: 2026-08-08
+    verified_at: 2026-08-09
     supersedes: []
     related: [subsystem.signed-config-release, runbook.release-rollback]
     size_hint: small

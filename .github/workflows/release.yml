@@ -30,6 +30,10 @@ jobs:
           echo "$ANDROID_KEYSTORE" | base64 -d > .secrets/release.jks
       - name: Verify offline-signed manifest
         run: python tools/release.py verify config/manifest.json --public-key config/manifest.pub
+      - name: Validate fresh-install release identity
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python tools/validate_fresh_install_release.py --tag "$RELEASE_TAG"
       - name: Build branded skin from pinned source
         env:
           SOURCE_URL: ${{ inputs.kodiSourceUrl }}
@@ -40,16 +44,17 @@ jobs:
           python tools/skin_builder.py --upstream-archive artifacts/kodi-source.zip --manifest config/manifest.json --output artifacts/skin
       - run: python tools/release.py kodi --output artifacts/kodi --base-url "https://github.com/rjclark99/starlanemeridian/releases/latest/download" --data-url "https://control.starlanemeridian.uk/v1/public/kodi"
       - run: python tools/verify_kodi_package_lock.py --local-assets artifacts/kodi --require-id skin.starlane.movies --require-id plugin.video.umbrella
+      - name: Verify fresh-install release packages
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python tools/validate_fresh_install_release.py --tag "$RELEASE_TAG" --kodi-assets artifacts/kodi
       - name: Build signed Android APK
         working-directory: android-app
         env:
           STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          MANIFEST_URL: ${{ secrets.PUBLIC_MANIFEST_URL }}
-          MANIFEST_PUBLIC_KEY: ${{ secrets.MANIFEST_PUBLIC_KEY }}
-          CONTROL_API_URL: ${{ secrets.CONTROL_API_URL }}
-        run: gradle :app:assembleRelease -PreleaseStoreFile=../.secrets/release.jks -PreleaseStorePassword="$STORE_PASSWORD" -PreleaseKeyAlias="$KEY_ALIAS" -PreleaseKeyPassword="$KEY_PASSWORD" -PmanifestUrl="$MANIFEST_URL" -PmanifestPublicKey="$MANIFEST_PUBLIC_KEY" -PcontrolApiUrl="$CONTROL_API_URL"
+        run: gradle :app:assembleRelease -PreleaseStoreFile=../.secrets/release.jks -PreleaseStorePassword="$STORE_PASSWORD" -PreleaseKeyAlias="$KEY_ALIAS" -PreleaseKeyPassword="$KEY_PASSWORD" -PmanifestUrl="https://github.com/rjclark99/starlanemeridian/releases/latest/download/manifest.json" -PmanifestPublicKey="$(cat ../config/manifest.pub)" -PcontrolApiUrl="https://control.starlanemeridian.uk"
       - run: cp android-app/app/build/outputs/apk/release/app-release.apk artifacts/setup.apk
       - run: cp config/manifest.json artifacts/manifest.json
       - uses: anchore/sbom-action@v0
