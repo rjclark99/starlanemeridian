@@ -2,6 +2,7 @@ package app.kodisetup.tv.install
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -24,5 +25,12 @@ class BootstrapAppliedVersionReaderTest {
         settings.parentFile!!.mkdirs()
         settings.writeText("""<!DOCTYPE x [<!ENTITY e SYSTEM "file:///etc/passwd">]><settings><setting id="applied_version">&e;</setting></settings>""")
         assertNull(runCatching { BootstrapAppliedVersionReader(root).read("org.xbmc.kodi") }.getOrNull())
+    }
+
+    @Test fun `keeps Fire OS parser capability checks optional after declaration rejection`() {
+        val source = File("src/main/java/app/kodisetup/tv/install/BootstrapAppliedVersionReader.kt").readText()
+        assertTrue(source.contains("require(!text.contains(\"<!DOCTYPE\", true)"))
+        assertTrue(source.contains("runCatching { setAttribute(\"http://javax.xml.XMLConstants/property/accessExternalDTD\""))
+        assertTrue(source.contains("runCatching { setAttribute(\"http://javax.xml.XMLConstants/property/accessExternalSchema\""))
     }
 }

@@ -68,64 +68,103 @@ internal fun exchangeWithKodi(request: String): String {
     }
 }
 
+enum class BootstrapActivationOutcome {
+    ENABLED_AWAITING_CONSENT,
+    ALREADY_ENABLED_AWAITING_CONSENT,
+    API_UNAVAILABLE,
+    BOOTSTRAP_MISSING,
+    BOOTSTRAP_INSTALLED_DISABLED,
+    UNKNOWN_SOURCES_DISABLED,
+}
+
 /** Enables only Starlane's fixed Bootstrap through Kodi's loopback JSON-RPC endpoint. */
 class KodiLoopbackBootstrapActivator internal constructor(
     private val exchange: (String) -> String = ::exchangeWithKodi,
     private val pause: (Long) -> Unit = Thread::sleep,
-    private val attempts: Int = 120,
+    private val attempts: Int = 110,
+    private val now: () -> Long = System::currentTimeMillis,
 ) {
-    fun activate(gate: () -> Unit): Boolean {
-        var lastFailure: Throwable? = null
+    /** One foreground activation attempt. Retries are only Kodi-startup readiness probes. */
+    fun activate(gate: () -> Unit): BootstrapActivationOutcome {
+        val deadline = now() + MAX_ACTIVATION_MILLIS
+        var bootstrapWasDiscoveredDisabled = false
         repeat(attempts) { attempt ->
+            if (now() >= deadline) return if (bootstrapWasDiscoveredDisabled) {
+                BootstrapActivationOutcome.BOOTSTRAP_INSTALLED_DISABLED
+            } else BootstrapActivationOutcome.API_UNAVAILABLE
+            gate()
+            val unknownSourcesAreEnabled = try {
+                unknownSourcesEnabled()
+            } catch (failure: Throwable) {
+                if (attempt + 1 < attempts) { gate(); pause(RETRY_DELAY_MS) }
+                return@repeat
+            }
+            if (!unknownSourcesAreEnabled) return BootstrapActivationOutcome.UNKNOWN_SOURCES_DISABLED
             gate()
             val alreadyEnabled = try {
                 enabled(GET_ID)
             } catch (failure: Throwable) {
-                lastFailure = failure
+                if (failure is BootstrapMissingException) return BootstrapActivationOutcome.BOOTSTRAP_MISSING
                 if (attempt + 1 < attempts) { gate(); pause(RETRY_DELAY_MS) }
                 return@repeat
             }
             if (alreadyEnabled) {
-                quitKodi(gate)
-                return false
+                quitKodi(gate, deadline)
+                return BootstrapActivationOutcome.ALREADY_ENABLED_AWAITING_CONSENT
             }
+            bootstrapWasDiscoveredDisabled = true
             gate()
             try {
                 val set = parse(exchange(SET_REQUEST), SET_ID)
                 require(set["result"]?.jsonPrimitive?.content == "OK") { "Kodi rejected fixed Bootstrap activation" }
             } catch (failure: Throwable) {
-                lastFailure = failure
                 if (attempt + 1 < attempts) { gate(); pause(RETRY_DELAY_MS) }
                 return@repeat
             }
             gate()
             try {
                 require(enabled(VERIFY_ID)) { "Kodi did not confirm fixed Bootstrap activation" }
-                quitKodi(gate)
-                return true
+                quitKodi(gate, deadline)
+                return BootstrapActivationOutcome.ENABLED_AWAITING_CONSENT
             } catch (failure: Throwable) {
-                lastFailure = failure
                 if (attempt + 1 < attempts) { gate(); pause(RETRY_DELAY_MS) }
             }
         }
-        throw IllegalStateException("Kodi did not make the fixed Bootstrap activation API ready in time", lastFailure)
+        return if (bootstrapWasDiscoveredDisabled) BootstrapActivationOutcome.BOOTSTRAP_INSTALLED_DISABLED
+        else BootstrapActivationOutcome.API_UNAVAILABLE
     }
 
-    private fun quitKodi(gate: () -> Unit) {
+    private fun quitKodi(gate: () -> Unit, deadline: Long): Boolean {
+        if (now() + KODI_QUIT_BUDGET_MS > deadline) return false
         gate()
-        val response = parse(exchange(QUIT_REQUEST), QUIT_ID)
-        require(response["result"]?.jsonPrimitive?.content == "OK") { "Kodi rejected the fixed Bootstrap restart" }
+        val response = runCatching { parse(exchange(QUIT_REQUEST), QUIT_ID) }.getOrNull() ?: return false
+        if (response["result"]?.jsonPrimitive?.content != "OK") return false
         pause(KODI_SHUTDOWN_GRACE_MS)
+        return true
     }
 
     private fun enabled(id: Int): Boolean {
         val response = parse(exchange(getRequest(id)), id)
         val addon = response["result"]?.jsonObject?.get("addon")?.jsonObject
-            ?: error("Kodi has not discovered the fixed Bootstrap yet")
+            ?: throw BootstrapMissingException()
         require(addon["addonid"]?.jsonPrimitive?.content == ADDON_ID) { "Kodi returned an unexpected add-on identity" }
         return addon["enabled"]?.jsonPrimitive?.boolean
             ?: error("Kodi omitted the fixed Bootstrap enabled state")
     }
+
+    private fun unknownSourcesEnabled(): Boolean {
+        val response = parse(exchange(UNKNOWN_SOURCES_REQUEST), UNKNOWN_SOURCES_ID)
+        val value = response["result"]?.jsonObject?.entries
+            ?.singleOrNull { it.key == "value" }?.value?.jsonPrimitive?.content
+            ?: error("Kodi omitted the Unknown Sources setting")
+        return when (value.lowercase()) {
+            "true" -> true
+            "false" -> false
+            else -> error("Kodi returned an invalid Unknown Sources setting")
+        }
+    }
+
+    private class BootstrapMissingException : IllegalStateException("Kodi has not discovered the fixed Bootstrap yet")
 
     private fun parse(source: String, id: Int) = Json.parseToJsonElement(source).jsonObject.also { response ->
         require(response["jsonrpc"]?.jsonPrimitive?.content == "2.0" && response["id"]?.jsonPrimitive?.content == id.toString()) {
@@ -140,9 +179,13 @@ class KodiLoopbackBootstrapActivator internal constructor(
         const val SET_ID = 4102
         const val VERIFY_ID = 4103
         const val QUIT_ID = 4104
+        const val UNKNOWN_SOURCES_ID = 4105
         const val RETRY_DELAY_MS = 500L
         const val KODI_SHUTDOWN_GRACE_MS = 3_000L
+        const val MAX_ACTIVATION_MILLIS = 45_000L
+        const val KODI_QUIT_BUDGET_MS = 4_500L
         fun getRequest(id: Int) = """{"jsonrpc":"2.0","method":"Addons.GetAddonDetails","params":{"addonid":"$ADDON_ID","properties":["enabled"]},"id":$id}"""
+        val UNKNOWN_SOURCES_REQUEST = """{"jsonrpc":"2.0","method":"Settings.GetSettingValue","params":{"setting":"addons.unknownsources"},"id":$UNKNOWN_SOURCES_ID}"""
         val SET_REQUEST = """{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","params":{"addonid":"$ADDON_ID","enabled":true},"id":$SET_ID}"""
         val QUIT_REQUEST = """{"jsonrpc":"2.0","method":"Application.Quit","id":$QUIT_ID}"""
     }

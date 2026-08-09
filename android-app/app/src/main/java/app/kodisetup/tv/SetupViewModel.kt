@@ -20,9 +20,11 @@ import app.kodisetup.tv.install.FixedBootstrapEligibility
 import app.kodisetup.tv.install.KodiRealDebridCredentials
 import app.kodisetup.tv.install.KodiRealDebridHandoff
 import app.kodisetup.tv.install.KodiLoopbackBootstrapActivator
+import app.kodisetup.tv.install.BootstrapActivationOutcome
 import app.kodisetup.tv.automation.AutomationConsentCoordinator
 import app.kodisetup.tv.automation.AutomationSecurityScope
 import app.kodisetup.tv.automation.AutomationScope
+import app.kodisetup.tv.automation.ConsentInvalidationReason
 import app.kodisetup.tv.automation.ConsentStatus
 import app.kodisetup.tv.automation.SharedPreferencesConsentStorage
 import app.kodisetup.tv.model.*
@@ -32,6 +34,7 @@ import app.kodisetup.tv.net.RealDebridAuthorization
 import app.kodisetup.tv.net.RealDebridClient
 import app.kodisetup.tv.security.DeviceIdentity
 import app.kodisetup.tv.security.TokenVault
+import app.kodisetup.tv.security.ManifestReleaseCandidate
 import app.kodisetup.tv.security.ManifestSecurity
 import app.kodisetup.tv.security.ManifestRevokedException
 import kotlinx.coroutines.Dispatchers
@@ -77,12 +80,8 @@ data class SetupUiState(
     val consentScope: AutomationScope? = null,
     val consentRequestId: String? = null,
     val automationRunning: Boolean = false,
+    val bootstrapActivationPending: Boolean = false,
 )
-
-internal object BootstrapRecoveryPolicy {
-    fun shouldRetry(applied: Boolean, busy: Boolean, apiLevel: Int, strictConsent: Boolean, fixedEligibility: Boolean): Boolean =
-        !applied && !busy && apiLevel in 25..28 && strictConsent && fixedEligibility
-}
 
 class SetupViewModel(application: Application) : AndroidViewModel(application) {
     private val mutable = MutableStateFlow(SetupUiState())
@@ -138,30 +137,55 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         runCatching {
             require(BuildConfig.MANIFEST_PUBLIC_KEY.isNotBlank()) { "Release public key is not configured" }
             val cache = File(getApplication<Application>().filesDir, "last-verified-manifest.json")
-            val downloaded = runCatching { Http.getText(BuildConfig.MANIFEST_URL) }
-            val remote = downloaded.getOrNull()?.let { raw -> runCatching { ManifestSecurity.verify(raw, BuildConfig.MANIFEST_PUBLIC_KEY, BuildConfig.VERSION_CODE) } }
-            val remoteFailure = remote?.exceptionOrNull()
-            if (remoteFailure is ManifestRevokedException) {
+            val downloadedLatest = runCatching { Http.getText(BuildConfig.MANIFEST_URL) }
+            val remoteLatest = downloadedLatest.getOrNull()?.let { raw ->
+                runCatching { ManifestSecurity.verify(raw, BuildConfig.MANIFEST_PUBLIC_KEY, BuildConfig.VERSION_CODE) }
+            }
+            val latestFailure = remoteLatest?.exceptionOrNull()
+            if (latestFailure is ManifestRevokedException) {
                 cache.delete()
-                throw remoteFailure
+                throw latestFailure
+            }
+            val candidateUrl = remoteLatest?.getOrNull()
+                ?.takeIf { ManifestReleaseCandidate.shouldCheck(it, BuildConfig.VERSION_CODE) }
+                ?.let { ManifestReleaseCandidate.url(BuildConfig.MANIFEST_URL, BuildConfig.VERSION_NAME) }
+            val downloadedCandidate = candidateUrl?.let { url -> runCatching { Http.getText(url) } }
+            val remoteCandidate = downloadedCandidate?.getOrNull()?.let { raw ->
+                runCatching { ManifestSecurity.verify(raw, BuildConfig.MANIFEST_PUBLIC_KEY, BuildConfig.VERSION_CODE) }
+            }
+            val candidateFailure = remoteCandidate?.exceptionOrNull()
+            if (candidateFailure is ManifestRevokedException) {
+                cache.delete()
+                throw candidateFailure
             }
             val cached = cache.takeIf { it.isFile }?.let {
                 runCatching { ManifestSecurity.verify(it.readText(), BuildConfig.MANIFEST_PUBLIC_KEY, BuildConfig.VERSION_CODE) }.getOrNull()
             }
-            val verified = remote?.getOrNull()
+            val remote = listOfNotNull(
+                remoteLatest?.getOrNull()?.let { it to downloadedLatest.getOrThrow() },
+                remoteCandidate?.getOrNull()?.let { it to downloadedCandidate!!.getOrThrow() },
+            ).maxWithOrNull { left, right ->
+                compareVersions(
+                    left.first["configVersion"]!!.jsonPrimitive.content,
+                    right.first["configVersion"]!!.jsonPrimitive.content,
+                )
+            }
+            val verified = remote?.first
             val selected = when {
-                verified == null -> cached ?: throw (remoteFailure ?: downloaded.exceptionOrNull() ?: SecurityException("No verified configuration is available"))
+                verified == null -> cached ?: throw (candidateFailure ?: latestFailure ?: downloadedLatest.exceptionOrNull() ?: SecurityException("No verified configuration is available"))
                 cached != null && compareVersions(verified["configVersion"]!!.jsonPrimitive.content, cached["configVersion"]!!.jsonPrimitive.content) < 0 -> cached
                 else -> verified
             }
-            if (selected === verified && downloaded.isSuccess) {
+            if (selected === verified) {
                 val pending = File(cache.parentFile, cache.name + ".new")
-                pending.writeText(downloaded.getOrThrow())
+                pending.writeText(remote!!.second)
                 require(pending.renameTo(cache) || runCatching { pending.copyTo(cache, overwrite = true); pending.delete(); true }.getOrDefault(false)) { "Verified configuration could not be cached" }
             }
             json.decodeFromJsonElement(SetupManifest.serializer(), selected)
         }.onSuccess { manifest ->
-            val restoredConsent = consent.current(AutomationSecurityScope.digest(manifest))
+            val securityScope = AutomationSecurityScope.digest(manifest)
+            recordConsentInvalidation(consent.invalidationReason(securityScope))
+            val restoredConsent = consent.current(securityScope)
             val restored = state.value.step.takeUnless { it == SetupStep.WELCOME } ?: SetupStep.CONFIGURATION
             transition(restored, "Configuration ${manifest.configVersion} verified", manifest = manifest)
             mutable.value = mutable.value.copy(
@@ -169,6 +193,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
                 consentScope = restoredConsent?.takeIf { it.status == ConsentStatus.REQUESTED }?.scope,
                 consentRequestId = restoredConsent?.takeIf { it.status == ConsentStatus.REQUESTED }?.requestId,
                 automationRunning = restoredConsent?.status == ConsentStatus.GRANTED && restoredConsent.scope == AutomationScope.STRICT_SETUP,
+                bootstrapActivationPending = bootstrapActivationIsPending(manifest.configVersion),
             )
             if (strictAutomationIsActive()) advanceAutomatedWorkflow()
             else if (restoredConsent?.status == ConsentStatus.GRANTED &&
@@ -180,6 +205,11 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
 
     fun startAutomatedSetup() {
         requestLocalConsent(AutomationScope.STRICT_SETUP, "local-strict-setup")
+    }
+
+    fun resumeAutomatedBootstrap() {
+        mutable.value = mutable.value.copy(bootstrapActivationPending = true)
+        requestLocalConsent(AutomationScope.STRICT_SETUP, "resume-fixed-bootstrap")
     }
 
     fun grantAutomationConsent() {
@@ -206,7 +236,8 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
     fun stopAutomatedSetup() {
         consent.invalidate()
         installMonitor?.cancel()
-        workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
+        workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation")
+            .putString("automation_invalidation_reason", "STOPPED").apply()
         mutable.value = mutable.value.copy(
             busy = false, automationRunning = false, consentGeneration = null, consentScope = null,
             consentRequestId = null, message = "Automated setup stopped; no further automated steps will run",
@@ -282,8 +313,8 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         runCatching {
             if (resumeFixedActivation) {
                 revalidateManifestScope(expectedScope, bootstrap.url, bootstrap.sha256)
-                val activated = activateFixedBootstrap(requireNotNull(strictGeneration), expectedScope)
-                return@runCatching "Bootstrap activation resumed and ${if (activated) "enabled" else "confirmed"} through Kodi; approve its fixed setup prompt in Kodi"
+                val outcome = activateFixedBootstrap(requireNotNull(strictGeneration), expectedScope)
+                return@runCatching activationInstruction(outcome, resumed = true)
             }
             val file = File(getApplication<Application>().cacheDir, "packages/repository.kodisetup.zip")
             Http.download(bootstrap.url, file, 25L * 1024 * 1024)
@@ -297,8 +328,9 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 workflowPrefs.edit().putBoolean("bootstrap_ready", true).putString("bootstrap_auto_installed_version", configVersion)
                     .putBoolean("bootstrap_launch_pending", true).apply()
-                val activated = activateFixedBootstrap(requireNotNull(strictGeneration), expectedScope)
-                "Bootstrap ${result.version} installed atomically and ${if (activated) "enabled" else "already enabled"} through Kodi; approve its fixed setup prompt in Kodi"
+                mutable.value = mutable.value.copy(bootstrapActivationPending = true)
+                val outcome = activateFixedBootstrap(requireNotNull(strictGeneration), expectedScope)
+                "Bootstrap ${result.version} installed atomically. ${activationInstruction(outcome, resumed = false)}"
             } else {
                 val location = BootstrapExporter(getApplication()).export(file, "repository.kodisetup.zip")
                 workflowPrefs.edit().putBoolean("bootstrap_ready", true).putString("bootstrap_prepared_version", configVersion).apply()
@@ -311,20 +343,47 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun activateFixedBootstrap(strictGeneration: String, expectedScope: String): Boolean {
+    private fun activateFixedBootstrap(strictGeneration: String, expectedScope: String): BootstrapActivationOutcome {
         requireFixedBootstrapActivationGate(strictGeneration, expectedScope)
         val intent = requireNotNull(getApplication<Application>().packageManager.getLaunchIntentForPackage(FIXED_KODI_PACKAGE)) {
             "Kodi launch activity is unavailable"
         }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         getApplication<Application>().startActivity(intent)
-        val activated = KodiLoopbackBootstrapActivator().activate {
+        val outcome = KodiLoopbackBootstrapActivator().activate {
             bootstrapPreparation?.ensureActive()
             requireFixedBootstrapActivationGate(strictGeneration, expectedScope)
         }
         requireFixedBootstrapActivationGate(strictGeneration, expectedScope)
-        getApplication<Application>().startActivity(intent)
-        workflowPrefs.edit().putBoolean("bootstrap_launch_pending", false).apply()
-        return activated
+        if (outcome == BootstrapActivationOutcome.ENABLED_AWAITING_CONSENT || outcome == BootstrapActivationOutcome.ALREADY_ENABLED_AWAITING_CONSENT) {
+            getApplication<Application>().startActivity(intent)
+            workflowPrefs.edit().putBoolean("bootstrap_launch_pending", false).apply()
+            mutable.value = mutable.value.copy(bootstrapActivationPending = false)
+        } else {
+            consent.invalidate()
+            workflowPrefs.edit()
+                .putBoolean("automatic", false)
+                .remove("automation_generation")
+                .putString("automation_invalidation_reason", outcome.name)
+                .apply()
+            mutable.value = mutable.value.copy(
+                automationRunning = false,
+                bootstrapActivationPending = true,
+            )
+        }
+        return outcome
+    }
+
+    private fun activationInstruction(outcome: BootstrapActivationOutcome, resumed: Boolean): String = when (outcome) {
+        BootstrapActivationOutcome.ENABLED_AWAITING_CONSENT -> "Bootstrap is enabled and awaiting its visible Kodi consent"
+        BootstrapActivationOutcome.ALREADY_ENABLED_AWAITING_CONSENT -> "Bootstrap was already enabled and is awaiting its visible Kodi consent"
+        BootstrapActivationOutcome.API_UNAVAILABLE -> "Kodi activation API is unavailable; keep Kodi open and select Resume automated setup"
+        BootstrapActivationOutcome.BOOTSTRAP_MISSING -> "Kodi has not discovered the verified Bootstrap yet; keep Kodi open and select Resume automated setup"
+        BootstrapActivationOutcome.BOOTSTRAP_INSTALLED_DISABLED -> "Bootstrap is installed but remains disabled; keep Kodi open and select Resume automated setup"
+        BootstrapActivationOutcome.UNKNOWN_SOURCES_DISABLED -> if (resumed) {
+            "Kodi still reports Unknown Sources disabled; fully close Kodi, then select Resume automated setup"
+        } else {
+            "Kodi reports Unknown Sources disabled after the fixed profile update; fully close Kodi, then select Resume automated setup"
+        }
     }
 
     fun storagePermissionDenied() = update(busy = false, error = "STORAGE_PERMISSION_DENIED", message = "Storage access is required to save the Kodi bootstrap ZIP")
@@ -337,23 +396,13 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
         }.getOrNull() else null
         val applied = observed == expected
         if (applied) {
-            workflowPrefs.edit().putString("bootstrap_applied_version", observed).apply()
+            workflowPrefs.edit().putString("bootstrap_applied_version", observed).putBoolean("bootstrap_launch_pending", false).apply()
             consent.invalidate()
             workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
-            mutable.value = mutable.value.copy(automationRunning = false)
+            mutable.value = mutable.value.copy(automationRunning = false, bootstrapActivationPending = false)
             transition(SetupStep.ACCOUNT_LINK, "Bootstrap $observed was observed as applied. Link Real-Debrid or finish.")
         } else {
-            val generation = activeStrictGeneration()
-            val expectedScope = state.value.manifest?.let(AutomationSecurityScope::digest)
-            val eligible = generation != null && expectedScope != null && runCatching {
-                requireFixedBootstrapGate(generation, expectedScope)
-            }.isSuccess
-            if (BootstrapRecoveryPolicy.shouldRetry(applied, state.value.busy, Build.VERSION.SDK_INT, generation != null, eligible)) {
-                update(message = "Bootstrap is not yet applied; retrying the fixed loopback activation")
-                prepareBootstrap()
-            } else {
-                update(message = "Waiting for Kodi Bootstrap to report applied configuration $expected. Complete the visible Kodi confirmations, then check again.")
-            }
+            update(message = "Waiting for Kodi Bootstrap to report applied configuration $expected. Complete the visible Kodi confirmations, then check again.")
         }
     }
     fun markComplete() {
@@ -518,7 +567,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
             SetupStep.CONFIGURATION -> if (installer.canRequestInstalls()) installKodi() else update(message = "Select Allow APK installs, approve Starlane Movies, then return here")
             SetupStep.KODI -> installProton()
             SetupStep.PROTON -> if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) update(message = "Select Prepare Kodi bootstrap and allow storage access") else prepareBootstrap()
-            SetupStep.BOOTSTRAP -> update(message = "Open Kodi and confirm the one-time bootstrap ZIP installation")
+            SetupStep.BOOTSTRAP -> if (state.value.bootstrapActivationPending) prepareBootstrap() else update(message = "Open Kodi and confirm the one-time bootstrap ZIP installation")
             SetupStep.ACCOUNT_LINK -> update(message = "Choose whether to link Real-Debrid or finish setup")
             SetupStep.COMPLETE -> workflowPrefs.edit().putBoolean("automatic", false).apply()
         }
@@ -642,14 +691,26 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun strictAutomationIsActive(): Boolean {
         if (!workflowPrefs.getBoolean("automatic", false)) return false
+        val expectedScope = state.value.manifest?.let(AutomationSecurityScope::digest) ?: return false
         val generation = workflowPrefs.getString("automation_generation", null) ?: return false
+        val invalidationReason = consent.invalidationReason(expectedScope)
         val active = strictConsentStillValid(generation)
         if (!active) {
-            workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation").apply()
+            workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation")
+                .putString("automation_invalidation_reason", invalidationReason?.name ?: "REVOKED_OR_MISSING").apply()
             mutable.value = mutable.value.copy(automationRunning = false)
         }
         return active
     }
+    private fun recordConsentInvalidation(reason: ConsentInvalidationReason?) {
+        if (reason != null && workflowPrefs.getBoolean("automatic", false)) {
+            workflowPrefs.edit().putBoolean("automatic", false).remove("automation_generation")
+                .putString("automation_invalidation_reason", reason.name).apply()
+        }
+    }
+    private fun bootstrapActivationIsPending(configVersion: String): Boolean =
+        workflowPrefs.getBoolean("bootstrap_launch_pending", false) &&
+            workflowPrefs.getString("bootstrap_auto_installed_version", null) == configVersion
     private fun requireFixedBootstrapGate(generation: String, expectedScope: String) {
         val permission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         val installed = state.value.manifest?.kodi?.packageName == FIXED_KODI_PACKAGE && isInstalled(FIXED_KODI_PACKAGE)

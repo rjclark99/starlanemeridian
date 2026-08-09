@@ -69,4 +69,20 @@ class AutomationConsentCoordinatorTest {
         assertEquals(first.generation, repeated.generation)
         assertEquals(1, generated)
     }
+
+    @Test fun `invalidation reasons distinguish expiry update scope and clock rollback`() {
+        val storage = MemoryStorage()
+        var time = 5_000L
+        val coordinator = AutomationConsentCoordinator(storage, 8, { time }, { "run-1" })
+        coordinator.request(AutomationScope.STRICT_SETUP, "local", "scope-1")
+        coordinator.grant("run-1", "scope-1")
+
+        assertEquals(ConsentInvalidationReason.APP_UPDATED,
+            AutomationConsentCoordinator(storage, 9, { time }).invalidationReason("scope-1"))
+        assertEquals(ConsentInvalidationReason.SCOPE_CHANGED, coordinator.invalidationReason("scope-2"))
+        time = 4_999L
+        assertEquals(ConsentInvalidationReason.CLOCK_ROLLBACK, coordinator.invalidationReason("scope-1"))
+        time = 5_000L + AutomationConsentCoordinator.MAX_LIFETIME_MILLIS
+        assertEquals(ConsentInvalidationReason.EXPIRED, coordinator.invalidationReason("scope-1"))
+    }
 }

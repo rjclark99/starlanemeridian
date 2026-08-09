@@ -88,13 +88,18 @@ class KodiProfileConfigurator(private val externalStorageRoot: File) {
             .filter { it.tagName == "setting" && it.getAttribute("id") == SETTING_ID }
         require(matches.size <= 1) { "Kodi guisettings.xml contains duplicate Unknown Sources settings" }
 
-        if (matches.singleOrNull()?.textContent?.trim() == "true" && original != null) return original
+        val existing = matches.singleOrNull()
+        // Kodi treats default="true" as the serialized default, not a user choice.
+        // Leaving that attribute on this one fixed setting lets Kodi restore `false`
+        // after the next launch. Preserve every other setting and attribute exactly.
+        if (existing?.textContent?.trim() == "true" && !existing.hasAttribute("default") && original != null) return original
 
-        val target = matches.firstOrNull() ?: document.createElement("setting").also {
+        val target = existing ?: document.createElement("setting").also {
             it.setAttribute("id", SETTING_ID)
             settings.appendChild(it)
         }
         target.textContent = "true"
+        target.removeAttribute("default")
         val output = ByteArrayOutputStream()
         transformer().transform(DOMSource(document), StreamResult(output))
         return output.toByteArray()

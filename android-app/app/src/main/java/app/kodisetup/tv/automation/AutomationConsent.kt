@@ -16,6 +16,14 @@ enum class AutomationScope {
 
 enum class ConsentStatus { REQUESTED, GRANTED }
 
+enum class ConsentInvalidationReason {
+    SCHEMA_CHANGED,
+    APP_UPDATED,
+    SCOPE_CHANGED,
+    CLOCK_ROLLBACK,
+    EXPIRED,
+}
+
 data class AutomationConsent(
     val schemaVersion: Int,
     val generation: String,
@@ -82,10 +90,7 @@ class AutomationConsentCoordinator(
     fun current(securityScopeDigest: String): AutomationConsent? {
         val consent = storage.load() ?: return null
         val currentTime = now()
-        if (consent.schemaVersion != SCHEMA_VERSION || consent.appVersion != appVersion ||
-            consent.securityScopeDigest != securityScopeDigest || currentTime < consent.lastObservedMillis ||
-            (consent.status == ConsentStatus.GRANTED && currentTime >= consent.expiresAtMillis)
-        ) {
+        if (invalidationReason(consent, securityScopeDigest, currentTime) != null) {
             storage.save(null)
             return null
         }
@@ -93,6 +98,9 @@ class AutomationConsentCoordinator(
         storage.save(observed)
         return observed
     }
+
+    fun invalidationReason(securityScopeDigest: String): ConsentInvalidationReason? =
+        storage.load()?.let { invalidationReason(it, securityScopeDigest, now()) }
 
     fun request(scope: AutomationScope, requestId: String, securityScopeDigest: String): AutomationConsent {
         val existing = current(securityScopeDigest)
@@ -123,4 +131,17 @@ class AutomationConsentCoordinator(
     }
 
     fun invalidate() = storage.save(null)
+
+    private fun invalidationReason(
+        consent: AutomationConsent,
+        securityScopeDigest: String,
+        currentTime: Long,
+    ): ConsentInvalidationReason? = when {
+        consent.schemaVersion != SCHEMA_VERSION -> ConsentInvalidationReason.SCHEMA_CHANGED
+        consent.appVersion != appVersion -> ConsentInvalidationReason.APP_UPDATED
+        consent.securityScopeDigest != securityScopeDigest -> ConsentInvalidationReason.SCOPE_CHANGED
+        currentTime < consent.lastObservedMillis -> ConsentInvalidationReason.CLOCK_ROLLBACK
+        consent.status == ConsentStatus.GRANTED && currentTime >= consent.expiresAtMillis -> ConsentInvalidationReason.EXPIRED
+        else -> null
+    }
 }

@@ -64,6 +64,48 @@ class KodiProfileConfiguratorTest {
         assertTrue(before.contentEquals(settings.readBytes()))
     }
 
+    @Test
+    fun `real Kodi default form becomes an explicit true without changing other attributes`() {
+        val root = temporary.newFolder("external")
+        val settings = settingsFile(root)
+        settings.parentFile!!.mkdirs()
+        settings.writeText(
+            """<settings version="2"><setting id="lookandfeel.skin" default="skin.estuary" tag="keep">skin.estuary</setting><setting id="addons.unknownsources" default="true" level="advanced">false</setting></settings>""",
+        )
+
+        val update = KodiProfileConfigurator(root).enableUnknownSources("org.xbmc.kodi")
+        val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(settings)
+        val nodes = document.getElementsByTagName("setting")
+        val unknown = (0 until nodes.length).map { nodes.item(it) as org.w3c.dom.Element }.single { it.getAttribute("id") == "addons.unknownsources" }
+        val skin = (0 until nodes.length).map { nodes.item(it) as org.w3c.dom.Element }.single { it.getAttribute("id") == "lookandfeel.skin" }
+
+        assertTrue(update.changed)
+        assertEquals("true", unknown.textContent.trim())
+        assertFalse(unknown.hasAttribute("default"))
+        assertEquals("advanced", unknown.getAttribute("level"))
+        assertEquals("skin.estuary", skin.getAttribute("default"))
+        assertEquals("keep", skin.getAttribute("tag"))
+    }
+
+    @Test
+    fun `default marker is removed even when its serialized text is already true`() {
+        val root = temporary.newFolder("external")
+        val settings = settingsFile(root)
+        settings.parentFile!!.mkdirs()
+        settings.writeText(
+            """<settings version="2"><setting id="addons.unknownsources" default="true" level="keep">true</setting></settings>""",
+        )
+
+        val update = KodiProfileConfigurator(root).enableUnknownSources("org.xbmc.kodi")
+        val unknown = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(settings)
+            .getElementsByTagName("setting").item(0) as org.w3c.dom.Element
+
+        assertTrue(update.changed)
+        assertEquals("true", unknown.textContent.trim())
+        assertFalse(unknown.hasAttribute("default"))
+        assertEquals("keep", unknown.getAttribute("level"))
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsAnyPackageOtherThanOfficialKodiCompatibilityId() {
         KodiProfileConfigurator(temporary.newFolder("external"))

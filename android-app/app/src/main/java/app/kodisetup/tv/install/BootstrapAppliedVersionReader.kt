@@ -12,16 +12,22 @@ class BootstrapAppliedVersionReader(private val externalStorageRoot: File) {
             "Android/data/$KODI_PACKAGE/files/.kodi/userdata/addon_data/repository.kodisetup/settings.xml",
         )
         if (!settings.isFile || settings.length() > MAX_SETTINGS_BYTES) return null
-        val factory = DocumentBuilderFactory.newInstance().apply {
-            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-            setFeature("http://xml.org/sax/features/external-general-entities", false)
-            setFeature("http://xml.org/sax/features/external-parameter-entities", false)
-            setAttribute("http://javax.xml.XMLConstants/property/accessExternalDTD", "")
-            setAttribute("http://javax.xml.XMLConstants/property/accessExternalSchema", "")
-            isXIncludeAware = false
-            isExpandEntityReferences = false
+        val text = settings.readText(Charsets.UTF_8)
+        require(!text.contains("<!DOCTYPE", true) && !text.contains("<!ENTITY", true)) {
+            "Unsafe Bootstrap settings XML"
         }
-        val document = settings.inputStream().use { factory.newDocumentBuilder().parse(it) }
+        val factory = DocumentBuilderFactory.newInstance().apply {
+            // Fire OS does not implement every JAXP hardening switch. Reject the
+            // dangerous declarations above, then enable all supported safeguards.
+            runCatching { setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
+            runCatching { setFeature("http://xml.org/sax/features/external-general-entities", false) }
+            runCatching { setFeature("http://xml.org/sax/features/external-parameter-entities", false) }
+            runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalDTD", "") }
+            runCatching { setAttribute("http://javax.xml.XMLConstants/property/accessExternalSchema", "") }
+            runCatching { isXIncludeAware = false }
+            runCatching { isExpandEntityReferences = false }
+        }
+        val document = text.byteInputStream(Charsets.UTF_8).use { factory.newDocumentBuilder().parse(it) }
         val nodes = document.getElementsByTagName("setting")
         for (index in 0 until nodes.length) {
             val element = nodes.item(index)

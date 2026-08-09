@@ -84,7 +84,12 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
                     SetupStep.CONFIGURATION -> { Action("Start setup", Modifier.focusRequester(primaryFocus)) { model.startAutomatedSetup() }; Action("Allow APK installs") { model.grantInstallPermission() }; Action("Install Kodi") { model.installKodi() } }
                     SetupStep.KODI -> Action("Install Proton VPN", Modifier.focusRequester(primaryFocus)) { model.openProton() }
                     SetupStep.PROTON -> Action("Prepare Kodi bootstrap", Modifier.focusRequester(primaryFocus)) { if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) else model.prepareBootstrap() }
-                    SetupStep.BOOTSTRAP -> Action("Check applied setup", Modifier.focusRequester(primaryFocus)) { model.checkBootstrapApplied() }
+                    SetupStep.BOOTSTRAP -> {
+                        Action("Check applied setup", Modifier.focusRequester(primaryFocus)) { model.checkBootstrapApplied() }
+                        if (!state.automationRunning) {
+                            Action("Resume automated setup") { model.resumeAutomatedBootstrap() }
+                        }
+                    }
                     SetupStep.ACCOUNT_LINK -> { Action("Link Real-Debrid", Modifier.focusRequester(primaryFocus)) { model.beginRealDebrid() }; state.debridCode?.let { Text("Code: $it  ${state.debridUrl.orEmpty()}", color = Color.White, fontSize = 18.sp) }; Action("Finish") { model.markComplete() } }
                     SetupStep.COMPLETE -> {
                         Action("Prepare Kodi bootstrap", Modifier.focusRequester(primaryFocus)) {
@@ -108,17 +113,20 @@ private fun SetupScreen(model: SetupViewModel = viewModel()) {
 @Composable
 private fun ConsentScreen(scope: app.kodisetup.tv.automation.AutomationScope?, cancel: () -> Unit, approve: () -> Unit) {
     val cancelFocus = remember { FocusRequester() }
-    LaunchedEffect(scope) { runCatching { cancelFocus.requestFocus() } }
+    var confirming by remember(scope) { mutableStateOf(false) }
+    LaunchedEffect(scope, confirming) { runCatching { cancelFocus.requestFocus() } }
     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0xFF050B14), Color(0xFF102A42)))).padding(56.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Approve this automated run?", fontSize = 38.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+            Text(if (confirming) "Confirm full automation" else "Full automation warning", fontSize = 38.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             Text("Requested scope: ${scope?.name ?: "UNKNOWN"}", fontSize = 18.sp, color = Color(0xFF67E8C4))
             Text("Automated after approval: download and verify configured packages, open an official app-store route when needed, and on Android 9 or older atomically enable Kodi Unknown Sources and install only the verified Starlane Bootstrap repository.", fontSize = 19.sp, color = Color(0xFFC8D8EB))
             Text("Always manual and visible: Android storage/install permissions, every package/store confirmation, and Bootstrap's separate approval inside Kodi. Android 10+ also keeps Kodi Unknown Sources, ZIP selection, and Install from ZIP manual.", fontSize = 19.sp, color = Color(0xFFC8D8EB))
             Text("Consent applies only to this app/configuration and this run, expires within 24 hours, and can be stopped at any time.", fontSize = 19.sp, color = Color(0xFFC8D8EB))
+            if (confirming) Text("This is the secondary confirmation. Approve only if you want Starlane Movies to perform the fixed automated steps described above.", fontSize = 19.sp, color = Color(0xFFFFD58A))
             Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 Action("Cancel", Modifier.focusRequester(cancelFocus), cancel)
-                Action("Approve one run", action = approve)
+                if (confirming) Action("Confirm and approve one run", action = approve)
+                else Action("Continue to confirmation") { confirming = true }
             }
         }
     }
