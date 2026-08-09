@@ -35,6 +35,7 @@ DIRECTORY_LOGO_TUPLE = re.compile(
 )
 DIRECTORY_LOGO_MINIMUM = 100
 DIRECTORY_LOGO_HOSTS = ("i.imgur.com", "i.postimg.cc")
+ABSOLUTE_ARTWORK_URI_PREFIXES = ("resource://", "special://", "https://", "http://")
 # Display names whose logo ships under a different texture name in the locked
 # resource.images.studios.coloured 0.0.24 bundle.
 DIRECTORY_LOGO_ALIASES = {
@@ -79,7 +80,7 @@ ADDONS = (
     AddonBrand(
         addon_id="plugin.video.umbrella",
         source_version="6.7.81",
-        branded_version="6.7.81.4",
+        branded_version="6.7.81.5",
         display_name="Starlane Movies: On Demand",
         subtitle="ON DEMAND",
         summary="Starlane Movies on-demand discovery and playback.",
@@ -244,6 +245,117 @@ def rewrite_user_facing_python(addon_root: Path, addon: AddonBrand) -> None:
             "\t\tPremAccntNotification().run()",
         )
         service.write_text(text, encoding="utf-8", newline="")
+
+
+def preserve_absolute_directory_artwork(addon_root: Path, addon: AddonBrand) -> None:
+    """Keep Kodi resource URIs out of Umbrella's themed artwork directory.
+
+    ``tvshows.addDirectory`` is the consumer that calls ``setArt`` for the
+    Networks and Providers rows.  It previously regarded only ``http`` values
+    as absolute, turning a local ``resource://`` texture into a non-existent
+    path below the selected artwork theme.
+    """
+    if addon.addon_id != "plugin.video.umbrella":
+        return
+    tvshows = addon_root / "resources/lib/menus/tvshows.py"
+    if not tvshows.is_file():
+        return
+    text = tvshows.read_text(encoding="utf-8-sig")
+    upstream_consumer = (
+        "\t\t\t\tif i['image'].startswith('http'): poster = i['image']\n"
+        "\t\t\t\telif artPath: poster = control.joinPath(artPath, i['image'])\n"
+        "\t\t\t\telse: poster = addonThumb\n"
+        "\t\t\t\tif content == 'genres':\n"
+        "\t\t\t\t\ticon = control.joinPath(control.genreIconPath(), i['icon']) or 'DefaultFolder.png'\n"
+        "\t\t\t\t\tposter = control.joinPath(control.genrePosterPath(), i['image']) or addonThumb\n"
+        "\t\t\t\telse:\n"
+        "\t\t\t\t\ticon = i['icon']\n"
+        "\t\t\t\t\tif icon.startswith('http'): pass\n"
+        "\t\t\t\t\telif not icon.startswith('Default'): icon = control.joinPath(artPath, icon)"
+    )
+    if upstream_consumer not in text:
+        raise ValueError(f"{tvshows}: expected directory artwork consumer")
+    absolute = repr(ABSOLUTE_ARTWORK_URI_PREFIXES)
+    replacement = upstream_consumer.replace(
+        "i['image'].startswith('http')", f"i['image'].startswith({absolute})"
+    ).replace("icon.startswith('http')", f"icon.startswith({absolute})")
+    tvshows.write_text(text.replace(upstream_consumer, replacement), encoding="utf-8", newline="")
+
+
+def add_tmdb_request_diagnostics(addon_root: Path, addon: AddonBrand) -> None:
+    """Add privacy-safe result diagnostics to Umbrella's TMDB HTTP consumer."""
+    if addon.addon_id != "plugin.video.umbrella":
+        return
+    tmdb = addon_root / "resources/lib/indexers/tmdb.py"
+    if not tmdb.is_file():
+        return
+    text = tmdb.read_text(encoding="utf-8-sig")
+    import_landmark = "from urllib3.util.retry import Retry\n"
+    if import_landmark not in text:
+        raise ValueError(f"{tmdb}: expected TMDB retry import")
+    text = text.replace(import_landmark, import_landmark + "from urllib.parse import urlsplit\n", 1)
+    start = "\tdef get_request(self, url):\n"
+    end = "\tdef userlists(self, url):"
+    try:
+        before, remainder = text.split(start, 1)
+        upstream_request, after = remainder.split(end, 1)
+    except ValueError as error:
+        raise ValueError(f"{tmdb}: expected TMDB get_request consumer") from error
+    expected = (
+        "\t\ttry:\n\t\t\ttry: response = session.get(url, timeout=20)\n"
+        "\t\t\texcept requests.exceptions.SSLError:\n\t\t\t\tresponse = session.get(url, verify=False)\n"
+        "\t\texcept requests.exceptions.ConnectionError:\n\t\t\tnotification(message=32024)\n"
+        "\t\t\tfrom resources.lib.modules import log_utils\n\t\t\tlog_utils.error()\n\t\t\treturn None\n"
+        "\t\ttry:\n\t\t\tif response.status_code in (200, 201): return response.json()\n"
+    )
+    if not upstream_request.startswith(expected):
+        raise ValueError(f"{tmdb}: expected TMDB request response handling")
+    diagnostic = (
+        "\ndef starlane_provider_request_diagnostic(url, status=None, error=None):\n"
+        "\t\"\"\"Record only provider result metadata; never URL query or response data.\"\"\"\n"
+        "\ttry:\n\t\tparsed = urlsplit(url)\n\t\thost = parsed.hostname or parsed.scheme\n\t\tif parsed.port: host = '%s:%s' % (host, parsed.port)\n\t\tsegments = (parsed.path or '/').split('/')\n\t\tpath = '/'.join(segment if index <= 1 or not segment.isdigit() else ':id' for index, segment in enumerate(segments))\n"
+        "\t\tfrom resources.lib.modules import log_utils\n"
+        "\t\tif error is None:\n\t\t\tlevel = log_utils.LOGDEBUG if status in (200, 201) else log_utils.LOGWARNING\n\t\t\tlog_utils.log('Starlane provider request host=%s path=%s status=%s' % (host, path, status), level=level)\n"
+        "\t\telse:\n\t\t\tlog_utils.log('Starlane provider request host=%s path=%s exception=%s' % (host, path, type(error).__name__), level=log_utils.LOGWARNING)\n"
+        "\texcept Exception:\n\t\tpass\n\n"
+    )
+    rewritten = upstream_request.replace(
+        "\t\ttry:\n\t\t\ttry: response = session.get(url, timeout=20)\n"
+        "\t\t\texcept requests.exceptions.SSLError:\n\t\t\t\tresponse = session.get(url, verify=False)\n",
+        "\t\ttry:\n\t\t\tresponse = session.get(url, timeout=20)\n",
+        1,
+    ).replace(
+        "\t\texcept requests.exceptions.ConnectionError:\n",
+        "\t\texcept requests.exceptions.RequestException as error:\n\t\t\tstarlane_provider_request_diagnostic(url, error=error)\n",
+        1,
+    ).replace(
+        "\t\ttry:\n\t\t\tif response.status_code in (200, 201): return response.json()\n",
+        "\t\ttry:\n\t\t\tstarlane_provider_request_diagnostic(url, status=response.status_code)\n\t\t\tif response.status_code in (200, 201): return response.json()\n",
+        1,
+    ).replace(
+        "\t\texcept:\n\t\t\tfrom resources.lib.modules import log_utils\n\t\t\tlog_utils.error()\n\t\t\treturn None",
+        "\t\texcept Exception as error:\n\t\t\tstarlane_provider_request_diagnostic(url, error=error)\n\t\t\tfrom resources.lib.modules import log_utils\n\t\t\tlog_utils.error()\n\t\t\treturn None",
+        1,
+    )
+    rewritten_source = before + start + rewritten + end + after
+    v4_tls_fallback = (
+        "\t\t\ttry: response = session.get(url, headers=headers, timeout=20)\n"
+        "\t\t\texcept requests.exceptions.SSLError:\n"
+        "\t\t\t\tresponse = session.get(url, headers=headers, verify=False)\n"
+    )
+    rewritten_source = rewritten_source.replace(
+        v4_tls_fallback,
+        "\t\t\tresponse = session.get(url, headers=headers, timeout=20)\n",
+        1,
+    )
+    if "verify=False" in rewritten_source:
+        raise ValueError(f"{tmdb}: TLS certificate verification bypass remains")
+    class_landmark = "\nclass TMDb:\n"
+    if class_landmark not in rewritten_source:
+        raise ValueError(f"{tmdb}: expected TMDB class")
+    rewritten_source = rewritten_source.replace(class_landmark, diagnostic + class_landmark, 1)
+    compile(rewritten_source, str(tmdb), "exec")
+    tmdb.write_text(rewritten_source, encoding="utf-8", newline="")
 
 
 def rewrite_discovery_previews(addon_root: Path, addon: AddonBrand) -> None:
@@ -579,6 +691,8 @@ def build(source_root: Path, output_root: Path) -> list[Path]:
         rewrite_user_facing_python(target, addon)
         rewrite_discovery_previews(target, addon)
         localise_directory_logo_artwork(target, addon)
+        preserve_absolute_directory_artwork(target, addon)
+        add_tmdb_request_diagnostics(target, addon)
         update_metadata(target, addon)
         prepare_artwork_theme(target, addon)
         replace_artwork(target, addon)

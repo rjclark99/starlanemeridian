@@ -9,9 +9,12 @@ import stat
 import struct
 import sys
 import tempfile
+import threading
+import time
 import urllib.request
 import zipfile
 from xml.etree import ElementTree
+from urllib.parse import urlsplit
 
 import xbmc
 import xbmcaddon
@@ -51,6 +54,11 @@ SETUP_APP_PACKAGE = "app.kodisetup.tv"
 BOOTSTRAP_ADDON_ID = "repository.kodisetup"
 CONSENT_SCOPE_VERSION = 1
 MAX_ACTIVATION_ATTEMPTS = 3
+PROVIDER_DIRECTORY_ROUTES = (
+    "plugin://plugin.video.umbrella/?action=tmdbmovies&url=tmdb_toprated",
+    "plugin://plugin.video.umbrella/?action=tmdbTvshows&url=tmdb_toprated",
+)
+PROVIDER_DIRECTORY_TIMEOUT_SECONDS = 15.0
 CONSENT_SCOPE_FIELDS = (
     "schemaVersion",
     "configVersion",
@@ -617,6 +625,89 @@ def record_activation_attempt(count):
     set_internal_setting("activation_attempts", str(count) if count else "")
 
 
+def log_provider_directory_diagnostic(url, status=None, error=None):
+    """Log only a directory result and its route, never query or response data."""
+    parsed = urlsplit(url)
+    host = parsed.hostname or parsed.scheme
+    if parsed.port:
+        host = "%s:%s" % (host, parsed.port)
+    path = parsed.path or "/"
+    if error is not None:
+        log("Provider request host=%s path=%s exception=%s" % (
+            host, path, type(error).__name__), xbmc.LOGWARNING)
+    else:
+        log("Provider request host=%s path=%s status=%s" % (host, path, status))
+
+
+class ProviderDirectoryReadinessError(ValueError):
+    pass
+
+
+def execute_provider_directory_request(request, timeout=PROVIDER_DIRECTORY_TIMEOUT_SECONDS):
+    responses = []
+    failures = []
+
+    def invoke():
+        try:
+            responses.append(xbmc.executeJSONRPC(json.dumps(request)))
+        except Exception as error:
+            failures.append(error)
+
+    worker = threading.Thread(target=invoke, daemon=True)
+    worker.start()
+    deadline = time.monotonic() + timeout
+    monitor = xbmc.Monitor()
+    while worker.is_alive():
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ProviderDirectoryReadinessError("provider directory request timed out")
+        if monitor.waitForAbort(min(0.25, remaining)):
+            raise ProviderDirectoryReadinessError("Kodi stopped during provider directory request")
+    if failures:
+        raise failures[0]
+    if len(responses) != 1:
+        raise ValueError("provider directory response was missing")
+    return responses[0]
+
+
+def provider_directory_ready(url):
+    """Perform one bounded canonical provider-directory check through Kodi."""
+    request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "Files.GetDirectory",
+        "params": {"directory": url, "media": "video", "properties": []},
+    }
+    try:
+        result = json.loads(execute_provider_directory_request(request))
+        if not isinstance(result, dict):
+            raise ValueError("malformed provider directory response")
+        if "error" in result:
+            status = result["error"].get("code", "error") if isinstance(result["error"], dict) else "error"
+            log_provider_directory_diagnostic(url, status=status)
+            raise ProviderDirectoryReadinessError("provider directory request was rejected")
+        files = result.get("result", {}).get("files")
+        if not isinstance(files, list):
+            raise ValueError("malformed provider directory response")
+        log_provider_directory_diagnostic(url, status=200)
+        if not files:
+            raise ProviderDirectoryReadinessError("provider directory returned no items")
+    except ProviderDirectoryReadinessError:
+        raise
+    except Exception as error:
+        log_provider_directory_diagnostic(url, error=error)
+        raise ProviderDirectoryReadinessError(
+            "provider directory response was not usable"
+        ) from error
+
+
+def wait_for_provider_directories(addon_id):
+    if addon_id != "plugin.video.umbrella":
+        return
+    for route in PROVIDER_DIRECTORY_ROUTES:
+        provider_directory_ready(route)
+
+
 def wait_for_provider_ready(addon_id, attempts=120, interval=0.25):
     """Wait briefly for the provider's own service to announce readiness.
 
@@ -632,6 +723,7 @@ def wait_for_provider_ready(addon_id, attempts=120, interval=0.25):
     monitor = xbmc.Monitor()
     for _attempt in range(attempts):
         if window.getProperty("starlane.umbrella.ready") == "true":
+            wait_for_provider_directories(addon_id)
             return
         if monitor.waitForAbort(interval):
             raise ValueError("Kodi stopped while waiting for the provider")
@@ -794,6 +886,15 @@ def run():
         for item in enabled_addons:
             try:
                 wait_for_provider_ready(item["id"])
+            except ProviderDirectoryReadinessError as error:
+                # The marker appeared but a direct canonical directory is not
+                # ready. Do not re-run the bounded probe on this setup attempt.
+                if activation_attempts() < MAX_ACTIVATION_ATTEMPTS:
+                    deferred = item["id"] + ": " + str(error)
+                    log("Deferring Home activation until Kodi restarts: " + deferred)
+                    break
+                failures.append(item["id"] + ": " + str(error))
+                log(failures[-1], xbmc.LOGERROR)
             except Exception as error:
                 # Most often the freshly installed package was already enabled,
                 # so Kodi never raised the enable event that starts its service.

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="repository.kodisetup" name="Starlane Movies Bootstrap" version="1.1.17" provider-name="Starlane Movies">
+<addon id="repository.kodisetup" name="Starlane Movies Bootstrap" version="1.1.18" provider-name="Starlane Movies">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
   </requires>

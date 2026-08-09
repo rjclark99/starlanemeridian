@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 import types
 import unittest
 import zipfile
@@ -78,6 +79,8 @@ class KodiBootstrapTests(unittest.TestCase):
                         }
                     )
                 return json.dumps({"error": {"message": "Unknown addon"}})
+            if method == "Files.GetDirectory":
+                return json.dumps({"result": {"files": [{}] * 20}})
             return json.dumps({"error": {"message": "unexpected method"}})
 
         xbmc.executeJSONRPC = json_rpc
@@ -629,6 +632,63 @@ class KodiBootstrapTests(unittest.TestCase):
             "script.module.cocoscrapers", attempts=1, interval=0
         )
 
+    def test_provider_directory_probe_requires_both_canonical_routes_once(self):
+        requests = []
+        original = self.service.provider_directory_ready
+        self.service.provider_directory_ready = requests.append
+        try:
+            self.service.wait_for_provider_directories("plugin.video.umbrella")
+        finally:
+            self.service.provider_directory_ready = original
+        self.assertEqual(list(self.service.PROVIDER_DIRECTORY_ROUTES), requests)
+
+    def test_provider_request_diagnostics_redact_queries_bodies_and_keys(self):
+        messages = []
+        self.service.log = lambda message, *_args: messages.append(message)
+        route = "https://user:password@provider.example:443/path?api_key=secret&body=private"
+        for status in (200, 401, 403, 429):
+            self.service.log_provider_directory_diagnostic(route, status=status)
+        self.service.log_provider_directory_diagnostic(route, error=TimeoutError("secret"))
+        self.service.log_provider_directory_diagnostic(route, error=ValueError("body secret"))
+        self.assertEqual(
+            [
+                "Provider request host=provider.example:443 path=/path status=200",
+                "Provider request host=provider.example:443 path=/path status=401",
+                "Provider request host=provider.example:443 path=/path status=403",
+                "Provider request host=provider.example:443 path=/path status=429",
+                "Provider request host=provider.example:443 path=/path exception=TimeoutError",
+                "Provider request host=provider.example:443 path=/path exception=ValueError",
+            ],
+            messages,
+        )
+
+    def test_provider_directory_probe_rejects_malformed_response_without_logging_data(self):
+        messages = []
+        self.service.log = lambda message, *_args: messages.append(message)
+        original = self.service.xbmc.executeJSONRPC
+        self.service.xbmc.executeJSONRPC = lambda _request: "not-json"
+        try:
+            with self.assertRaises(ValueError):
+                self.service.provider_directory_ready(self.service.PROVIDER_DIRECTORY_ROUTES[0])
+        finally:
+            self.service.xbmc.executeJSONRPC = original
+        self.assertEqual(
+            "Provider request host=plugin.video.umbrella path=/ exception=JSONDecodeError",
+            messages[-1],
+        )
+
+    def test_provider_directory_probe_times_out_without_blocking_bootstrap(self):
+        original = self.service.xbmc.executeJSONRPC
+        self.service.xbmc.executeJSONRPC = lambda _request: time.sleep(0.1)
+        started = time.monotonic()
+        try:
+            with self.assertRaisesRegex(ValueError, "timed out"):
+                request = {"jsonrpc": "2.0", "id": 1, "method": "Files.GetDirectory"}
+                self.service.execute_provider_directory_request(request, timeout=0.01)
+        finally:
+            self.service.xbmc.executeJSONRPC = original
+        self.assertLess(time.monotonic() - started, 0.08)
+
     def test_locked_package_rejects_wrong_identity_before_extraction(self):
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)
@@ -971,6 +1031,53 @@ class KodiBootstrapTests(unittest.TestCase):
         self.assertEqual("", self.service.internal_setting("applied_scope"))
         self.assertEqual("1", self.service.internal_setting("activation_attempts"))
         self.assertIn(("Quit", False), self.commands)
+
+    def test_unready_canonical_directory_defers_without_repeating_the_probe(self):
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        self.service.wait_for_provider_ready = lambda _addon_id: (_ for _ in ()).throw(
+            self.service.ProviderDirectoryReadinessError("provider directory returned no items")
+        )
+        restart_calls = []
+        self.service.restart_provider_service = lambda addon_id: restart_calls.append(addon_id)
+        activated = []
+        self.service.activate_skin_and_generate_shortcuts = activated.append
+
+        self.service.run()
+
+        self.assertEqual([], restart_calls)
+        self.assertEqual([], activated)
+        self.assertEqual("1", self.service.internal_setting("activation_attempts"))
+        self.assertIn(("Quit", False), self.commands)
+
+    def test_unready_canonical_directory_stops_after_bounded_restarts(self):
+        document = self.manifest()
+        packages = [
+            {"id": "script.module.cocoscrapers"},
+            {"id": "plugin.video.umbrella"},
+            {"id": "skin.starlane.movies"},
+        ]
+        self._install_only_run(document, packages)
+        self.service.set_internal_setting(
+            "activation_attempts", str(self.service.MAX_ACTIVATION_ATTEMPTS)
+        )
+        self.service.wait_for_provider_ready = lambda _addon_id: (_ for _ in ()).throw(
+            self.service.ProviderDirectoryReadinessError("provider directory returned no items")
+        )
+        self.service.activate_skin_and_generate_shortcuts = lambda _skin_id: None
+
+        self.service.run()
+
+        self.assertNotIn(("Quit", False), self.commands)
+        self.assertTrue(
+            any(command.startswith("Notification(Starlane Movies,Setup finished with")
+                for command, _wait in self.commands)
+        )
 
     def test_cycling_the_provider_starts_its_service_and_avoids_a_restart(self):
         # An already-enabled package raises no enable event, so its service never
