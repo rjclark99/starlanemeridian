@@ -6,7 +6,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/source-state.md
-    summary: The uncommitted, offline-signed acceptance-recovery candidate targets Android 0.5.11/code 12, Bootstrap 1.1.18, provider 6.7.81.5, configuration 2026.08.43, and private skin 2.2.22; an existing-device pass succeeded but clean prerelease acceptance remains outstanding.
+    summary: main at f3f4494 holds the shipped v0.5.11 candidate - Android 0.5.11/code 12, Bootstrap 1.1.18, provider 6.7.81.5, private skin 2.2.22, configuration 2026.08.43; perf/widget-row-cap is parked and deliberately unshipped.
     tags: [git, source, versions]
     path_globs: ["**"]
     read_when: [starting implementation, resolving version conflicts]
@@ -34,7 +34,7 @@ records:
     kind: current
     status: active
     path: docs/agent-knowledge/current/public-release-state.md
-    summary: v0.5.10-test remains the verified public Latest release; v0.5.11 exists only as an unsigned local candidate and no rollback or publication mutation has occurred.
+    summary: v0.5.11-test is the public Latest release, verified after promotion across all four latest routes and 38 of 38 locked packages on both ABIs; the clean-device pass completed and the device applied configuration 2026.08.43 with zero errors.
     tags: [release, manifest, github]
     path_globs: [.github/workflows/**, config/**, tools/release.py]
     read_when: [publishing, release comparison, public route checks]

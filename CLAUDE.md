@@ -16,26 +16,25 @@ and ask the owner to perform simple television interactions manually.
 ## Current authoritative state
 
 - Client repository: `C:\Users\Admin\Documents\Codex Projects\Kodi Remote Setup APK`
-- Active candidate branch: `codex/v0.5.11-acceptance` at
-  `f08d52e9a4b01661a234d0ad3e160f9c7b066b7b`, pushed to `origin`. The four candidate
-  commits are `db63c94`, `23cd774`, `bad935e`, and `f08d52e`. Do not assume these are
-  on `main`.
-- Public release: `v0.5.10-test`, built from `42a7cb2`, is the GitHub **Latest** full
-  release. It was published with the owner's explicit approval; no rebuild or asset
-  replacement occurred during publication, and the `latest/download` routes were
-  verified afterwards.
-- Public prerelease: `v0.5.11-test` is published as a prerelease, explicitly not
-  Latest. Its tag resolves exactly to `f08d52e9a4b01661a234d0ad3e160f9c7b066b7b`.
-  Latest remains `v0.5.10-test` and its manifest remains configuration `2026.08.42`.
-- The published release reports configuration `2026.08.42`, minimum setup app code 11,
-  Bootstrap 1.1.17, setup APK 0.5.10/code 11, private skin 2.2.22, provider 6.7.81.4.
-- Downloader code `7499455` remains pinned to the superseded v0.5.9 APK and must not
-  be used for this pass. Code `3467018` is the previously generated reusable Latest
-  installer code, not a newly generated code after `7499455`. Live inspection on
-  9 August confirmed that it follows `latest/download/setup.apk`, which now serves
-  v0.5.10/code 11.
+- Git: `main` and `origin/main` are at `f3f4494`, reached by a clean fast-forward of
+  `codex/v0.5.11-acceptance`. The published tag `v0.5.11-test` resolves to `f08d52e`,
+  an ancestor of `f3f4494`.
+- **Public release: `v0.5.11-test` is the GitHub Latest full release**, promoted on
+  9 August 2026 with the owner's explicit approval. Promotion changed release metadata
+  only (`draft=false`, `prerelease=false`); nothing was rebuilt or replaced.
+- Latest serves setup APK `0.5.11`/code 12, configuration `2026.08.43` with minimum
+  setup app code 12, Bootstrap `1.1.18`, provider `6.7.81.5`, private skin `2.2.22`,
+  production skin `1.3.0`.
+- `v0.5.10-test` (configuration `2026.08.42`) is the immediately superseded release and
+  remains public as rollback evidence.
+- Downloader code `3467018` is the reusable Latest installer code and follows
+  `latest/download/setup.apk`, which now serves 0.5.11/code 12. Code `7499455` is pinned
+  to the superseded v0.5.9 APK and must not be used.
+- Two tags are load-bearing and must not be deleted: manifest `2026.08.43` pins
+  `bootstrap.url` to the `v0.5.11-test` tag, and the package lock's private-skin entry
+  still points at `v0.5.9-test`. Both resolve and are hash-pinned.
 
-## v0.5.11 verified continuation point
+## v0.5.11 release record
 
 Targets Android `0.5.11`/code 12, Bootstrap `1.1.18`, provider `6.7.81.5`, private
 skin `2.2.22`, production skin `1.3.0`, and signed configuration `2026.08.43` with
@@ -76,7 +75,7 @@ provider route returned 8 entries, a network route returned 104, and Netflix/ABC
 visibly rendered from local `resource.images.studios.coloured` artwork. Evidence is in
 `build/device-evidence/v0.5.11-local-pretest-20260809/`.
 
-The authorised clean-device run is **in progress, not yet passed**. Its rollback
+The authorised clean-device run **passed** and the release was promoted. Its rollback
 evidence is under `build/device-evidence/v0.5.11-clean-prewipe-20260809/`. The exact
 pre-wipe Kodi profile is `kodi-profile.tar.gz` (268,430,560 bytes, SHA-256
 `55cfbb2fbf9df4f9aa51b8e77a24882c3a7f51e3ad42b9242216848612c1c252`); it was listed
@@ -92,23 +91,40 @@ and saved `/sdcard/Download/Downloader/setup(5).apk`. Its device-side SHA-256 wa
 verified GitHub asset. Android installed it through the visible package-confirmation
 screen; installed identity is `app.kodisetup.tv` 0.5.11/code 12.
 
-Starlane was opened, `Continue offline` was selected, and the current TV screen says
-`Configuration verified` / `Configuration 2026.08.43 verified`, proving the signed
-prerelease fallback works while Latest remains configuration 42. The visible actions
-are `Start setup`, `Allow APK installs`, and `Install Kodi`. Resume from this exact
-screen. No Kodi package is currently installed. Continue with both automation consent
-confirmations, the visible Kodi installer confirmation, Bootstrap approval, Home build,
-movie/TV widgets, local provider/network artwork, Show More navigation, and bounded
-final logs. Further ADB execution stopped only because Codex's environment approval
-reviewer reported its usage limit; this was not a product failure. Do not promote
-v0.5.11 to Latest without a complete device pass and separate owner approval.
+## Clean-device pass result: passed, then promoted
 
-## Fresh-device acceptance result: did not pass
+The run completed on the reference Fire TV `AFTKAUK001`. Kodi 21.3 and Starlane
+0.5.11/code 12 installed, Bootstrap applied the configuration, the Home menu generated
+with all three required Skin Shortcuts include sections, and provider/network logos
+rendered from local `resource.images.studios.coloured` artwork — the imgur region notice
+is gone. Skin activation confirmed through the two-launch lifecycle and cleared its
+recovery state. No `Setup finished with N issue(s)`, no Python tracebacks, and zero
+`[Starlane Movies]` error lines in any session.
+
+Evidence: `build/device-evidence/v0.5.11-clean-run-logs-20260809/` holds `kodi.log`,
+`kodi.old.log`, and `kodi-warm-restart.log`.
+
+While Latest was still configuration 42, Bootstrap read `latest/download` and recorded
+`applied_version` 2026.08.42 even though the APK had validated 43 through the prerelease
+fallback. That fallback covers the setup app only, not Bootstrap. It was harmless here
+because 42 and 43 differ solely in `configVersion`, `minimumSetupAppVersion`, and the
+bootstrap URL/hash — every add-on, setting, skin, and home-menu entry is identical — and
+promotion resolved it structurally. After promotion the device applied `2026.08.43` with
+zero errors, having correctly required fresh scope-bound consent because the package scope
+digest changed. Do not build a Bootstrap-side prerelease fallback: a tag-pinned
+`manifest_url` would freeze devices on that tag.
+
+Customer-visible consequence of the 42 to 43 move: existing installs see **two** prompts,
+an app update (code 11 to 12) and then a Bootstrap consent dialog for the changed scope.
+Declining the consent installs nothing and re-prompts on the next launch.
+
+## Historical: 8 August fresh-device acceptance did not pass
 
 The pass ran on 2026-08-08 against the published bytes. Configuration `2026.08.41`
-applied and the Home menu was generated, but four defects were found. Acceptance areas
-4 to 7 remain unverified. All four are fixed in source; see
-`docs/agent-knowledge/incidents/INC-022`, `INC-023`, and `INC-024`.
+applied and the Home menu was generated, but four defects were found. All four are fixed
+and were subsequently confirmed on real hardware by the v0.5.11 clean-device pass above;
+see `docs/agent-knowledge/incidents/INC-022`, `INC-023`, and `INC-024`. Retained as the
+diagnostic record of what the defects looked like.
 
 1. **Provider service readiness.** Bootstrap reported `Setup finished with 2 issue(s)`
    on every first run. A directory-replaced package is often already enabled, so
@@ -126,7 +142,7 @@ applied and the Home menu was generated, but four defects were found. Acceptance
    `i.imgur.com` (78) and `i.postimg.cc` (36) URLs. Imgur is region-blocked in the UK and
    returns a notice *image*, which Kodi rendered as the logo.
 
-## Uncommitted v0.5.10 source candidate
+## Historical: v0.5.10 source candidate, now shipped and superseded
 
 Targets Android `0.5.10`/code 11, Bootstrap `1.1.17`, provider `6.7.81.4`, private skin
 unchanged at `2.2.22`, configuration `2026.08.42`, minimum setup app code 11.
@@ -173,7 +189,7 @@ data URL changes the Bootstrap bytes.
   local copy is at `build/addon-install/2026-07-26/plugin.video.umbrella-6.7.81.zip`,
   so no download is needed to rebuild.
 
-## Release status: published Latest
+## Historical: v0.5.10-test release record, superseded by v0.5.11-test
 
 Manifest `2026.08.42` is signed and verified. Signed-release run `31280750978` built
 `v0.5.10-test` from `main` at `42a7cb2`. All 14 draft assets were downloaded and verified:
@@ -188,20 +204,28 @@ assets, and all 38 selected ARMv7 packages passed the public lock verification.
 
 ## What to do next
 
-1. **Resume acceptance areas 4 to 7** on the device. Start with the Providers row: Amazon,
-   Apple TV+ and Hulu were the three imgur-hosted logos showing the region notice.
-2. Confirm the setup app updates to configuration `2026.08.42` and uses APK 0.5.10/code
-   11; code 10 cannot parse Kodi's real port-9090 framing.
-3. Decide whether `minimumSetupAppVersion` 11 is right. It forces an APK update; the
-   reason is that code 10's activator cannot talk to Kodi at all.
-4. Optional robustness fix: the lock's private-skin entry still points at the
-   `v0.5.9-test` tag. Those bytes are unchanged so it resolves correctly, but the current
-   release carries the same archive and repointing would remove the cross-release
-   dependency.
+Nothing is blocking. v0.5.11 is shipping. The remaining items are all optional and none
+justifies a release on its own — fold them into the next release that happens anyway.
+
+1. **Repoint the two cross-release tag references.** Manifest `bootstrap.url` targets the
+   `v0.5.11-test` tag and the lock's private-skin entry targets `v0.5.9-test`. Both work
+   and are hash-pinned, but neither tag can ever be deleted while they stand.
+2. **Decide on `perf/widget-row-cap`** (`715a7e4`). Ready and tested, deliberately
+   unshipped; see `current.source-state` for the measurement that argued against it.
+3. **Consider a personal TMDb API key** for `script.module.metadatautils` if row
+   population is ever a real complaint. That removes the rate-limit sleeps outright.
+   Prefer a per-household setting over embedding a key in a signed public release.
+4. **Watch for the two remaining `GetDirectory - Error getting /` lines** on the widget
+   helper threads. Harmless and reduced from six, but not zero.
 
 `gh` is installed at `C:\Program Files\GitHub CLI\gh.exe` and authenticated for
 `rjclark99` with `workflow` scope. Existing shells may have a stale PATH; a new terminal
-finds it.
+finds it. `.claude/settings.local.json` carries a narrow allow rule for
+`gh release edit *` so promotion is not blocked by the permission classifier; that file is
+untracked and must stay out of the client repository.
+
+When pulling files off the device with Git Bash, set `MSYS_NO_PATHCONV=1` or `/sdcard/...`
+is rewritten into a Windows path and `adb pull` fails.
 
 ## Environment notes
 
@@ -238,3 +262,14 @@ Kodi exposes no texture-loading state, so the skin cannot honestly show a spinne
 posters stream from TMDB; its widget spinner only covers an empty container. Localising
 the logos removes the wait for those rows only. Movie and TV posters still populate
 asynchronously and briefly show fallback card art, which reads as breakage but is not.
+
+Home rows populate slowly on a freshly wiped device, and it is not a skin defect. The rows
+themselves come from the provider quickly, but `script.skin.helper.service` enriches each
+listed item through `script.module.metadatautils`, which is rate limited without a personal
+API key. Measured on 9 August: a cold device spent 49 seconds in enforced sleeps across 13
+throttle events (themoviedb.org and omdbapi.com) with six `GetDirectory - Error getting /`
+errors on the same threads; a warm restart spent 17 seconds over 4 events with two errors.
+Caching is already handled by three existing layers that all populate normally —
+`simplecache.db`, the provider's own `cache.db`/`artwork.db`/`fanarttv.db`, and Kodi's
+`Textures13.db` — so do not add a fourth. The apparent duplication of routes in the
+generated include is layout variants, only one of which renders at a time.

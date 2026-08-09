@@ -2,13 +2,45 @@
 id: current.public-release-state
 kind: current
 status: active
-verified_at: 2026-08-08
+verified_at: 2026-08-09
 tags: [release, manifest, github]
 authority: [github-release, downloaded-bytes, config/manifest.json]
 supersedes: []
 ---
 
 # Public release state
+
+`v0.5.11-test` is the current GitHub **Latest** full release. Its tag resolves to
+`f08d52e9a4b01661a234d0ad3e160f9c7b066b7b`, which is now also on `main`. It was built by
+signed-release run `31309112396`, verified as a draft and again as a public prerelease,
+then promoted to Latest on 9 August 2026 with explicit owner approval. Promotion changed
+release metadata only: `draft=false`, `prerelease=false`. No asset was rebuilt or replaced.
+
+It serves setup APK `0.5.11`/code 12, configuration `2026.08.43` with minimum setup app
+code 12, Bootstrap `1.1.18`, provider `6.7.81.5`, private skin `2.2.22`, and production
+skin `1.3.0`.
+
+Verified after promotion on 9 August 2026:
+
+- All four `latest/download` routes return the expected v0.5.11 bytes:
+  `manifest.json` `b9f186e28d5cf64c9a80ea924351f7de8f7132a685db8a470f5c858371ae6bc9`,
+  `setup.apk` `0117c126032b157e3e3d0b46c40eea61652946d434cdd2f685af29e60ea543ec`,
+  `repository.kodisetup-1.1.18.zip`
+  `977c374f27239888945ddc8865db5d2d87d6c44e1b7489f61d70b8eec4161915`, and
+  `plugin.video.umbrella-6.7.81.5.zip`
+  `f06266e02c56800716bf7e50eba570f40c33e2637c5abdca55353f8524710996`.
+- The live manifest reports configuration `2026.08.43`, minimum setup app code 12, and a
+  bootstrap pointer resolving to 1.1.18.
+- `tools/verify_kodi_package_lock.py` passes for **both** ABIs against live URLs: 38 of 38
+  selected packages for `arm64-v8a` and 38 of 38 for `armeabi-v7a`, zero failures. This
+  check could not run before promotion because the lock's provider URL targets the
+  `v0.5.11-test` tag, whose assets are not publicly downloadable while a release is a
+  draft or, for that URL, before the tag exists publicly.
+
+Two tags are now load-bearing and must not be deleted. Manifest `2026.08.43` pins
+`bootstrap.url` to the `v0.5.11-test` tag rather than `latest/download`, and the package
+lock's private-skin entry still points at `v0.5.9-test`. Both resolve and are hash-pinned,
+but repointing them in a future release would remove the cross-release dependency.
 
 `v0.5.10-test` was created by successful signed-release run `31280750978` from `main`
 at `42a7cb2`, independently verified as a draft, and published as the GitHub **Latest**

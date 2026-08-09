@@ -10,6 +10,27 @@ supersedes: []
 
 # Repository source state
 
+`main` and `origin/main` are at `f3f4494` as of 9 August 2026. It contains the shipped
+v0.5.11 candidate — Android `0.5.11`/code 12, Bootstrap `1.1.18`, provider `6.7.81.5`,
+private skin `2.2.22`, production skin `1.3.0`, and signed configuration `2026.08.43` with
+minimum setup app code 12 — reached by a clean fast-forward of `codex/v0.5.11-acceptance`.
+`v0.5.11-test` is published as GitHub Latest from `f08d52e`, which is an ancestor of
+`f3f4494`; see `current.public-release-state`. 115 Python tests and
+`validate_project_control.py` pass on this commit.
+
+One branch is deliberately unshipped: `perf/widget-row-cap` at `715a7e4` defaults each of
+the eight Home widget slots to 10 items in
+`kodi/skin.starlane.movies/shortcuts/template.xml`, preserving the separate Show More
+terminal content block. Skin Shortcuts had left `widgetLimit` empty, so the generated
+include carried no `limit` attribute and rows rendered the provider's full page. It is
+parked rather than released because measurement showed the cost was a cold cache, not row
+length: a freshly wiped device spent 49 seconds in `script.module.metadatautils` rate-limit
+sleeps against themoviedb.org and omdbapi.com, while a warm restart spent 17 seconds and
+produced two directory errors instead of six. Shipping it would require skin 2.2.23, a new
+lock hash, Bootstrap 1.1.19, a new configuration, and re-signing. If row population ever
+becomes a real complaint, a personal TMDb API key for metadatautils removes the throttling
+outright, whereas the cap only reduces how often it is hit.
+
 Read-only inspection on 1 August 2026 found a clean `main` and `origin/main` at
 `cefca90`. The source contains Android setup
 0.5.3/code 8, Bootstrap 1.1.13, production skin 1.3.0, private skin 2.2.20,
