@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-21T20:36:49.945949+00:00",
+  "checkedAt": "2026-11-09T17:36:32.901299+00:00",
   "reviewRequired": true,
   "warning": "Do not promote these candidates until package identity, compatibility, SHA-256, and signer certificate are independently verified.",
   "kodi": {
@@ -17,13 +17,18 @@
     }
   },
   "protonVpn": {
-    "version": "5.19.43.0",
-    "releaseUrl": "https://github.com/ProtonVPN/android-app/releases/tag/5.19.43.0",
+    "version": "5.20.98.0",
+    "releaseUrl": "https://github.com/ProtonVPN/android-app/releases/tag/5.20.98.0",
     "apkAssets": [
       {
-        "name": "ProtonVPN-5.19.43.0.605194300.-production-vanilla-direct-release.apk",
-        "url": "https://github.com/ProtonVPN/android-app/releases/download/5.19.43.0/ProtonVPN-5.19.43.0.605194300.-production-vanilla-direct-release.apk",
-        "sha256": "sha256:e5a0b80a6cfcdb86789de95b3f325fa0352c0b44249fc8222eddb854f511e8f0"
+        "name": "ProtonVPN-5.20.98.0.605209800.-production-vanilla-direct-release.apk",
+        "url": "https://github.com/ProtonVPN/android-app/releases/download/5.20.98.0/ProtonVPN-5.20.98.0.605209800.-production-vanilla-direct-release.apk",
+        "sha256": "sha256:c4d531002b98953b66589bc9bdf83fdd1ad51f35f6e5ebb41bccb4156104fc27"
+      },
+      {
+        "name": "ProtonVPN-5.20.98.0.605209800.-production-vanilla-openSource-release-fdroid.apk",
+        "url": "https://github.com/ProtonVPN/android-app/releases/download/5.20.98.0/ProtonVPN-5.20.98.0.605209800.-production-vanilla-openSource-release-fdroid.apk",
+        "sha256": "sha256:a0aa2adc8d93f7f47a971c886b50ceb7ec77539b1ecc265ee350dce5da8bff27"
       }
     ]
   }
